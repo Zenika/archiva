@@ -444,6 +444,9 @@
       <li>
         <a data-toggle="tab" href="#artifact-details-metadatas-content">${$.i18n.prop('artifact.detail.tab.header.metadatas')}</a>
       </li>
+      <li>
+        <a data-toggle="tab" href="#artifact-details-cudf">${$.i18n.prop('cudf.title')}</a>
+      </li>
     </ul>
     <div class="tab-content">
   	  <div id="artifact-details-info-content" class="tab-pane active">
@@ -696,6 +699,14 @@
         {{if hasSavePropertyKarma()}}
           <a href="#" class="btn btn-primary" data-bind="click: addProperty">${$.i18n.prop('browse.artifact.metadatas.add')}</a>
         {{/if}}
+      </div>
+
+
+      <div class="tab-pane" id="artifact-details-cudf">
+        ${$.i18n.prop('cudf.message.artifact.extract-cudf')}<br/>
+        <button data-bind="click: function(){getCUDFExtract(groupId, artifactId, version)}" class="btn" id="extract-cudf">
+          ${$.i18n.prop('cudf.link-text')}
+        </button>
       </div>
 
     </div>

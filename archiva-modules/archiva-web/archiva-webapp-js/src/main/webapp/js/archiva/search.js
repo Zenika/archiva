@@ -1304,6 +1304,18 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
 
   }
 
-
+  getCUDFExtract=function(groupId,artifactId,version){
+    $.ajax({
+      url: "restServices/archivaServices/cudfService/coneRequest/"+groupId+"/"+artifactId+"/"+version,
+      type: "GET",
+      dataType: "text",
+      success: function(data) {
+          console.log(data);
+      },
+      error: function(data) {
+          console.log(data);
+      }
+    });
+  }
 
 });
