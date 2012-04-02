@@ -1305,17 +1305,9 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
   }
 
   getCUDFExtract=function(groupId,artifactId,version){
-    $.ajax({
-      url: "restServices/archivaServices/cudfService/coneRequest/"+groupId+"/"+artifactId+"/"+version,
-      type: "GET",
-      dataType: "text",
-      success: function(data) {
-          console.log(data);
-      },
-      error: function(data) {
-          console.log(data);
-      }
-    });
+    $("#artifact-details-cudf #get-cudf-spinner-div").html(smallSpinnerImg());
+    $("<form action='restServices/archivaServices/cudfService/coneRequest/"+groupId+"/"+artifactId+"/"+version+"' method='POST'></form>" ).submit();
+    removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
   }
 
 });

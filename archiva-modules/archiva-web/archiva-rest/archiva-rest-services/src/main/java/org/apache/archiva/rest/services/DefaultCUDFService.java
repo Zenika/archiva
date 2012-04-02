@@ -29,7 +29,12 @@ import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -49,7 +54,7 @@ public class DefaultCUDFService
     @Inject
     private DependencyTreeBuilder dependencyTreeBuilder;
 
-    public CharSequence getConeCUDF( String groupId, String artifactId, String version )
+    public String getConeCUDF( String groupId, String artifactId, String version )
         throws ArchivaRestServiceException
     {
         StringBuilder response = new StringBuilder();
@@ -120,35 +125,58 @@ public class DefaultCUDFService
         return response.toString();
     }
 
+    public Response getConeCUDFFile( String groupId, String artifactId, String version )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            String fileName = "extractCUDF_" + groupId + "-" + artifactId + "-" + version;
+            File output = File.createTempFile( fileName, ".txt" );
+            output.deleteOnExit();
+            BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
+            bw.write( getConeCUDF( groupId, artifactId, version ) );
+            bw.close();
+            return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM )
+                .header( "Content-Disposition","attachment; filename="+ fileName + ".txt" )
+                .build();
+        }
+        catch ( IOException e )
+        {
+            return null;
+        }
+    }
+
     public CharSequence getUniverseCUDF()
         throws ArchivaRestServiceException
     {
-        StringBuilder sb = new StringBuilder();
-
-        return sb.toString();
+        // todo
+        return null;
     }
 
     private String convertMavenArtifactToCUDF( Artifact artifact )
     {
         StringBuilder sb = new StringBuilder();
-        sb.append( "Package: " ).append( convertMavenArtifactInline( artifact ) ).append( "\n" );
-        sb.append( "Version: " ).append( artifact.getVersion() ).append( "\n" );
+        sb.append( "package: " ).append( convertMavenArtifactInline( artifact ) ).append( "\n" );
+        sb.append( "source: " ).append( artifact.getVersion() ).append( "\n" );
+        // todo change to match "list version"
+        sb.append( "version: " ).append( artifact.getVersion() ).append( "\n" );
         return sb.toString();
     }
 
     private String convertMavenArtifactInline( Artifact artifact )
     {
-        return artifact.getGroupId() + ":" + artifact.getArtifactId();
+        return artifact.getGroupId() + "\\:" + artifact.getArtifactId();
     }
 
     private String convertTreeEntryChildToCUDF( TreeEntry treeEntry )
     {
         StringBuilder response = new StringBuilder();
-        response.append( "Depends: " );
+        response.append( "depends: " );
         Iterator<TreeEntry> it = treeEntry.getChilds().iterator();
         while ( it.hasNext() )
         {
             Artifact artifact = it.next().getArtifact();
+            // todo change to match "list version"
             response.append( convertMavenArtifactInline( artifact ) ).append( " = " ).append( artifact.getVersion() );
             if ( it.hasNext() )
             {

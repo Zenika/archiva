@@ -22,10 +22,12 @@ package org.apache.archiva.rest.api.services;
 import org.codehaus.plexus.redback.authorization.RedbackAuthorization;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * @author Adrien Lecharpentier
@@ -33,18 +35,44 @@ import javax.ws.rs.core.MediaType;
 @Path( "/cudfService/" )
 public interface CUDFService
 {
+    /**
+     * Gets the cone extract for the artifact as text response.
+     *
+     * @param groupId    the groupId of the desired artifact
+     * @param artifactId the artifactId of the desired artifact
+     * @param version    the version of the desired artifact
+     * @return The CUDF extract for the artifact in CharSequence
+     * @throws ArchivaRestServiceException
+     */
     @Path( "coneRequest/{groupId}/{artifactId}/{version}" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
-    @Produces( { MediaType.TEXT_PLAIN } )
-    CharSequence getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
+    @Produces( MediaType.TEXT_PLAIN )
+    String getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
+                        @PathParam( "version" ) String version )
+        throws ArchivaRestServiceException;
+
+    /**
+     * Gets the cone extract for the artifact in file.
+     *
+     * @param groupId    the groupId of the desired artifact
+     * @param artifactId the artifactId of the desired artifact
+     * @param version    the version of the desired artifact
+     * @return The CUDF extract for the artifact in CharSequence
+     * @throws ArchivaRestServiceException
+     */
+    @Path( "coneRequest/{groupId}/{artifactId}/{version}" )
+    @POST
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Produces( MediaType.APPLICATION_OCTET_STREAM )
+    Response getConeCUDFFile( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
                               @PathParam( "version" ) String version )
         throws ArchivaRestServiceException;
 
     @Path( "universeRequest" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
-    @Produces( { MediaType.TEXT_PLAIN } )
+    @Produces( MediaType.TEXT_PLAIN )
     CharSequence getUniverseCUDF()
         throws ArchivaRestServiceException;
 }
