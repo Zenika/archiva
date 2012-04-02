@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("main",["order!jquery","jquery_ui","jquery_cookie","bootstrap","order!archiva/search",
-         "jquery_validate","jquery_json","order!knockout","order!redback-templates","order!main-templates","order!roles",
-          "order!redback","general-admin","repositories","network-proxies","proxy-connectors","repository-groups",
-          "order!knockout.simpleGrid"],
+define("archiva.main",["order!jquery","jquery.ui","jquery.cookie","bootstrap","order!archiva/search",
+         "jquery.validate","jquery.json","order!knockout","order!redback.templates","order!archiva.templates",
+          "order!redback.roles","order!redback","archiva.general-admin","archiva.repositories",
+          "archiva.network-proxies","archiva.proxy-connectors","archiva.repository-groups","archiva.artifacts-management"],
 function() {
 
   /**
@@ -84,7 +84,7 @@ function() {
           displayBrowseArtifactDetail(splitted[0],splitted[1],null,null);
           return;
         } else if (splitted.length==3) {
-          generaldisplayArtifactDetailsVersionView(splitted[0],splitted[1],splitted[2],repositoryId);
+          generalDisplayArtifactDetailsVersionView(splitted[0],splitted[1],splitted[2],repositoryId);
           return;
         } else {
           displayWarningMessage( $.i18n.prop("shortcut.artifact.illegal"));
@@ -131,7 +131,17 @@ function() {
       }
       if (screen=='appearance-configuration'&& hasKarma('archiva-manage-configuration')){
         displayAppearanceConfiguration();
-        return
+        return;
+      }
+
+      if (screen=='artifact-upload' && hasKarma('archiva-upload-repository')){
+        displayUploadArtifact();
+        return;
+      }
+
+      if (screen=='manage-users' && hasKarma('archiva-manage-users')){
+        displayUsersGrid();
+        return;
       }
     }
     // by default display search screen

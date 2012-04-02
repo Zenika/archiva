@@ -16,8 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("proxy-connectors",["jquery","i18n","jquery_tmpl","bootstrap","jquery_validate","order!knockout"
-  ,"order!knockout.simpleGrid"], function() {
+define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jquery.validate","order!knockout"
+  ,"order!knockout.simpleGrid","knockout.sortable"], function() {
 
   ProxyConnector=function(sourceRepoId,targetRepoId,proxyId,blackListPatterns,whiteListPatterns,policiesEntries,propertiesEntries,
                           disabled,order){
@@ -35,10 +35,16 @@ define("proxy-connectors",["jquery","i18n","jquery_tmpl","bootstrap","jquery_val
       self.modified(true);
     });
 
+    this.previousProxyId=proxyId;
+
     //private String proxyId;
     this.proxyId=ko.observable(proxyId);
     this.proxyId.subscribe(function(newValue){
-      self.modified(true);
+      if(newValue!=self.previousProxyId){
+        $.log("proxyId modified:"+newValue+",previous:"+self.previousProxyId);
+        self.previousProxyId=newValue;
+        self.modified(true);
+      }
     });
 
     //private List<String> blackListPatterns;
@@ -78,23 +84,19 @@ define("proxy-connectors",["jquery","i18n","jquery_tmpl","bootstrap","jquery_val
     });
 
     this.modified=ko.observable(false);
-    //this.modified.subscribe(function(newValue){$.log("ProxyConnector modified:"+newValue)});
 
     this.updatePolicyEntry=function(key,value){
       $.log("updatePolicyEntry:"+key+":"+value);
       var found=false;
       for(var i=0;i<self.policiesEntries().length;i++){
-        $.log('loop policiesEntries:'+self.policiesEntries()[i].key);
         if (self.policiesEntries()[i].key==key){
           self.policiesEntries()[i].value=value;
-          $.log("really updatedPolicyEntry:"+key+":"+self.policiesEntries()[i].value)
           found=true;
           self.modified(true);
         }
       }
       if(!found){
         self.policiesEntries().push(new Entry(key,value));
-        $.log("added updatedPolicyEntry:"+key+":"+self.policiesEntries()[i].value());
       }
     }
 
@@ -284,7 +286,6 @@ define("proxy-connectors",["jquery","i18n","jquery_tmpl","bootstrap","jquery_val
     this.remoteRepositories=ko.observableArray([]);
     this.networkProxies=ko.observableArray([]);
 
-
     this.bulkSave=function(){
       return getModifiedProxyConnectors().length>0;
     }
@@ -368,9 +369,10 @@ define("proxy-connectors",["jquery","i18n","jquery_tmpl","bootstrap","jquery_val
     }
 
     showSettings=function(proxyConnector,targetContentStartId, targetImgStartId,theProxyConnectorsViewModel){
-      $.log("proxyConnector:"+proxyConnector.sourceRepoId()+":"+proxyConnector.targetRepoId());
       var id = (targetContentStartId?targetContentStartId:"#proxy-connectors-grid-remoterepo-settings-content-")
-                                      +proxyConnector.sourceRepoId()+"-"+proxyConnector.targetRepoId();
+                                      +proxyConnector.sourceRepoId()+"-"+proxyConnector.targetRepoId()
+          .replace(/\./g,"\\\.");
+
 
       var targetContent = $(id);
       targetContent.html("");
@@ -384,7 +386,7 @@ define("proxy-connectors",["jquery","i18n","jquery_tmpl","bootstrap","jquery_val
       targetContent.append(tmplHtml);
 
       var targetImg = $((targetImgStartId?targetImgStartId:"#proxy-connectors-grid-remoterepo-settings-edit-")
-                            +proxyConnector.sourceRepoId()+"-"+proxyConnector.targetRepoId());
+                            +proxyConnector.sourceRepoId()+"-"+proxyConnector.targetRepoId().replace(/\./g,"\\\."));
       targetImg.attr("data-content",targetContent.html());
       targetImg.popover(
           {
