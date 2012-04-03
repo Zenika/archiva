@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="css/jquery-ui-1.8.16.custom.css"/>
   <link rel="stylesheet" href="css/bootstrap.2.0.2.css">
   <link rel="stylesheet" href="css/archiva.css">
+  <link rel="shortcut icon" href="favicon.ico"/>
 
 
   <script type="text/javascript" src="js/jquery-1.7.2.js"></script>
@@ -28,7 +29,7 @@
     <div class="span10 columns">
       <div class="content">
         <div id="user-messages"></div>
-        <div id="main-content"></div>
+        <div id="main-content"><img src="images/medium-spinner.gif"/></div>
     </div>
   </div>
   </div>
@@ -53,19 +54,24 @@
     }
 
     timestampNoCache=function(){
-      if (!window.archivaDevMode){
-        return "";
+      if (window.archivaRuntimeInfo.version.match("SNAPSHOT$")=="SNAPSHOT"){
+        return "&archivaTimestamp="+window.archivaRuntimeInfo.timestamp+(window.archivaRuntimeInfo.devMode?"&_="+jQuery.now():"");
       }
-      return "&_="+jQuery.now();
+      return "";
     }
 
     appendTemplateUrl=function(){
       return appendArchivaVersion()+timestampNoCache();
     }
 
+    appendJsNoCacheUrl=function(){
+      return appendArchivaVersion()+timestampNoCache();
+    }
+
     $.ajax({
         url: "restServices/archivaUiServices/runtimeInfoService/archivaRuntimeInfo/en",
         dataType: 'json',
+        cache: false,
         success:function(data){
 
             window.archivaDevMode=data.devMode;
@@ -74,12 +80,13 @@
 
                 require.config({
                     baseUrl: "js/",
-                    urlArgs: ""+appendTemplateUrl(),
+                    urlArgs: ""+appendJsNoCacheUrl(),
                     paths: {
                         "i18n":"jquery.i18n.properties-1.0.9",
                         "jquery": "jquery-1.7.2",
                         "jquery.tmpl": "jquery.tmpl",
                         "utils": "archiva/utils",
+                        "startup": "archiva/startup",
                         "jquery.ui": "jquery-ui-1.8.16.custom.min",
                         "jquery.ui.widget": "jquery.ui.widget-1.8.18",
                         "jquery.cookie": "jquery.cookie.1.0.0",
@@ -109,18 +116,14 @@
                         "archiva.artifacts-management": "archiva/artifacts-management",
                         "archiva.main": "archiva/main"
                     }
-                    // file upload dependencies
-                    //.script("jquery.iframe-transport-1.4.js").wait()
-                    //.script("jquery.fileupload-5.10.0.js").wait()
-                    //.script("jquery.fileupload-ip-1.0.6.js").wait()
-                    //.script("jquery.fileupload-ui-6.6.3.js" ).wait()
                 });
 
 
 
 
                 require(['order!domReady','order!jquery','order!i18n','order!startup'], function (domReady) {
-                  domReady.withResources(function () {
+                  domReady.withResources(
+                    loadi18n(function () {
                       $.ajax({
                           url: "restServices/archivaUiServices/runtimeInfoService/archivaRuntimeInfo/"+usedLang(),
                           dataType: 'json',
@@ -139,8 +142,9 @@
 
 
                           }
-                      })
-                  })
+                        })
+                    })
+                  );
                 });
         }
     })

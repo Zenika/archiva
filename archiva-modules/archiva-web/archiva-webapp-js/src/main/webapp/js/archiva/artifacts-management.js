@@ -47,6 +47,7 @@ define("archiva.artifacts-management",["jquery","i18n","order!utils","order!jque
         return;
       }
       var url="restServices/archivaUiServices/fileUploadService/save/"+this.repositoryId()+"/"+this.groupId()+"/"+this.artifactId();
+      url+="/"+this.version()+"/"+this.packaging();
       if (this.generatePom()){
         url+="?generatePom=true";
       }
@@ -54,7 +55,7 @@ define("archiva.artifacts-management",["jquery","i18n","order!utils","order!jque
           type: "GET",
           dataType: 'json',
           success: function(data) {
-
+            displaySuccessMessage($.i18n.prop("fileupload.artifacts.saved"));
           },
           error: function(data) {
             var res = $.parseJSON(data.responseText);
@@ -89,21 +90,8 @@ define("archiva.artifacts-management",["jquery","i18n","order!utils","order!jque
                   }
                 });
                 $('#fileupload').fileupload({
-                    add: function (e, data) {
-                      if(!mainContent.find("#fileupload" ).valid()){
-                        return;
-                      }
-                      data.formData = {
-                        groupId: artifactUploadViewModel.groupId(),
-                        artifactId: artifactUploadViewModel.artifactId(),
-                        version: artifactUploadViewModel.version(),
-                        packaging: artifactUploadViewModel.packaging()
-                      };
-                      $.blueimpUI.fileupload.prototype.options.add.call(this, e, data);
-                    },
                     submit: function (e, data) {
                       var $this = $(this);
-
                       $this.fileupload('send', data);
                       artifactUploadViewModel.artifactUploads.push(new ArtifactUpload(data.formData.classifier,data.formData.pomFile));
                       return false;
@@ -113,6 +101,9 @@ define("archiva.artifacts-management",["jquery","i18n","order!utils","order!jque
                 $('#fileupload').bind('fileuploadsubmit', function (e, data) {
                   var pomFile = data.context.find('#pomFile' ).attr("checked");
                   var classifier = data.context.find('#classifier' ).val();
+                  if (!data.formData){
+                    data.formData={};
+                  }
                   data.formData.pomFile = pomFile;
                   data.formData.classifier = classifier;
                 });

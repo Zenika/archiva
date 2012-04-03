@@ -523,6 +523,12 @@ public class DefaultManagedRepositoryAdmin
     {
         // Normalize the path
         File file = new File( repository.getLocation() );
+        if ( !file.isAbsolute() )
+        {
+            // add appserver.base/repositories
+            file = new File( getRegistry().getString( "appserver.base" ) + File.separatorChar + "repositories",
+                             repository.getLocation() );
+        }
         repository.setLocation( file.getCanonicalPath() );
         if ( !file.exists() )
         {
@@ -562,11 +568,20 @@ public class DefaultManagedRepositoryAdmin
                 if ( !indexDirectory.isAbsolute() )
                 {
                     indexDirectory = new File( managedRepository, repository.getIndexDirectory() );
+                    repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
                 }
             }
             else
             {
                 indexDirectory = new File( managedRepository, ".indexer" );
+                if ( !managedRepository.isAbsolute() )
+                {
+                    indexDirectory = new File(
+                        getRegistry().getString( "appserver.base" ) + File.separatorChar + "repositories"
+                            + File.separatorChar +
+                            repository.getLocation(), ".indexer" );
+                    repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
+                }
             }
 
             if ( !indexDirectory.exists() )

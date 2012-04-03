@@ -241,13 +241,13 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   displayLegacyArtifactPathSupport=function(){
     clearUserMessages();
     var mainContent=$("#main-content");
-
-    mainContent.html($("#legacy-artifact-path-main").tmpl());
+    mainContent.html(mediumSpinnerImg());
 
     $.ajax("restServices/archivaServices/archivaAdministrationService/getLegacyArtifactPaths", {
         type: "GET",
         dataType: 'json',
         success: function(data){
+          mainContent.html($("#legacy-artifact-path-main").tmpl());
           var legacyArtifactPathsViewModel=new LegacyArtifactPathsViewModel();
           var legacyPaths=mapLegacyArtifactPaths(data);
           $.log("legacyPaths:"+legacyPaths.length);
@@ -540,12 +540,13 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   displayNetworkConfiguration=function(){
     screenChange();
     var mainContent=$("#main-content");
-    mainContent.html($("#network-configuration-screen").tmpl());
+    mainContent.html(mediumSpinnerImg());
 
     $.ajax("restServices/archivaServices/archivaAdministrationService/getNetworkConfiguration", {
         type: "GET",
         dataType: 'json',
         success: function(data){
+          mainContent.html($("#network-configuration-screen").tmpl());
           var networkConfiguration=new NetworkConfiguration(data.maxTotal,data.maxTotalPerHost,data.usePooling);
           var networkConfigurationViewModel=new NetworkConfigurationViewModel(networkConfiguration);
           ko.applyBindings(networkConfigurationViewModel,mainContent.get(0));
@@ -807,12 +808,13 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   displayAppearanceConfiguration=function(){
     screenChange();
     var mainContent=$("#main-content");
-    mainContent.html($("#changeAppearance").tmpl());
+    mainContent.html(mediumSpinnerImg());
 
     $.ajax("restServices/archivaServices/archivaAdministrationService/getOrganisationInformation", {
       type: "GET",
       dataType: 'json',
       success: function(data) {
+        mainContent.html($("#changeAppearance").tmpl());
         var organisationInformation=new OrganisationInformation(data.name,data.url,data.logoLocation);
         var organisationInformationViewModel=new OrganisationInformationViewModel(organisationInformation);
         ko.applyBindings(organisationInformationViewModel, mainContent.get(0));

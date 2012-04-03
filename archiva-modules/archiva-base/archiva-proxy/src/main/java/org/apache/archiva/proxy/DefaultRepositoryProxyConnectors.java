@@ -20,6 +20,7 @@ package org.apache.archiva.proxy;
  */
 
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.admin.model.beans.NetworkProxy;
 import org.apache.archiva.admin.model.networkproxy.NetworkProxyAdmin;
@@ -1000,7 +1001,7 @@ public class DefaultRepositoryProxyConnectors
     }
 
     /**
-     * Creates a working directory in the repository root for this request
+     * Creates a working directory
      *
      * @param repository
      * @return file location of working directory
@@ -1008,18 +1009,7 @@ public class DefaultRepositoryProxyConnectors
      */
     private File createWorkingDirectory( ManagedRepositoryContent repository )
     {
-        // TODO: This is ugly - lets actually clean this up when we get the new repository api
-        try
-        {
-            File tmpDir = File.createTempFile( ".workingdirectory", null, new File( repository.getRepoRoot() ) );
-            tmpDir.delete();
-            tmpDir.mkdirs();
-            return tmpDir;
-        }
-        catch ( IOException e )
-        {
-            throw new RuntimeException( "Could not create working directory for this request", e );
-        }
+        return Files.createTempDir();
     }
 
     /**
