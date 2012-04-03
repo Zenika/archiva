@@ -19,10 +19,16 @@ package org.apache.archiva.rest.services;
  * under the License.
  */
 
+import org.apache.archiva.common.utils.VersionComparator;
 import org.apache.archiva.dependency.tree.maven2.DependencyTreeBuilder;
+import org.apache.archiva.metadata.repository.MetadataResolutionException;
+import org.apache.archiva.metadata.repository.MetadataResolver;
+import org.apache.archiva.metadata.repository.RepositorySession;
 import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.model.TreeEntry;
+import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
+import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.rest.services.utils.TreeDependencyNodeVisitor;
 import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
@@ -36,10 +42,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -53,6 +63,8 @@ public class DefaultCUDFService
 {
     @Inject
     private DependencyTreeBuilder dependencyTreeBuilder;
+
+    private Map<Artifact, Integer> cudfVersionMapper = new HashMap<Artifact, Integer>();
 
     public String getConeCUDF( String groupId, String artifactId, String version )
         throws ArchivaRestServiceException
@@ -88,7 +100,6 @@ public class DefaultCUDFService
                     return o1.getVersion().compareTo( o2.getVersion() );
                 }
             } );
-            TreeEntry item;
 
             for ( TreeEntry treeEntry : treeEntries )
             {
@@ -98,6 +109,7 @@ public class DefaultCUDFService
                     knownArtifacts.add( treeEntry.getArtifact() );
                 }
             }
+            TreeEntry item;
             while ( ( item = entries.poll() ) != null )
             {
                 knownArtifacts.add( item.getArtifact() );
@@ -137,7 +149,7 @@ public class DefaultCUDFService
             bw.write( getConeCUDF( groupId, artifactId, version ) );
             bw.close();
             return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM )
-                .header( "Content-Disposition","attachment; filename="+ fileName + ".txt" )
+                .header( "Content-Disposition", "attachment; filename=" + fileName + ".txt" )
                 .build();
         }
         catch ( IOException e )
@@ -155,12 +167,18 @@ public class DefaultCUDFService
 
     private String convertMavenArtifactToCUDF( Artifact artifact )
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append( "package: " ).append( convertMavenArtifactInline( artifact ) ).append( "\n" );
-        sb.append( "source: " ).append( artifact.getVersion() ).append( "\n" );
-        // todo change to match "list version"
-        sb.append( "version: " ).append( artifact.getVersion() ).append( "\n" );
-        return sb.toString();
+        try
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append( "package: " ).append( convertMavenArtifactInline( artifact ) ).append( "\n" );
+            sb.append( "source: " ).append( artifact.getVersion() ).append( "\n" );
+            sb.append( "version: " ).append( convertArtifactVersionToCUDFVersion( artifact ) ).append( "\n" );
+            return sb.toString();
+        }
+        catch ( IllegalStateException e )
+        {
+            return "";
+        }
     }
 
     private String convertMavenArtifactInline( Artifact artifact )
@@ -176,8 +194,8 @@ public class DefaultCUDFService
         while ( it.hasNext() )
         {
             Artifact artifact = it.next().getArtifact();
-            // todo change to match "list version"
-            response.append( convertMavenArtifactInline( artifact ) ).append( " = " ).append( artifact.getVersion() );
+            int cudfVersion = convertArtifactVersionToCUDFVersion( artifact );
+            response.append( convertMavenArtifactInline( artifact ) ).append( " = " ).append( cudfVersion );
             if ( it.hasNext() )
             {
                 response.append( ", " );
@@ -186,5 +204,42 @@ public class DefaultCUDFService
         response.append( "\n" );
 
         return response.toString();
+    }
+
+    private int convertArtifactVersionToCUDFVersion( Artifact artifact )
+        throws IllegalStateException
+    {
+        if ( cudfVersionMapper.containsKey( artifact ) )
+        {
+            return cudfVersionMapper.get( artifact );
+        }
+        List<String> versionList;
+        RepositorySession repositorySession = repositorySessionFactory.createSession();
+        try
+        {
+            MetadataResolver metadataResolver = repositorySession.getResolver();
+
+            Set<String> versions = new LinkedHashSet<String>();
+
+            for ( String repoId : getObservableRepos() )
+            {
+                versions.addAll(
+                    metadataResolver.resolveProjectVersions( repositorySession, repoId, artifact.getGroupId(),
+                                                             artifact.getArtifactId() ) );
+            }
+            versionList = new ArrayList<String>( versions );
+            Collections.sort( versionList, VersionComparator.getInstance() );
+        }
+        catch ( MetadataResolutionException e )
+        {
+            return 0;
+        }
+        finally
+        {
+            repositorySession.close();
+        }
+        int cudfVersion = versionList.indexOf( artifact.getVersion() ) + 1;
+        cudfVersionMapper.put( artifact, cudfVersion );
+        return cudfVersion;
     }
 }
