@@ -20,7 +20,6 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.common.utils.VersionComparator;
-import org.apache.archiva.dependency.tree.maven2.DependencyTreeBuilder;
 import org.apache.archiva.metadata.model.Dependency;
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
@@ -30,7 +29,6 @@ import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.CUDFService;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.BufferedWriter;
@@ -39,12 +37,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author Adrien Lecharpentier
@@ -68,18 +70,41 @@ public class DefaultCUDFService
             return "Error";
         }
 
-        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version ) );
-        response.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories ) ).append( "\n" );
+        TreeSet<Dependency> knownDependencies = new TreeSet<Dependency>( new Comparator<Dependency>()
+        {
+            public int compare( Dependency o1, Dependency o2 )
+            {
+                int c = o1.getGroupId().compareTo( o2.getGroupId() );
+                if ( c != 0 )
+                {
+                    return c;
+                }
+                c = o1.getArtifactId().compareTo( o2.getArtifactId() );
+                if ( c != 0 )
+                {
+                    return c;
+                }
+                return o1.getVersion().compareTo( o2.getVersion() );
+            }
+        } );
+        LinkedList<Dependency> dependenciesQueue = new LinkedList<Dependency>();
 
-        for ( Dependency dependency : getDependencies( groupId, artifactId, version, repositories ) )
+        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version ) );
+        response.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue,
+                                                    knownDependencies ) ).append( "\n" );
+
+        Dependency dependency = null;
+        while ( ( dependency = dependenciesQueue.poll() ) != null )
         {
             if ( !dependency.isOptional() && ( dependency.getScope() == null || "compile".equals(
-                dependency.getScope() ) ) )
+                dependency.getScope() ) ) && !knownDependencies.contains( dependency ) )
             {
+                knownDependencies.add( dependency );
                 response.append( convertMavenArtifactToCUDF( dependency.getGroupId(), dependency.getArtifactId(),
                                                              dependency.getVersion() ) );
                 response.append( convertDependenciesToCUDF( dependency.getGroupId(), dependency.getArtifactId(),
-                                                            dependency.getVersion(), repositories ) ).append( "\n" );
+                                                            dependency.getVersion(), repositories, dependenciesQueue,
+                                                            knownDependencies ) ).append( "\n" );
             }
         }
 
@@ -137,7 +162,8 @@ public class DefaultCUDFService
     }
 
     private String convertDependenciesToCUDF( String groupId, String artifactId, String version,
-                                              List<String> repositories )
+                                              List<String> repositories, Queue<Dependency> dependencyQueue,
+                                              Set<Dependency> knownDependencies )
     {
         StringBuilder sb = new StringBuilder();
 
@@ -147,13 +173,25 @@ public class DefaultCUDFService
             return "";
         }
 
-        sb.append( "depends: " );
         Iterator<Dependency> it = dependencies.iterator();
+        List<Dependency> deps = new ArrayList<Dependency>();
         while ( it.hasNext() )
         {
             Dependency item = it.next();
-            if ( !item.isOptional() && ( item.getScope() == null || "compile".equals( item.getScope() ) ) )
+            if ( !item.isOptional() && ( item.getScope() == null || "compile".equals( item.getScope() ) )
+                && !knownDependencies.contains( item ) )
             {
+                deps.add( item );
+            }
+        }
+        if ( !deps.isEmpty() )
+        {
+            sb.append( "depends: " );
+            it = deps.iterator();
+            while ( it.hasNext() )
+            {
+                Dependency item = it.next();
+                dependencyQueue.add( item );
                 sb.append( convertMavenArtifactInline( item.getGroupId(), item.getArtifactId() ) ).append(
                     " = " ).append(
                     convertArtifactVersionToCUDFVersion( item.getGroupId(), item.getArtifactId(), item.getVersion() ) );
@@ -161,21 +199,10 @@ public class DefaultCUDFService
                 {
                     sb.append( ", " );
                 }
-                else
-                {
-                    sb.delete( sb.lastIndexOf( "," ), sb.lastIndexOf( "," ) + 1 );
-                }
             }
-            else
-            {
-                if ( !it.hasNext() )
-                {
-                    sb.delete( sb.lastIndexOf( "," ), sb.lastIndexOf( "," ) + 2 );
-                }
-            }
-        }
 
-        sb.append( "\n" );
+            sb.append( "\n" );
+        }
         return sb.toString();
     }
 
