@@ -35,6 +35,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -63,6 +65,7 @@ public class DefaultCUDFService
         throws ArchivaRestServiceException
     {
         StringBuilder response = new StringBuilder();
+        response.append( getCUDFPreambule() );
 
         List<String> repositories = getObservableRepos();
         if ( repositories.isEmpty() )
@@ -145,7 +148,7 @@ public class DefaultCUDFService
         {
             StringBuilder sb = new StringBuilder();
             sb.append( "package: " ).append( convertMavenArtifactInline( groupId, artifactId ) ).append( "\n" );
-            sb.append( "source: " ).append( version ).append( "\n" );
+            sb.append( "number: " ).append( version ).append( "\n" );
             sb.append( "version: " ).append(
                 convertArtifactVersionToCUDFVersion( groupId, artifactId, version ) ).append( "\n" );
             return sb.toString();
@@ -158,7 +161,13 @@ public class DefaultCUDFService
 
     private String convertMavenArtifactInline( String groupId, String artifactId )
     {
-        return groupId + "\\:" + artifactId;
+        try
+        {
+            return groupId + URLEncoder.encode( ":", "utf-8" ) + artifactId;
+        } catch (UnsupportedEncodingException e)
+        {
+            return groupId + "%3" + artifactId;
+        }
     }
 
     private String convertDependenciesToCUDF( String groupId, String artifactId, String version,
@@ -281,5 +290,9 @@ public class DefaultCUDFService
                 repositorySession.close();
             }
         }
+    }
+
+    private String getCUDFPreambule() {
+        return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [] \n\n";
     }
 }
