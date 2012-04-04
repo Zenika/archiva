@@ -25,10 +25,15 @@ import org.apache.archiva.metadata.model.ProjectVersionMetadata;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.metadata.repository.MetadataResolver;
 import org.apache.archiva.metadata.repository.RepositorySession;
+import org.apache.archiva.rest.api.model.BrowseResult;
+import org.apache.archiva.rest.api.model.BrowseResultEntry;
+import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
+import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
 import org.springframework.stereotype.Service;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.BufferedWriter;
@@ -58,6 +63,9 @@ public class DefaultCUDFService
     extends AbstractRestService
     implements CUDFService
 {
+
+    @Inject
+    private BrowseService browseService;
 
     private Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
 
@@ -135,11 +143,104 @@ public class DefaultCUDFService
         }
     }
 
-    public CharSequence getUniverseCUDF()
+    public String getUniverseCUDF()
         throws ArchivaRestServiceException
     {
-        // todo
-        return null;
+        StringBuilder sb = new StringBuilder();
+        sb.append( getCUDFPreambule() );
+
+        List<String> repositories = getObservableRepos();
+        if ( repositories.isEmpty() )
+        {
+            return "Error";
+        }
+
+        List<String> projects = new ArrayList<String>();
+
+        TreeSet<Dependency> knownDependencies = new TreeSet<Dependency>( new Comparator<Dependency>()
+        {
+            public int compare( Dependency o1, Dependency o2 )
+            {
+                int c = o1.getGroupId().compareTo( o2.getGroupId() );
+                if ( c != 0 )
+                {
+                    return c;
+                }
+                c = o1.getArtifactId().compareTo( o2.getArtifactId() );
+                if ( c != 0 )
+                {
+                    return c;
+                }
+                return o1.getVersion().compareTo( o2.getVersion() );
+            }
+        } );
+        LinkedList<Dependency> dependenciesQueue = new LinkedList<Dependency>();
+
+        for ( String repository : repositories )
+        {
+            BrowseResult rootGroupsResult = browseService.getRootGroups( repository );
+            for ( BrowseResultEntry rootGroupsResultEntry : rootGroupsResult.getBrowseResultEntries() )
+            {
+                getRepositoryContent( browseService.browseGroupId( rootGroupsResultEntry.getName(), repository ),
+                                      repository, projects );
+            }
+        }
+
+        for ( String s : projects )
+        {
+            String groupId = s.substring( 0, s.lastIndexOf( "." ) );
+            String artifactId = s.substring( s.lastIndexOf( "." ) + 1 );
+            for ( String repository : repositories )
+            {
+                VersionsList versionsList = browseService.getVersionsList( groupId, artifactId, repository );
+                for ( String version : versionsList.getVersions() )
+                {
+                    sb.append( convertMavenArtifactToCUDF( groupId, artifactId, version ) );
+                    sb.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue, knownDependencies ) );
+                    sb.append( "\n" );
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private void getRepositoryContent( BrowseResult browseResult, String repository, List<String> projects )
+        throws ArchivaRestServiceException
+    {
+        for ( BrowseResultEntry rootGroupsResultEntry : browseResult.getBrowseResultEntries() )
+        {
+            if ( rootGroupsResultEntry.isProject() )
+            {
+                projects.add( rootGroupsResultEntry.getName() );
+            }
+            else
+            {
+                getRepositoryContent( browseService.browseGroupId( rootGroupsResultEntry.getName(), repository ),
+                                      repository, projects );
+            }
+        }
+    }
+
+    public Response getUniverseCUDFFile()
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            String fileName = "extractCUDF_universe";
+            File output = File.createTempFile( fileName, ".txt" );
+            output.deleteOnExit();
+            BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
+            bw.write( getUniverseCUDF() );
+            bw.close();
+            return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
+                                                                                     "attachment; filename=" + fileName
+                                                                                         + ".txt" ).build();
+        }
+        catch ( IOException e )
+        {
+            return null;
+        }
     }
 
     private String convertMavenArtifactToCUDF( String groupId, String artifactId, String version )
@@ -161,13 +262,7 @@ public class DefaultCUDFService
 
     private String convertMavenArtifactInline( String groupId, String artifactId )
     {
-        try
-        {
-            return groupId + URLEncoder.encode( ":", "utf-8" ) + artifactId;
-        } catch (UnsupportedEncodingException e)
-        {
-            return groupId + "%3" + artifactId;
-        }
+        return groupId + "%3" + artifactId.replaceAll( "_", "-" );
     }
 
     private String convertDependenciesToCUDF( String groupId, String artifactId, String version,
@@ -292,7 +387,8 @@ public class DefaultCUDFService
         }
     }
 
-    private String getCUDFPreambule() {
+    private String getCUDFPreambule()
+    {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [] \n\n";
     }
 }
