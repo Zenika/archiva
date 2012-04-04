@@ -34,6 +34,13 @@
       </li>
     </ul>
 
+    <ul class="nav nav-list">
+      <li class="nav-header archiva-nav-header">${$.i18n.prop('cudf.title')}</li>
+      <li>
+        <a href="#" id="menu-cudf-extract-universe" onclick="getCUDFUniverseExtract()">${$.i18n.prop('menu.cudf.text')}</a>
+      </li>
+    </ul>
+
     <ul class="nav nav-list" redback-permissions="{permissions: ['archiva-manage-configuration']}">
       <li class="nav-header archiva-nav-header">${$.i18n.prop('menu.administration')}</li>
       <li style="display: none" redback-permissions="{permissions: ['archiva-manage-configuration']}">

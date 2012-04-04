@@ -1307,4 +1307,8 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
   }
 
+  getCUDFUniverseExtract=function(){
+    $("<form action='restServices/archivaServices/cudfService/universeRequest' method='POST'></form>").submit();
+  }
+
 });
