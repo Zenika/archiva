@@ -67,11 +67,10 @@ public class DefaultCUDFService
     @Inject
     private BrowseService browseService;
 
-    private Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
-
     public String getConeCUDF( String groupId, String artifactId, String version )
         throws ArchivaRestServiceException
     {
+        Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
         StringBuilder response = new StringBuilder();
         response.append( getCUDFPreambule() );
 
@@ -100,9 +99,9 @@ public class DefaultCUDFService
         } );
         LinkedList<Dependency> dependenciesQueue = new LinkedList<Dependency>();
 
-        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version ) );
+        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version, cudfVersionMapper ) );
         response.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue,
-                                                    knownDependencies ) ).append( "\n" );
+                                                    knownDependencies, cudfVersionMapper ) ).append( "\n" );
 
         Dependency dependency = null;
         while ( ( dependency = dependenciesQueue.poll() ) != null )
@@ -112,10 +111,10 @@ public class DefaultCUDFService
             {
                 knownDependencies.add( dependency );
                 response.append( convertMavenArtifactToCUDF( dependency.getGroupId(), dependency.getArtifactId(),
-                                                             dependency.getVersion() ) );
+                                                             dependency.getVersion(), cudfVersionMapper ) );
                 response.append( convertDependenciesToCUDF( dependency.getGroupId(), dependency.getArtifactId(),
                                                             dependency.getVersion(), repositories, dependenciesQueue,
-                                                            knownDependencies ) ).append( "\n" );
+                                                            knownDependencies, cudfVersionMapper ) ).append( "\n" );
             }
         }
 
@@ -146,6 +145,7 @@ public class DefaultCUDFService
     public String getUniverseCUDF()
         throws ArchivaRestServiceException
     {
+        Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
         StringBuilder sb = new StringBuilder();
         sb.append( getCUDFPreambule() );
 
@@ -195,8 +195,8 @@ public class DefaultCUDFService
                 VersionsList versionsList = browseService.getVersionsList( groupId, artifactId, repository );
                 for ( String version : versionsList.getVersions() )
                 {
-                    sb.append( convertMavenArtifactToCUDF( groupId, artifactId, version ) );
-                    sb.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue, knownDependencies ) );
+                    sb.append( convertMavenArtifactToCUDF( groupId, artifactId, version, cudfVersionMapper ) );
+                    sb.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue, knownDependencies, cudfVersionMapper ) );
                     sb.append( "\n" );
                 }
             }
@@ -243,7 +243,7 @@ public class DefaultCUDFService
         }
     }
 
-    private String convertMavenArtifactToCUDF( String groupId, String artifactId, String version )
+    private String convertMavenArtifactToCUDF( String groupId, String artifactId, String version, Map<String, Integer> cudfVersionMapper )
     {
         try
         {
@@ -251,7 +251,7 @@ public class DefaultCUDFService
             sb.append( "package: " ).append( convertMavenArtifactInline( groupId, artifactId ) ).append( "\n" );
             sb.append( "number: " ).append( version ).append( "\n" );
             sb.append( "version: " ).append(
-                convertArtifactVersionToCUDFVersion( groupId, artifactId, version ) ).append( "\n" );
+                convertArtifactVersionToCUDFVersion( groupId, artifactId, version, cudfVersionMapper ) ).append( "\n" );
             return sb.toString();
         }
         catch ( IllegalStateException e )
@@ -267,7 +267,7 @@ public class DefaultCUDFService
 
     private String convertDependenciesToCUDF( String groupId, String artifactId, String version,
                                               List<String> repositories, Queue<Dependency> dependencyQueue,
-                                              Set<Dependency> knownDependencies )
+                                              Set<Dependency> knownDependencies, Map<String, Integer> cudfVersionMapper )
     {
         StringBuilder sb = new StringBuilder();
 
@@ -298,7 +298,7 @@ public class DefaultCUDFService
                 dependencyQueue.add( item );
                 sb.append( convertMavenArtifactInline( item.getGroupId(), item.getArtifactId() ) ).append(
                     " = " ).append(
-                    convertArtifactVersionToCUDFVersion( item.getGroupId(), item.getArtifactId(), item.getVersion() ) );
+                    convertArtifactVersionToCUDFVersion( item.getGroupId(), item.getArtifactId(), item.getVersion(), cudfVersionMapper ) );
                 if ( it.hasNext() )
                 {
                     sb.append( ", " );
@@ -310,12 +310,13 @@ public class DefaultCUDFService
         return sb.toString();
     }
 
-    private int convertArtifactVersionToCUDFVersion( String groupId, String artifactId, String version )
+    private int convertArtifactVersionToCUDFVersion( String groupId, String artifactId, String version, Map<String, Integer> cudfVersionMapper )
         throws IllegalStateException
     {
-        if ( cudfVersionMapper.containsKey( groupId + "\\:" + artifactId + "\\:" + version ) )
+        String storeVersionKey = groupId + ":" + artifactId + ":" + version;
+        if ( cudfVersionMapper.containsKey( storeVersionKey ) )
         {
-            return cudfVersionMapper.get( groupId + "\\:" + artifactId + "\\:" + version );
+            return cudfVersionMapper.get( storeVersionKey );
         }
         List<String> versionList;
         RepositorySession repositorySession = repositorySessionFactory.createSession();
@@ -342,7 +343,7 @@ public class DefaultCUDFService
             repositorySession.close();
         }
         int cudfVersion = versionList.indexOf( version ) + 1;
-        cudfVersionMapper.put( groupId + "\\:" + artifactId + "\\:" + version, cudfVersion );
+        cudfVersionMapper.put( storeVersionKey, cudfVersion );
         return cudfVersion;
     }
 
