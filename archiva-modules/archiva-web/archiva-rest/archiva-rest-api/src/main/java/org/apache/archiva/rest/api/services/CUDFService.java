@@ -58,7 +58,7 @@ public interface CUDFService
      * @param groupId    the groupId of the desired artifact
      * @param artifactId the artifactId of the desired artifact
      * @param version    the version of the desired artifact
-     * @return The CUDF extract for the artifact in CharSequence
+     * @return The CUDF extract for the artifact in a file
      * @throws ArchivaRestServiceException
      */
     @Path( "coneRequest/{groupId}/{artifactId}/{version}" )
@@ -69,10 +69,29 @@ public interface CUDFService
                               @PathParam( "version" ) String version )
         throws ArchivaRestServiceException;
 
+    /**
+     * Gets the entire repository into cudf output.
+     *
+     * @return the universe included into the repositories
+     * @throws ArchivaRestServiceException
+     */
     @Path( "universeRequest" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
     CharSequence getUniverseCUDF()
+        throws ArchivaRestServiceException;
+
+    /**
+     * Gets the entire repository into a cudf file
+     *
+     * @return the universe included into the repositories
+     * @throws ArchivaRestServiceException
+     */
+    @Path( "universeRequest" )
+    @POST
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Produces( MediaType.APPLICATION_OCTET_STREAM )
+    Response getUniverseCUDFFile()
         throws ArchivaRestServiceException;
 }
