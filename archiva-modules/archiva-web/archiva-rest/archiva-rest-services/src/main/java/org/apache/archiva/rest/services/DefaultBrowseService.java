@@ -31,6 +31,11 @@ import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.metadata.repository.MetadataResolver;
 import org.apache.archiva.metadata.repository.RepositorySession;
 import org.apache.archiva.metadata.repository.storage.maven2.MavenProjectFacet;
+import org.apache.archiva.model.ArchivaArtifact;
+import org.apache.archiva.repository.ManagedRepositoryContent;
+import org.apache.archiva.repository.RepositoryContentFactory;
+import org.apache.archiva.repository.RepositoryException;
+import org.apache.archiva.repository.RepositoryNotFoundException;
 import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.model.ArtifactContentEntry;
 import org.apache.archiva.rest.api.model.BrowseResult;
@@ -40,6 +45,7 @@ import org.apache.archiva.rest.api.model.TreeEntry;
 import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.BrowseService;
+import org.apache.archiva.rest.services.utils.ArtifactContentEntryComparator;
 import org.apache.archiva.rest.services.utils.TreeDependencyNodeVisitor;
 import org.apache.archiva.security.ArchivaSecurityException;
 import org.apache.commons.collections.CollectionUtils;
@@ -49,14 +55,19 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @author Olivier Lamy
@@ -71,26 +82,13 @@ public class DefaultBrowseService
     @Inject
     private DependencyTreeBuilder dependencyTreeBuilder;
 
+    @Inject
+    private RepositoryContentFactory repositoryContentFactory;
+
     public BrowseResult getRootGroups( String repositoryId )
         throws ArchivaRestServiceException
     {
-        List<String> selectedRepos = getObservableRepos();
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return new BrowseResult();
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
 
         Set<String> namespaces = new LinkedHashSet<String>();
 
@@ -137,24 +135,7 @@ public class DefaultBrowseService
     public BrowseResult browseGroupId( String groupId, String repositoryId )
         throws ArchivaRestServiceException
     {
-
-        List<String> selectedRepos = getObservableRepos();
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return new BrowseResult();
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
 
         Set<String> projects = new LinkedHashSet<String>();
 
@@ -210,23 +191,7 @@ public class DefaultBrowseService
     public VersionsList getVersionsList( String groupId, String artifactId, String repositoryId )
         throws ArchivaRestServiceException
     {
-        List<String> selectedRepos = getObservableRepos();
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return new VersionsList();
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
 
         try
         {
@@ -273,24 +238,7 @@ public class DefaultBrowseService
                                                       String repositoryId )
         throws ArchivaRestServiceException
     {
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return null;
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
 
         RepositorySession repositorySession = null;
         try
@@ -335,24 +283,7 @@ public class DefaultBrowseService
         throws ArchivaRestServiceException
     {
 
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return null;
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
 
         RepositorySession repositorySession = null;
         try
@@ -480,24 +411,7 @@ public class DefaultBrowseService
     public List<TreeEntry> getTreeEntries( String groupId, String artifactId, String version, String repositoryId )
         throws ArchivaRestServiceException
     {
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return null;
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
 
         List<TreeEntry> treeEntries = new ArrayList<TreeEntry>();
         TreeDependencyNodeVisitor treeDependencyNodeVisitor = new TreeDependencyNodeVisitor( treeEntries );
@@ -694,15 +608,193 @@ public class DefaultBrowseService
     }
 
     public List<ArtifactContentEntry> getArtifactContentEntries( String groupId, String artifactId, String version,
-                                                                 String path, String repositoryId )
+                                                                 String classifier, String type, String path,
+                                                                 String repositoryId )
         throws ArchivaRestServiceException
     {
-        return null;
+        List<String> selectedRepos = getSelectedRepos( repositoryId );
+        try
+        {
+            for ( String repoId : selectedRepos )
+            {
+
+                ManagedRepositoryContent managedRepositoryContent =
+                    repositoryContentFactory.getManagedRepositoryContent( repoId );
+                ArchivaArtifact archivaArtifact = new ArchivaArtifact( groupId, artifactId, version, classifier,
+                                                                       StringUtils.isEmpty( type ) ? "jar" : type,
+                                                                       repositoryId );
+                File file = managedRepositoryContent.toFile( archivaArtifact );
+                if ( file.exists() )
+                {
+                    return readFileEntries( file, path );
+                }
+            }
+        }
+        catch ( IOException e )
+        {
+            log.error( e.getMessage(), e );
+            throw new ArchivaRestServiceException( e.getMessage(),
+                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode() );
+        }
+        catch ( RepositoryNotFoundException e )
+        {
+            log.error( e.getMessage(), e );
+            throw new ArchivaRestServiceException( e.getMessage(),
+                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode() );
+        }
+        catch ( RepositoryException e )
+        {
+            log.error( e.getMessage(), e );
+            throw new ArchivaRestServiceException( e.getMessage(),
+                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode() );
+        }
+        return Collections.emptyList();
     }
 
     //---------------------------
     // internals
     //---------------------------
+
+    protected List<ArtifactContentEntry> readFileEntries( File file, String filterPath )
+        throws IOException
+    {
+        Map<String, ArtifactContentEntry> artifactContentEntryMap = new HashMap<String, ArtifactContentEntry>();
+        int filterDepth = StringUtils.countMatches( filterPath, "/" );
+        if ( filterDepth == 0 )
+        {
+            filterDepth = 1;
+        }
+        JarFile jarFile = new JarFile( file );
+        try
+        {
+            Enumeration<JarEntry> jarEntryEnumeration = jarFile.entries();
+            while ( jarEntryEnumeration.hasMoreElements() )
+            {
+                JarEntry currentEntry = jarEntryEnumeration.nextElement();
+                String cleanedEntryName =
+                    StringUtils.endsWith( currentEntry.getName(), "/" ) ? StringUtils.substringBeforeLast(
+                        currentEntry.getName(), "/" ) : currentEntry.getName();
+                String entryRootPath = getRootPath( cleanedEntryName );
+                int depth = StringUtils.countMatches( cleanedEntryName, "/" );
+                if ( StringUtils.isEmpty( filterPath ) && !artifactContentEntryMap.containsKey( entryRootPath ) )
+                {
+
+                    artifactContentEntryMap.put( entryRootPath,
+                                                 new ArtifactContentEntry( entryRootPath, !currentEntry.isDirectory(),
+                                                                           depth ) );
+                }
+                else
+                {
+                    if ( StringUtils.startsWith( cleanedEntryName, filterPath ) && ( depth >= filterDepth || (
+                        !currentEntry.isDirectory() && depth == filterDepth ) ) )
+                    {
+                        artifactContentEntryMap.put( cleanedEntryName, new ArtifactContentEntry( cleanedEntryName,
+                                                                                                 !currentEntry.isDirectory(),
+                                                                                                 depth ) );
+                    }
+                }
+            }
+
+            if ( StringUtils.isNotEmpty( filterPath ) )
+            {
+                Map<String, ArtifactContentEntry> filteredArtifactContentEntryMap =
+                    new HashMap<String, ArtifactContentEntry>();
+
+                for ( Map.Entry<String, ArtifactContentEntry> entry : artifactContentEntryMap.entrySet() )
+                {
+                    filteredArtifactContentEntryMap.put( entry.getKey(), entry.getValue() );
+                }
+
+                List<ArtifactContentEntry> sorted = getSmallerDepthEntries( filteredArtifactContentEntryMap );
+                if ( sorted == null )
+                {
+                    return Collections.emptyList();
+                }
+                Collections.sort( sorted, ArtifactContentEntryComparator.INSTANCE );
+                return sorted;
+            }
+        }
+        finally
+        {
+            if ( jarFile != null )
+            {
+                jarFile.close();
+            }
+        }
+        List<ArtifactContentEntry> sorted = new ArrayList<ArtifactContentEntry>( artifactContentEntryMap.values() );
+        Collections.sort( sorted, ArtifactContentEntryComparator.INSTANCE );
+        return sorted;
+    }
+
+    private List<ArtifactContentEntry> getSmallerDepthEntries( Map<String, ArtifactContentEntry> entries )
+    {
+        int smallestDepth = Integer.MAX_VALUE;
+        Map<Integer, List<ArtifactContentEntry>> perDepthList = new HashMap<Integer, List<ArtifactContentEntry>>();
+        for ( Map.Entry<String, ArtifactContentEntry> entry : entries.entrySet() )
+        {
+
+            ArtifactContentEntry current = entry.getValue();
+
+            if ( current.getDepth() < smallestDepth )
+            {
+                smallestDepth = current.getDepth();
+            }
+
+            List<ArtifactContentEntry> currentList = perDepthList.get( current.getDepth() );
+
+            if ( currentList == null )
+            {
+                currentList = new ArrayList<ArtifactContentEntry>();
+                currentList.add( current );
+                perDepthList.put( current.getDepth(), currentList );
+            }
+            else
+            {
+                currentList.add( current );
+            }
+
+        }
+
+        return perDepthList.get( smallestDepth );
+    }
+
+    /**
+     * @param path
+     * @return org/apache -> org , org -> org
+     */
+    private String getRootPath( String path )
+    {
+        if ( StringUtils.contains( path, '/' ) )
+        {
+            return StringUtils.substringBefore( path, "/" );
+        }
+        return path;
+    }
+
+    private List<String> getSelectedRepos( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+
+        List<String> selectedRepos = getObservableRepos();
+
+        if ( CollectionUtils.isEmpty( selectedRepos ) )
+        {
+            // FIXME 403 ???
+            return null;
+        }
+
+        if ( StringUtils.isNotEmpty( repositoryId ) )
+        {
+            // check user has karma on the repository
+            if ( !selectedRepos.contains( repositoryId ) )
+            {
+                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
+                                                       Response.Status.FORBIDDEN.getStatusCode() );
+            }
+            selectedRepos = Collections.singletonList( repositoryId );
+        }
+        return selectedRepos;
+    }
 
     private List<String> getSortedList( Set<String> set )
     {
