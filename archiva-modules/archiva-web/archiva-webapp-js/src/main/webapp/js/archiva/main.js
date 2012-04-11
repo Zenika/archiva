@@ -147,10 +147,6 @@ function() {
         displayRolesGrid();
         return;
       }
-      if (screen=='reports'&& hasKarma('archiva-manage-configuration')){
-        displayReport();
-        return
-      }
     }
     // by default display search screen
     displaySearch();
