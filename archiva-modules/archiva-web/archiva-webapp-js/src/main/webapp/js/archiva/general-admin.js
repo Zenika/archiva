@@ -827,4 +827,132 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
     });
   }
 
+    //---------------//
+    // reports pages //
+    //---------------//
+  activateReportDynamics=function(){
+      $("#startDate").datepicker();
+      $("#endDate").datepicker();
+
+      $("#addSelectedRepository").click(function() {
+          return !$("#repositoriesList option:selected").remove().appendTo("#repositoriesToUse");
+      });
+      $("#removeSelectedRepository").click(function() {
+          return !$("#repositoriesToUse option:selected").remove().appendTo("#repositoriesList");
+      });
+      $("#removeAllRepositories").click(function() {
+          return !$("#repositoriesToUse option").remove().appendTo("#repositoriesList");
+      });
+      $("#addAllRepositories").click(function() {
+          return !$("#repositoriesList option").remove().appendTo("#repositoriesToUse");
+      });
+  }
+  displayReport=function(){
+    screenChange();
+    $("#main-content").html($("#report_page_tmpl").tmpl());
+    activateReportDynamics();
+    ko.applyBindings(
+            new RepositoryStatisticsViewModel(new RepositoryStatistics()),
+            $("#main-content #report-statistics-form-id").get(0)
+    );
+    ko.applyBindings(
+            new RepositoryHealthViewModel(new RepositoryHealth()),
+            $("#main-content #report-health-form-id").get(0)
+    );
+
+    $.ajax("restServices/archivaServices/managedRepositoriesService/getManagedRepositories", {
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            var options = '';
+            $.each(data, function(val, obj) {
+                options+="<option value='"+obj.id+"'>"+obj.name+"</option>";
+            });
+            $("#repositoriesList").html(options);
+            options = "<option value='all' selected>"+$.i18n.prop('report-page.all-repositories')+"</option>" + options;
+            $("#repositoryId").html(options);
+        }
+    });
+  }
+
+  RepositoryStatistics=function(repositories,rowCount,startDate,endDate){
+      this.repositories=ko.observable(repositories);
+      this.rowCount=ko.observable(rowCount);
+      this.startDate=ko.observable(startDate);
+      this.endDate=ko.observable(endDate);
+  }
+  RepositoryStatisticsViewModel=function(repositoryStatistics){
+    var validate = $("#main-content #report-statistics-form-id").validate({
+        rules: {
+            repositories: {
+                required: true
+            },
+            rowCount: {
+                required: true,
+                number: true
+            },
+            startDate: {
+                date: true
+            },
+            endDate: {
+                date: true
+            }
+        },
+        showErrors: function(validator, errorMap, errorList) {
+            customShowError("#main-content #report-statistics-form-id", validator, errorMap, errorMap);
+        }
+    });
+    this.repositoryStatistics=ko.observable(repositoryStatistics);
+    this.generate=function() {
+        if (!$("#main-content #report-statistics-form-id").valid()) {
+            return;
+        }
+    console.log(repositoryStatistics.endDate);
+    }
+  }
+
+  RepositoryHealth=function(rowCount,groupId,repositoryId){
+      this.rowCount=ko.observable(rowCount);
+      this.groupId=ko.observable(groupId);
+      this;repositoryId=ko.observable(repositoryId);
+  }
+  RepositoryHealthViewModel=function(repositoryHealth){
+      var validate=$("#main-content #report-health-form-id").validate({
+          rules: {
+              rowCount: {
+                  required: true,
+                  number: true
+              },
+              groupId: {
+                  required: true
+              },
+              repositoryId: {
+                  required: true
+              }
+          },
+          showErrors: function(validator, errorMap, errorList) {
+              customShowError("#main-content #report-health-form-id", validator, errorMap, errorMap);
+          }
+      });
+      this.repositoryHealth=ko.observable(repositoryHealth);
+      this.generate=function(){
+          if(!$("#main-content #report-health-form-id").valid()) {
+              return;
+          }
+          showStatistics();
+      }
+  }
+
+  showStatistics=function ()
+  {
+      screenChange();
+      $.ajax( "restServices/archivaServices/archivaAdministrationService/getOrganisationInformation", {
+          type:"GET",
+          dataType:'json',
+          success:function ( data ) {
+            var statistics=[];
+            $("#main-content").html($("#report_page_tmpl").tmpl({statisticsList:statistics}));
+          }
+      } );
+  }
 });
