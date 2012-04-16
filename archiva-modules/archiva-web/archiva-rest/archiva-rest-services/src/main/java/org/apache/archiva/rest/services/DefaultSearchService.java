@@ -222,7 +222,7 @@ public class DefaultSearchService
                     if ( StringUtils.isNotBlank( version ) )
                     {
                         versionned.setVersion( version );
-                        versionned.setUrl( getArtifactUrl( versionned, version ) );
+                        versionned.setUrl( getArtifactUrl( versionned ) );
 
                         artifacts.add( versionned );
 
@@ -239,7 +239,7 @@ public class DefaultSearchService
      * @param artifact
      * @return
      */
-    private String getArtifactUrl( Artifact artifact, String version )
+    private String getArtifactUrl( Artifact artifact )
     {
 
         if ( httpServletRequest == null )
