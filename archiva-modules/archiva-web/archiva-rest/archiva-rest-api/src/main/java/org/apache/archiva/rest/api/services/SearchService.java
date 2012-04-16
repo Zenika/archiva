@@ -29,6 +29,7 @@ import org.codehaus.plexus.redback.authorization.RedbackAuthorization;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -129,4 +130,12 @@ public interface SearchService
         throws ArchivaRestServiceException;
     */
 
+
+    @Path( "getArtifactURL/{g}/{a}/{v}" )
+    @GET
+    @Produces( MediaType.TEXT_PLAIN )
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    String getUrlForArtifact( @PathParam( "g" ) String groupId, @PathParam( "a" ) String artifactId,
+                              @PathParam( "v" ) String version )
+        throws ArchivaRestServiceException;
 }
