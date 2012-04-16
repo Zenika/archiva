@@ -1303,12 +1303,12 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
 
   getCUDFExtract=function(groupId,artifactId,version){
     $("#artifact-details-cudf #get-cudf-spinner-div").html(smallSpinnerImg());
-    $("<form action='restServices/archivaServices/cudfService/coneRequest/"+groupId+"/"+artifactId+"/"+version+"' method='POST'></form>" ).submit();
+    $("<form action='restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version+"' method='POST'></form>" ).submit();
     removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
   }
 
   getCUDFUniverseExtract=function(){
-    $("<form action='restServices/archivaServices/cudfService/universeRequest' method='POST'></form>").submit();
+    $("<form action='restServices/archivaServices/cudfService/universe' method='POST'></form>").submit();
   }
 
 });

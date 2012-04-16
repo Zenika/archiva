@@ -44,7 +44,7 @@ public interface CUDFService
      * @return The CUDF extract for the artifact in CharSequence
      * @throws ArchivaRestServiceException
      */
-    @Path( "coneRequest/{groupId}/{artifactId}/{version}" )
+    @Path( "cone/{groupId}/{artifactId}/{version}" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
@@ -61,7 +61,7 @@ public interface CUDFService
      * @return The CUDF extract for the artifact in a file
      * @throws ArchivaRestServiceException
      */
-    @Path( "coneRequest/{groupId}/{artifactId}/{version}" )
+    @Path( "cone/{groupId}/{artifactId}/{version}" )
     @POST
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
@@ -75,7 +75,7 @@ public interface CUDFService
      * @return the universe included into the repositories
      * @throws ArchivaRestServiceException
      */
-    @Path( "universeRequest" )
+    @Path( "universe" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
@@ -88,7 +88,7 @@ public interface CUDFService
      * @return the universe included into the repositories
      * @throws ArchivaRestServiceException
      */
-    @Path( "universeRequest" )
+    @Path( "universe" )
     @POST
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
