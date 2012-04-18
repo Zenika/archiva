@@ -38,6 +38,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -288,5 +289,13 @@ public class DefaultSearchService
             return "";
         }
         return artifacts.get( 0 ).getUrl();
+    }
+
+    public String getUrlForArtifact( String groupId, String artifact, String version, String repositoryId,
+                                     HttpServletRequest httpServletRequest )
+        throws ArchivaRestServiceException
+    {
+        this.httpServletRequest = httpServletRequest;
+        return getUrlForArtifact( groupId, artifact, version );
     }
 }
