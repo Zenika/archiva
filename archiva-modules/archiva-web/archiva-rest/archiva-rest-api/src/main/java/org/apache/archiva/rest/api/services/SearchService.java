@@ -26,6 +26,7 @@ import org.apache.archiva.rest.api.model.SearchRequest;
 import org.apache.archiva.rest.api.model.StringList;
 import org.codehaus.plexus.redback.authorization.RedbackAuthorization;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -137,5 +138,9 @@ public interface SearchService
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     String getUrlForArtifact( @PathParam( "g" ) String groupId, @PathParam( "a" ) String artifactId,
                               @PathParam( "v" ) String version )
+        throws ArchivaRestServiceException;
+
+    String getUrlForArtifact( String groupId, String artifact, String version, String repositoryId,
+                              HttpServletRequest httpServletRequest )
         throws ArchivaRestServiceException;
 }
