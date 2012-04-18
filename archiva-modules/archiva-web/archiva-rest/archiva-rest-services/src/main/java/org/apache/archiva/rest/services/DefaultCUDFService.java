@@ -31,6 +31,9 @@ import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
+import org.apache.archiva.rest.api.services.SearchService;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -40,8 +43,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,14 +68,17 @@ public class DefaultCUDFService
     @Inject
     private BrowseService browseService;
 
-    public String getConeCUDF( String groupId, String artifactId, String version )
+    @Inject
+    private SearchService searchService;
+
+    public String getConeCUDF( String groupId, String artifactId, String version, String repositoryId )
         throws ArchivaRestServiceException
     {
         Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
         StringBuilder response = new StringBuilder();
         response.append( getCUDFPreambule() );
 
-        List<String> repositories = getObservableRepos();
+        List<String> repositories = getSelectedRepos( repositoryId );
         if ( repositories.isEmpty() )
         {
             return "Error";
@@ -99,9 +103,10 @@ public class DefaultCUDFService
         } );
         LinkedList<Dependency> dependenciesQueue = new LinkedList<Dependency>();
 
-        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version, cudfVersionMapper ) );
-        response.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue,
-                                                    knownDependencies, cudfVersionMapper ) ).append( "\n" );
+        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version, "", cudfVersionMapper ) );
+        response.append(
+            convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue, knownDependencies,
+                                       cudfVersionMapper ) ).append( "\n" );
 
         Dependency dependency = null;
         while ( ( dependency = dependenciesQueue.poll() ) != null )
@@ -111,7 +116,7 @@ public class DefaultCUDFService
             {
                 knownDependencies.add( dependency );
                 response.append( convertMavenArtifactToCUDF( dependency.getGroupId(), dependency.getArtifactId(),
-                                                             dependency.getVersion(), cudfVersionMapper ) );
+                                                             dependency.getVersion(), "", cudfVersionMapper ) );
                 response.append( convertDependenciesToCUDF( dependency.getGroupId(), dependency.getArtifactId(),
                                                             dependency.getVersion(), repositories, dependenciesQueue,
                                                             knownDependencies, cudfVersionMapper ) ).append( "\n" );
@@ -121,7 +126,7 @@ public class DefaultCUDFService
         return response.toString();
     }
 
-    public Response getConeCUDFFile( String groupId, String artifactId, String version )
+    public Response getConeCUDFFile( String groupId, String artifactId, String version, String repositoryId )
         throws ArchivaRestServiceException
     {
         try
@@ -130,7 +135,7 @@ public class DefaultCUDFService
             File output = File.createTempFile( fileName, ".txt" );
             output.deleteOnExit();
             BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
-            bw.write( getConeCUDF( groupId, artifactId, version ) );
+            bw.write( getConeCUDF( groupId, artifactId, version, repositoryId ) );
             bw.close();
             return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
                                                                                      "attachment; filename=" + fileName
@@ -142,14 +147,14 @@ public class DefaultCUDFService
         }
     }
 
-    public String getUniverseCUDF()
+    public String getUniverseCUDF( String repositoryId )
         throws ArchivaRestServiceException
     {
         Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
         StringBuilder sb = new StringBuilder();
         sb.append( getCUDFPreambule() );
 
-        List<String> repositories = getObservableRepos();
+        List<String> repositories = getSelectedRepos( repositoryId );
         if ( repositories.isEmpty() )
         {
             return "Error";
@@ -195,14 +200,37 @@ public class DefaultCUDFService
                 VersionsList versionsList = browseService.getVersionsList( groupId, artifactId, repository );
                 for ( String version : versionsList.getVersions() )
                 {
-                    sb.append( convertMavenArtifactToCUDF( groupId, artifactId, version, cudfVersionMapper ) );
-                    sb.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue, knownDependencies, cudfVersionMapper ) );
+                    sb.append(
+                        convertMavenArtifactToCUDF( groupId, artifactId, version, repository, cudfVersionMapper ) );
+                    sb.append( convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue,
+                                                          knownDependencies, cudfVersionMapper ) );
                     sb.append( "\n" );
                 }
             }
         }
 
         return sb.toString();
+    }
+
+    public Response getUniverseCUDFFile( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            String fileName = "extractCUDF_universe";
+            File output = File.createTempFile( fileName, ".txt" );
+            output.deleteOnExit();
+            BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
+            bw.write( getUniverseCUDF( repositoryId ) );
+            bw.close();
+            return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
+                                                                                     "attachment; filename=" + fileName
+                                                                                         + ".txt" ).build();
+        }
+        catch ( IOException e )
+        {
+            return null;
+        }
     }
 
     private void getRepositoryContent( BrowseResult browseResult, String repository, List<String> projects )
@@ -222,28 +250,9 @@ public class DefaultCUDFService
         }
     }
 
-    public Response getUniverseCUDFFile()
+    private String convertMavenArtifactToCUDF( String groupId, String artifactId, String version, String repositoryId,
+                                               Map<String, Integer> cudfVersionMapper )
         throws ArchivaRestServiceException
-    {
-        try
-        {
-            String fileName = "extractCUDF_universe";
-            File output = File.createTempFile( fileName, ".txt" );
-            output.deleteOnExit();
-            BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
-            bw.write( getUniverseCUDF() );
-            bw.close();
-            return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
-                                                                                     "attachment; filename=" + fileName
-                                                                                         + ".txt" ).build();
-        }
-        catch ( IOException e )
-        {
-            return null;
-        }
-    }
-
-    private String convertMavenArtifactToCUDF( String groupId, String artifactId, String version, Map<String, Integer> cudfVersionMapper )
     {
         try
         {
@@ -252,6 +261,9 @@ public class DefaultCUDFService
             sb.append( "number: " ).append( version ).append( "\n" );
             sb.append( "version: " ).append(
                 convertArtifactVersionToCUDFVersion( groupId, artifactId, version, cudfVersionMapper ) ).append( "\n" );
+            sb.append( "url: " );
+            sb.append( convertURLToCUDFURL( getUrlForArtifact( groupId, artifactId, version, repositoryId ) ) );
+            sb.append( "\n" );
             return sb.toString();
         }
         catch ( IllegalStateException e )
@@ -265,9 +277,22 @@ public class DefaultCUDFService
         return groupId + "%3" + artifactId.replaceAll( "_", "-" );
     }
 
+
+    private String getUrlForArtifact( String groupId, String artifactId, String version, String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        return searchService.getUrlForArtifact( groupId, artifactId, version, "", httpServletRequest );
+    }
+
+    private String convertURLToCUDFURL( String url )
+    {
+        return url.replaceAll( ":", "%3" );
+    }
+
     private String convertDependenciesToCUDF( String groupId, String artifactId, String version,
                                               List<String> repositories, Queue<Dependency> dependencyQueue,
-                                              Set<Dependency> knownDependencies, Map<String, Integer> cudfVersionMapper )
+                                              Set<Dependency> knownDependencies,
+                                              Map<String, Integer> cudfVersionMapper )
     {
         StringBuilder sb = new StringBuilder();
 
@@ -298,7 +323,8 @@ public class DefaultCUDFService
                 dependencyQueue.add( item );
                 sb.append( convertMavenArtifactInline( item.getGroupId(), item.getArtifactId() ) ).append(
                     " = " ).append(
-                    convertArtifactVersionToCUDFVersion( item.getGroupId(), item.getArtifactId(), item.getVersion(), cudfVersionMapper ) );
+                    convertArtifactVersionToCUDFVersion( item.getGroupId(), item.getArtifactId(), item.getVersion(),
+                                                         cudfVersionMapper ) );
                 if ( it.hasNext() )
                 {
                     sb.append( ", " );
@@ -310,7 +336,8 @@ public class DefaultCUDFService
         return sb.toString();
     }
 
-    private int convertArtifactVersionToCUDFVersion( String groupId, String artifactId, String version, Map<String, Integer> cudfVersionMapper )
+    private int convertArtifactVersionToCUDFVersion( String groupId, String artifactId, String version,
+                                                     Map<String, Integer> cudfVersionMapper )
         throws IllegalStateException
     {
         String storeVersionKey = groupId + ":" + artifactId + ":" + version;
@@ -390,6 +417,31 @@ public class DefaultCUDFService
 
     private String getCUDFPreambule()
     {
-        return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [] \n\n";
+        return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
+            + "          url: string = [\"\"]\n\n";
+    }
+
+    private List<String> getSelectedRepos( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+
+        List<String> selectedRepos = getObservableRepos();
+
+        if ( CollectionUtils.isEmpty( selectedRepos ) )
+        {
+            return Collections.<String>emptyList();
+        }
+
+        if ( StringUtils.isNotEmpty( repositoryId ) )
+        {
+            // check user has karma on the repository
+            if ( !selectedRepos.contains( repositoryId ) )
+            {
+                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
+                                                       Response.Status.FORBIDDEN.getStatusCode() );
+            }
+            selectedRepos = Collections.singletonList( repositoryId );
+        }
+        return selectedRepos;
     }
 }
