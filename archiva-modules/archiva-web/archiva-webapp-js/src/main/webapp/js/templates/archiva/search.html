@@ -17,7 +17,7 @@
   ~ under the License.
 -->
 
-<script id="browse-tmpl" type="text/html">
+<script id="browse-tmpl" type="text/html" xmlns="http://www.w3.org/1999/html">
   <div>
     <div class="page-header">
       <div><b>${$.i18n.prop('browse.repository')}</b></div>
@@ -717,6 +717,20 @@
       </div>
 
     </div>
+</script>
+
+<script id="cudf_universe_tmpl" type="text/html">
+    <div id="cudf-universe-action" class="well">
+      <p>${$.i18n.prop('cudf.message.universe-extraction')}</p>
+      <a href="#" onclick="showCUDFUniverseExtract()" class="btn" id="show-cudf-universe-button">
+        ${$.i18n.prop('cudf.show-text')}
+      </a>
+      <a href="#" class='btn' onclick="getCUDFUniverseExtract()">
+        ${$.i18n.prop('cudf.extract-text')}
+      </a>
+      <div id="get-cudf-universe-spinner-div"></div>
+    </div>
+    <pre class="prettyprint hide" id="show-cudf-universe-content"></pre>
 </script>
 
 <script id="dependency_tree_tmpl" type="text/html">

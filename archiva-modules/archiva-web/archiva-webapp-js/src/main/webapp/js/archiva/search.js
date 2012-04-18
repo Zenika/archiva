@@ -1328,8 +1328,32 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     });
   }
 
+  displayCUDFUniverse=function(){
+      screenChange();
+      var mainContent=$("#main-content");
+      mainContent.html(mediumSpinnerImg());
+      mainContent.html( $("#cudf_universe_tmpl").tmpl() );
+  }
+
+  showCUDFUniverseExtract=function(){
+    $("#get-cudf-universe-spinner-div").html(smallSpinnerImg());
+    $.ajax("restServices/archivaServices/cudfService/universe/", {
+      type: "GET",
+      dataType: "html",
+      success: function(data){
+        $("#show-cudf-universe-content").html(data.replace(/\n/g, '<br />'));
+        $("#show-cudf-universe-content").removeClass("hide");
+        removeSmallSpinnerImg("#get-cudf-universe-spinner-div");
+        $("#show-cudf-universe-button" ).addClass("disabled");
+      },
+      error: function(data){
+        displayErrorMessage($.i18n.prop('cudf.extract.error-message'));
+        removeSmallSpinnerImg("#get-cudf-universe-spinner-div");
+      }
+    });
+  }
+
   getCUDFUniverseExtract=function(){
     $("<form action='restServices/archivaServices/cudfService/universe' method='POST'></form>").submit();
   }
-
 });
