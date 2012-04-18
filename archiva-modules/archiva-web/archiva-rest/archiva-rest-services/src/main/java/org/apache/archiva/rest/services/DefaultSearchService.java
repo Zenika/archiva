@@ -287,6 +287,6 @@ public class DefaultSearchService
         {
             return "";
         }
-        return getArtifactUrl(artifacts.get( 0 ), version);
+        return artifacts.get( 0 ).getUrl();
     }
 }
