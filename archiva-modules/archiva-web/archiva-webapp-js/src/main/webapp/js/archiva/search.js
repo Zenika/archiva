@@ -1307,6 +1307,24 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
   }
 
+  showCUDFExtract=function(groupId,artifactId,version){
+    $("#artifact-details-cudf #get-cudf-spinner-div").html(smallSpinnerImg());
+    $.ajax("restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version, {
+      type: "GET",
+      dataType: "html",
+      success: function(data){
+        $("#show-cudf-content").html(data.replace(/\n/g, '<br />'));
+        $("#show-cudf-content").removeClass("hide");
+        removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
+        $("#show-cudf-button" ).addClass("disabled");
+      },
+      error: function(data){
+        displayErrorMessage($.i18n.prop('cudf.extract.error-message'));
+        removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
+      }
+    });
+  }
+
   getCUDFUniverseExtract=function(){
     $("<form action='restServices/archivaServices/cudfService/universe' method='POST'></form>").submit();
   }
