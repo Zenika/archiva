@@ -703,11 +703,17 @@
 
 
       <div class="tab-pane" id="artifact-details-cudf">
-        ${$.i18n.prop('cudf.message.artifact.extract-cudf')}<br/>
-        <button data-bind="click: function(){getCUDFExtract(groupId, artifactId, version)}" class="btn" id="extract-cudf">
-          ${$.i18n.prop('cudf.link-text')}
-        </button>
+        <p>${$.i18n.prop('cudf.message.artifact.extract-cudf')}</p><br/>
+        <pre class="prettyprint hide" id="show-cudf-content"></pre>
         <div id="get-cudf-spinner-div"></div>
+        <div id="cudf-action">
+          <button data-bind="click: function(){showCUDFExtract(groupId, artifactId, version)}" class="btn" id="show-cudf-button">
+            ${$.i18n.prop('cudf.show-text')}
+          </button>
+          <button class='btn' data-bind='click: function(){getCUDFExtract(groupId,artifactId,version)}'>
+            ${$.i18n.prop('cudf.extract-text')}
+          </button>
+        </div>
       </div>
 
     </div>
