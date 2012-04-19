@@ -137,10 +137,7 @@ public interface SearchService
     @Produces( MediaType.TEXT_PLAIN )
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     String getUrlForArtifact( @PathParam( "g" ) String groupId, @PathParam( "a" ) String artifactId,
-                              @PathParam( "v" ) String version )
-        throws ArchivaRestServiceException;
-
-    String getUrlForArtifact( String groupId, String artifact, String version, String repositoryId,
-                              HttpServletRequest httpServletRequest )
+                              @PathParam( "v" ) String version, @QueryParam( "type" ) String type,
+                              @QueryParam( "repositoryId" ) String repositoryId )
         throws ArchivaRestServiceException;
 }

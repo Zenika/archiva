@@ -279,23 +279,15 @@ public class DefaultSearchService
         return sb.toString();
     }
 
-    public String getUrlForArtifact( String groupId, String artifactId, String version )
+    public String getUrlForArtifact( String groupId, String artifactId, String version, String type, String repositoryId )
         throws ArchivaRestServiceException
     {
         List<Artifact> artifacts =
-            searchArtifacts( new SearchRequest( groupId, artifactId, version, null, null, getObservableRepos() ) );
+            searchArtifacts( new SearchRequest( groupId, artifactId, version, type, null, getObservableRepos() ) );
         if ( artifacts.isEmpty() )
         {
             return "";
         }
         return artifacts.get( 0 ).getUrl();
-    }
-
-    public String getUrlForArtifact( String groupId, String artifact, String version, String repositoryId,
-                                     HttpServletRequest httpServletRequest )
-        throws ArchivaRestServiceException
-    {
-        this.httpServletRequest = httpServletRequest;
-        return getUrlForArtifact( groupId, artifact, version );
     }
 }

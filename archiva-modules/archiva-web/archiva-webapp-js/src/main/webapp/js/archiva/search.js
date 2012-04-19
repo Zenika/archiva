@@ -1306,13 +1306,23 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
 
   getCUDFExtract=function(groupId,artifactId,version){
     $("#artifact-details-cudf #get-cudf-spinner-div").html(smallSpinnerImg());
-    $("<form action='restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version+"' method='POST'></form>" ).submit();
+    $("<form action='restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version+"' method='POST'>"
+              + "<input type='text' name='repositoryId' value='"+getSelectedBrowsingRepository()+"'/>"
+              + "</form>" ).submit();
     removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
   }
 
   showCUDFExtract=function(groupId,artifactId,version){
     $("#artifact-details-cudf #get-cudf-spinner-div").html(smallSpinnerImg());
-    $.ajax("restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version, {
+    var metadataUrl="restServices/archivaServices/cudfService/cone/";
+    metadataUrl+=groupId+"/";
+    metadataUrl+=artifactId+"/";
+    metadataUrl+=version;
+    var selectedRepo=getSelectedBrowsingRepository();
+    if (selectedRepo){
+      metadataUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
+    }
+    $.ajax(metadataUrl, {
       type: "GET",
       dataType: "html",
       success: function(data){
@@ -1337,7 +1347,12 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
 
   showCUDFUniverseExtract=function(){
     $("#get-cudf-universe-spinner-div").html(smallSpinnerImg());
-    $.ajax("restServices/archivaServices/cudfService/universe/", {
+    var metadataUrl="restServices/archivaServices/cudfService/universe";
+    var selectedRepo=getSelectedBrowsingRepository();
+    if (selectedRepo){
+      metadataUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
+    }
+    $.ajax(metadataUrl, {
       type: "GET",
       dataType: "html",
       success: function(data){
@@ -1354,6 +1369,8 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
   }
 
   getCUDFUniverseExtract=function(){
-    $("<form action='restServices/archivaServices/cudfService/universe' method='POST'></form>").submit();
+    $("<form action='restServices/archivaServices/cudfService/universe' method='POST'>"
+              + "<input type='text' name='repositoryId' value='"+getSelectedBrowsingRepository()+"'/>"
+              + "</form>").submit();
   }
 });
