@@ -103,7 +103,7 @@ public class DefaultCUDFService
         } );
         LinkedList<Dependency> dependenciesQueue = new LinkedList<Dependency>();
 
-        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version, "", cudfVersionMapper ) );
+        response.append( convertMavenArtifactToCUDF( groupId, artifactId, version, repositoryId, cudfVersionMapper ) );
         response.append(
             convertDependenciesToCUDF( groupId, artifactId, version, repositories, dependenciesQueue, knownDependencies,
                                        cudfVersionMapper ) ).append( "\n" );
