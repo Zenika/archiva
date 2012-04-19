@@ -281,7 +281,8 @@ public class DefaultCUDFService
     private String getUrlForArtifact( String groupId, String artifactId, String version, String repositoryId )
         throws ArchivaRestServiceException
     {
-        return searchService.getUrlForArtifact( groupId, artifactId, version, "", httpServletRequest );
+        // FIXME not always a jar
+        return searchService.getUrlForArtifact( groupId, artifactId, version, "jar", repositoryId );
     }
 
     private String convertURLToCUDFURL( String url )

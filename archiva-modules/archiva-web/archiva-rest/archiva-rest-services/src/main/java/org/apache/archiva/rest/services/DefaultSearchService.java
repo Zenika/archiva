@@ -251,7 +251,15 @@ public class DefaultSearchService
         {
             return null;
         }
-        StringBuilder sb = new StringBuilder( getBaseUrl( httpServletRequest ) );
+        StringBuilder sb = new StringBuilder(  );
+        try
+        {
+            sb.append( getBaseUrl( httpServletRequest ) );
+        }
+        catch (NullPointerException e)
+        {
+            log.warn( "Was not able to create base url", e );
+        }
 
         sb.append( "/repository" );
 
