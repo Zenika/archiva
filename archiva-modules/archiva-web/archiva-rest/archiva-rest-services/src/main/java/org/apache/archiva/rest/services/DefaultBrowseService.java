@@ -771,31 +771,6 @@ public class DefaultBrowseService
         return path;
     }
 
-    private List<String> getSelectedRepos( String repositoryId )
-        throws ArchivaRestServiceException
-    {
-
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return null;
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
-        return selectedRepos;
-    }
-
     private List<String> getSortedList( Set<String> set )
     {
         List<String> list = new ArrayList<String>( set );

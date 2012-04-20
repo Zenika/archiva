@@ -42,6 +42,7 @@ public interface CUDFService
      * @param groupId    the groupId of the desired artifact
      * @param artifactId the artifactId of the desired artifact
      * @param version    the version of the desired artifact
+     * @param type       the type of the desired artifact
      * @return The CUDF extract for the artifact in CharSequence
      * @throws ArchivaRestServiceException
      */
@@ -50,7 +51,8 @@ public interface CUDFService
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
     String getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
-                        @PathParam( "version" ) String version, @QueryParam( "repositoryId" ) String repositoryId )
+                        @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
+                        @QueryParam( "repositoryId" ) String repositoryId )
         throws ArchivaRestServiceException;
 
     /**
@@ -59,6 +61,7 @@ public interface CUDFService
      * @param groupId    the groupId of the desired artifact
      * @param artifactId the artifactId of the desired artifact
      * @param version    the version of the desired artifact
+     * @param type       the type of the desired artifact
      * @return The CUDF extract for the artifact in a file
      * @throws ArchivaRestServiceException
      */
@@ -67,7 +70,7 @@ public interface CUDFService
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
     Response getConeCUDFFile( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
-                              @PathParam( "version" ) String version,
+                              @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
                               @QueryParam( "repositoryId" ) String repositoryId )
         throws ArchivaRestServiceException;
 

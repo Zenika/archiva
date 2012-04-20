@@ -38,7 +38,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -251,14 +250,16 @@ public class DefaultSearchService
         {
             return null;
         }
-        StringBuilder sb = new StringBuilder(  );
+        StringBuilder sb = new StringBuilder();
         try
         {
             sb.append( getBaseUrl( httpServletRequest ) );
         }
-        catch (NullPointerException e)
+        catch ( NullPointerException e )
         {
-            log.warn( "Was not able to create base url", e );
+            log.warn(
+                "Was not able to create base url for " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":"
+                    + artifact.getVersion()/*, e*/ );
         }
 
         sb.append( "/repository" );
@@ -287,7 +288,8 @@ public class DefaultSearchService
         return sb.toString();
     }
 
-    public String getUrlForArtifact( String groupId, String artifactId, String version, String type, String repositoryId )
+    public String getUrlForArtifact( String groupId, String artifactId, String version, String type,
+                                     String repositoryId )
         throws ArchivaRestServiceException
     {
         List<Artifact> artifacts =
