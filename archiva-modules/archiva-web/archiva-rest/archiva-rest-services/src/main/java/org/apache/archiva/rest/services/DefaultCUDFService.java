@@ -225,7 +225,7 @@ public class DefaultCUDFService
             sb.append( "url: " );
             sb.append( convertURLToCUDFURL( artifact.getUrl() ) );
             sb.append( "\n" );
-            sb.append( "type: " ).append( StringUtils.defaultString( artifact.getFileExtension() ) ).append( "\n" );
+            sb.append( "type: " ).append( StringUtils.defaultString( artifact.getPackaging() ) ).append( "\n" );
             return sb.toString();
         }
         catch ( IllegalStateException e )
