@@ -73,6 +73,8 @@ public class DefaultCUDFService
     implements CUDFService
 {
 
+    private static final String SEPARATOR = "%3a";
+
     @Inject
     private BrowseService browseService;
 
@@ -223,6 +225,7 @@ public class DefaultCUDFService
             sb.append( "url: " );
             sb.append( convertURLToCUDFURL( artifact.getUrl() ) );
             sb.append( "\n" );
+            sb.append( "type: " ).append( StringUtils.defaultString( artifact.getFileExtension() ) ).append( "\n" );
             return sb.toString();
         }
         catch ( IllegalStateException e )
@@ -233,12 +236,12 @@ public class DefaultCUDFService
 
     private String outputArtifactInCUDFInline( String groupId, String artifactId )
     {
-        return groupId + "%3" + artifactId.replaceAll( "_", "-" );
+        return groupId + SEPARATOR + artifactId.replaceAll( "_", "-" );
     }
 
     private String convertURLToCUDFURL( String url )
     {
-        return Strings.nullToEmpty( url ).replaceAll( ":", "%3" );
+        return Strings.nullToEmpty( url ).replaceAll( ":", SEPARATOR );
     }
 
     private String convertDependenciesToCUDF( Artifact artifact, List<String> repositories, Queue<Artifact> queue,
@@ -373,7 +376,8 @@ public class DefaultCUDFService
     private String getCUDFPreambule()
     {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
-            + "          url: string = [\"\"]\n\n";
+            + "          url: string = [\"\"],,,\n"
+            + "          type: string = [\"\"],,,\n\n";
     }
 
     private Artifact getSpecificArtifact( final String groupId, final String artifactId, final String version,
