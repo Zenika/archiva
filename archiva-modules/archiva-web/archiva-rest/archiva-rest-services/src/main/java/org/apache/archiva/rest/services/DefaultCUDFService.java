@@ -376,8 +376,8 @@ public class DefaultCUDFService
     private String getCUDFPreambule()
     {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
-            + "          url: string = [\"\"],,,\n"
-            + "          type: string = [\"\"],,,\n\n";
+            + "          url: string = [\"\"],\n"
+            + "          type: string = [\"\"]\n\n";
     }
 
     private Artifact getSpecificArtifact( final String groupId, final String artifactId, final String version,
