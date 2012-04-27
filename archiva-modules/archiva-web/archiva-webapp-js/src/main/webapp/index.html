@@ -4,7 +4,7 @@
   <link rel="stylesheet" href="css/jquery.fileupload-ui.css"/>
   <link rel="stylesheet" href="css/chosen-0.9.7.css"/>
   <link rel="stylesheet" href="css/jquery-ui-1.8.16.custom.css"/>
-  <link rel="stylesheet" href="css/bootstrap.2.0.2.css">
+  <link rel="stylesheet" href="css/bootstrap.2.0.3.css">
   <link rel="stylesheet" href="css/archiva.css">
   <link rel="shortcut icon" href="favicon.ico"/>
 
@@ -29,7 +29,7 @@
     <div class="span10 columns">
       <div class="content">
         <div id="user-messages"></div>
-        <div id="main-content"><img src="images/medium-spinner.gif"/></div>
+        <div id="main-content"></div>
     </div>
   </div>
   </div>
@@ -89,7 +89,7 @@
                         "jquery.ui": "jquery-ui-1.8.16.custom.min",
                         "jquery.ui.widget": "jquery.ui.widget-1.8.18",
                         "jquery.cookie": "jquery.cookie.1.0.0",
-                        "bootstrap": "bootstrap.2.0.2",
+                        "bootstrap": "bootstrap.2.0.3",
                         "choosen": "chosen.jquery-0.9.7",
                         "jquery.validate": "jquery.validate-1.9.0",
                         "jquery.json": "jquery.json-2.3.min",
@@ -135,6 +135,7 @@
                               require(['order!domReady','archiva/main'],function (domReady) {
                                   domReady.withResources(function () {
                                       startArchivaApplication();
+                                      $("#loadingDiv").hide();
                                   })
                               })
 
@@ -150,16 +151,13 @@
 
 
 </script>
-<div id="dialog-spinner-modal" class="modal fade" style="display: block;">
-  <div class="modal-header">
-    <a class="close" href="#" data-dismiss="modal">&#215;</a>
-    <h3 id="dialog-spinner-modal-header-title">Apache Archiva Loading</h3>
-  </div>
-  <div class="modal-body">
-   <div id="dialog-spinner-modal-body-text" style="text-align: center">
-     <img width="80px" src="img/loading.gif"/>
-   </div>
+
+<div id="loadingDiv">
+  <div class="loading-indicator">
+    <img src="img/loading.gif" />
+    <span id="loading-msg">Loading</span>
   </div>
 </div>
+
 </body>
 </html>
