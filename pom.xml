@@ -93,7 +93,7 @@
     <httpclient.core.version>4.1.4</httpclient.core.version>
     <javaxMailVersion>1.4</javaxMailVersion>
     <jettyVersion>7.4.5.v20110725</jettyVersion>
-    <jacksonVersion>1.9.5</jacksonVersion>
+    <jacksonVersion>1.9.7</jacksonVersion>
     <!-- restore when we will be able to use a derby in memory database -->
     <redbackTestJdbcUrl>jdbc:derby:memory:users-test;create=true</redbackTestJdbcUrl>
     <redbackTestJdbcDriver>org.apache.derby.jdbc.EmbeddedDriver</redbackTestJdbcDriver>
@@ -102,7 +102,7 @@
     <plexus-digest.version>1.1</plexus-digest.version>
     <plexus-expression-evaluator.version>2.0-SNAPSHOT</plexus-expression-evaluator.version>
     <plexus-utils.version>1.5.5</plexus-utils.version>
-    <asfTomcatMavenPluginVersion>2.0-beta-1</asfTomcatMavenPluginVersion>
+    <asfTomcatMavenPluginVersion>2.0-SNAPSHOT</asfTomcatMavenPluginVersion>
     <tomcat7Version>7.0.27</tomcat7Version>
   </properties>
 
@@ -1660,6 +1660,11 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.5-SNAPSHOT</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.8</version>
@@ -1726,23 +1731,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>2.2-beta-3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.3.2</version>
-          <configuration>
-            <source>1.5</source>
-            <target>1.5</target>
-          </configuration>
-          <!-- remove with upgrade to m-c-p 2.4 -->
-          <dependencies>
-            <dependency>
-              <groupId>org.codehaus.plexus</groupId>
-              <artifactId>plexus-compiler-javac</artifactId>
-              <version>1.8.6</version>
-            </dependency>
-          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

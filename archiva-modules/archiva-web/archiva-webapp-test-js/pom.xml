@@ -30,7 +30,9 @@
   <name>Archiva Web :: Javascript Application Tests</name>
 
   <properties>
-    <webappDirectory>${project.build.directory}/tomcat6x/webapps/archiva</webappDirectory>
+    <webappDirectory>${project.build.directory}/tomcat7x/webapps/archiva</webappDirectory>
+    <container.test.port>0</container.test.port>
+    <tomcat.propertiesPortFilePath>${project.build.directory}/tomcat-port.properties</tomcat.propertiesPortFilePath>
   </properties>
 
   <dependencies>
@@ -201,6 +203,7 @@
                 <maxWaitTimeInMs>${maxWaitTimeInMs}</maxWaitTimeInMs>
                 <seleniumHost>${seleniumHost}</seleniumHost>
                 <seleniumPort>${seleniumPort}</seleniumPort>
+                <tomcat.propertiesPortFilePath>${tomcat.propertiesPortFilePath}</tomcat.propertiesPortFilePath>
               </systemPropertyVariables>
             </configuration>
           </execution>
@@ -276,13 +279,10 @@
                     <copy todir="${project.build.directory}/local-repo">
                       <fileset dir="src/test/resources/local-repo"/>
                     </copy>
-                    <copy todir="${project.build.directory}/tomcat6x">
-                      <fileset dir="src/test/tomcat6x"/>
-                    </copy>
                   </tasks>
                 </configuration>
               </execution>
-              <execution>
+              <!--execution>
                 <id>check-archiva-loaded</id>
                 <phase>integration-test</phase>
                 <configuration>
@@ -294,12 +294,12 @@
                 <goals>
                   <goal>run</goal>
                 </goals>
-              </execution>
+              </execution-->
             </executions>
           </plugin>
           <plugin>
             <groupId>org.apache.tomcat.maven</groupId>
-            <artifactId>tomcat6-maven-plugin</artifactId>
+            <artifactId>tomcat7-maven-plugin</artifactId>
             <dependencies>
               <dependency>
                 <groupId>org.apache.derby</groupId>
@@ -320,8 +320,6 @@
                 </goals>
                 <phase>pre-integration-test</phase>
                 <configuration>
-                  <additionalConfigFilesDir>${project.build.directory}/tomcat6x/conf</additionalConfigFilesDir>
-                  <configurationDir>${project.build.directory}/tomcat6x</configurationDir>
                   <path>/archiva</path>
                   <port>${container.test.port}</port>
                   <uriEncoding>UTF-8</uriEncoding>
@@ -334,9 +332,9 @@
                     <derby.system.home>${project.build.directory}</derby.system.home>
                     <archiva.devMode>true</archiva.devMode>
                   </systemProperties>
-                  <contextFile>src/test/${container.name}/Catalina/localhost/archiva.xml</contextFile>
+                  <contextFile>${project.build.testOutputDirectory}/archiva.xml</contextFile>
+                  <propertiesPortFilePath>${tomcat.propertiesPortFilePath}</propertiesPortFilePath>
                   <useNaming>true</useNaming>
-                  <serverXml>${project.build.directory}/tomcat6x/conf/server.xml</serverXml>
                 </configuration>
               </execution>
               <execution>
