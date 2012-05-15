@@ -771,7 +771,7 @@ public class DefaultBrowseService
         return path;
     }
 
-    private List<String> getSelectedRepos( String repositoryId )
+    protected List<String> getSelectedRepos( String repositoryId )
         throws ArchivaRestServiceException
     {
 
