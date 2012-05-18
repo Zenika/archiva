@@ -51,6 +51,57 @@ public class ArtifactContentEntriesTests
     }
 
     @Test
+    public void readArtifactContentEntriesRootPathNull()
+        throws Exception
+    {
+
+        File file = new File( getBasedir(),
+                              "src/test/repo-with-osgi/commons-logging/commons-logging/1.1/commons-logging-1.1.jar" );
+
+        List<ArtifactContentEntry> artifactContentEntries = browseService.readFileEntries( file, null );
+
+        log.info( "artifactContentEntries: {}", artifactContentEntries );
+
+        assertThat( artifactContentEntries ).isNotNull().isNotEmpty().hasSize( 2 ).contains(
+            new ArtifactContentEntry( "org", false, 0 ), new ArtifactContentEntry( "META-INF", false, 0 ) );
+
+    }
+
+    @Test
+    public void readArtifactContentEntriesRootPathEmpty()
+        throws Exception
+    {
+
+        File file = new File( getBasedir(),
+                              "src/test/repo-with-osgi/commons-logging/commons-logging/1.1/commons-logging-1.1.jar" );
+
+        List<ArtifactContentEntry> artifactContentEntries = browseService.readFileEntries( file, "" );
+
+        log.info( "artifactContentEntries: {}", artifactContentEntries );
+
+        assertThat( artifactContentEntries ).isNotNull().isNotEmpty().hasSize( 2 ).contains(
+            new ArtifactContentEntry( "org", false, 0 ), new ArtifactContentEntry( "META-INF", false, 0 ) );
+
+    }
+
+    @Test
+    public void readArtifactContentEntriesRootSlash()
+        throws Exception
+    {
+
+        File file = new File( getBasedir(),
+                              "src/test/repo-with-osgi/commons-logging/commons-logging/1.1/commons-logging-1.1.jar" );
+
+        List<ArtifactContentEntry> artifactContentEntries = browseService.readFileEntries( file, "/" );
+
+        log.info( "artifactContentEntries: {}", artifactContentEntries );
+
+        assertThat( artifactContentEntries ).isNotNull().isNotEmpty().hasSize( 2 ).contains(
+            new ArtifactContentEntry( "org", false, 0 ), new ArtifactContentEntry( "META-INF", false, 0 ) );
+
+    }
+
+    @Test
     public void readArtifactContentEntriesSecondDepthOnlyOneDirectory()
         throws Exception
     {

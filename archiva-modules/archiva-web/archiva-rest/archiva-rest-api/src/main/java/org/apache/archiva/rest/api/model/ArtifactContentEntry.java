@@ -29,7 +29,7 @@ import java.io.Serializable;
 public class ArtifactContentEntry
     implements Serializable
 {
-    private String name;
+    private String path;
 
     private boolean file;
 
@@ -40,21 +40,21 @@ public class ArtifactContentEntry
         // no op
     }
 
-    public ArtifactContentEntry( String name, boolean file, int depth )
+    public ArtifactContentEntry( String path, boolean file, int depth )
     {
-        this.name = name;
+        this.path = path;
         this.file = file;
         this.depth = depth;
     }
 
-    public String getName()
+    public String getPath()
     {
-        return name;
+        return path;
     }
 
-    public void setName( String name )
+    public void setPath( String path )
     {
-        this.name = name;
+        this.path = path;
     }
 
     public boolean isFile()
@@ -75,18 +75,6 @@ public class ArtifactContentEntry
     public void setDepth( int depth )
     {
         this.depth = depth;
-    }
-
-    @Override
-    public String toString()
-    {
-        final StringBuilder sb = new StringBuilder();
-        sb.append( "ArtifactContentEntry" );
-        sb.append( "{name='" ).append( name ).append( '\'' );
-        sb.append( ", file=" ).append( file );
-        sb.append( ", depth=" ).append( depth );
-        sb.append( '}' );
-        return sb.toString();
     }
 
     @Override
@@ -111,7 +99,7 @@ public class ArtifactContentEntry
         {
             return false;
         }
-        if ( !name.equals( that.name ) )
+        if ( path != null ? !path.equals( that.path ) : that.path != null )
         {
             return false;
         }
@@ -122,9 +110,21 @@ public class ArtifactContentEntry
     @Override
     public int hashCode()
     {
-        int result = name.hashCode();
+        int result = path != null ? path.hashCode() : 0;
         result = 31 * result + ( file ? 1 : 0 );
         result = 31 * result + depth;
         return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        final StringBuilder sb = new StringBuilder();
+        sb.append( "ArtifactContentEntry" );
+        sb.append( "{text='" ).append( path ).append( '\'' );
+        sb.append( ", file=" ).append( file );
+        sb.append( ", depth=" ).append( depth );
+        sb.append( '}' );
+        return sb.toString();
     }
 }

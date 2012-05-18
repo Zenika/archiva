@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knockout.simpleGrid"], function() {
+define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knockout.simpleGrid","jqueryFileTree"], function() {
 
 
 
@@ -151,7 +151,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
   }
 
 
-  ArtifactVersionDetailViewModel=function(groupId,artifactId,version){
+  ArtifactVersionDetailViewModel=function(groupId,artifactId,version,repositoryId){
     var mainContent = $("#main-content");
     var self=this;
     this.groupId=groupId;
@@ -159,6 +159,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     this.version=version;
     this.projectVersionMetadata=null;
     this.entries=ko.observableArray([]);
+    this.repositoryId=repositoryId;
 
     displayGroupId=function(groupId){
       displayGroupDetail(groupId,null);
@@ -250,31 +251,40 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
                 if ($(e.target).attr("href")=="#artifact-details-metadatas-content") {
                   $.log("artifact metadata");
                   var metadatasContentDiv=mainContent.find("#artifact-details-metadatas-content" );
-                    var metadatasUrl="restServices/archivaServices/browseService/metadatas/"+encodeURIComponent(groupId);
-                    metadatasUrl+="/"+encodeURIComponent(artifactId);
-                    metadatasUrl+="/"+encodeURIComponent(version);
-                    var selectedRepo=getSelectedBrowsingRepository();
-                    if (selectedRepo){
-                      metadatasUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
+                  var metadatasUrl="restServices/archivaServices/browseService/metadatas/"+encodeURIComponent(groupId);
+                  metadatasUrl+="/"+encodeURIComponent(artifactId);
+                  metadatasUrl+="/"+encodeURIComponent(version);
+                  var selectedRepo=getSelectedBrowsingRepository();
+                  if (selectedRepo){
+                    metadatasUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
+                  }
+                  $.ajax(metadatasUrl, {
+                    type: "GET",
+                    dataType: 'json',
+                    success: function(data) {
+                      var entries= $.map(data,function(e,i){
+                        return new MetadataEntry( e.key, e.value,false);
+                      });
+                      self.entries(entries);
                     }
-                    $.ajax(metadatasUrl, {
-                      type: "GET",
-                      dataType: 'json',
-                      success: function(data) {
-                        var entries= $.map(data,function(e,i){
-                          return new MetadataEntry( e.key, e.value,false);
-                        });
-                        self.entries(entries);
-                      }
-                    });
+                  });
                 }
 
-                if ($(e.target).attr("href")=="#artifact-details-pom-data-content") {
-                  $.log("pom content");
+                if ($(e.target).attr("href")=="#artifact-details-file-content") {
+                  $.log("file content:"+self.groupId+":"+self.artifactId+":"+self.version);
 
+                  var entriesUrl = "restServices/archivaServices/browseService/artifactContentEntries/"+encodeURIComponent(self.groupId);
+                  entriesUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
+                  entriesUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+                  //entriesUrl+="&p="+encodeURIComponent(artifactContentEntry.name);
+
+                  $("#main-content #artifact_content_tree").fileTree({
+                    script: entriesUrl,
+                    root: ""
+              		},function(file) {
+              		  //alert(file);
+              		});
                 }
-
-
               });
             }
           });
@@ -373,6 +383,24 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
 
   }
 
+  ArtifactContentEntry=function(path,file,depth){
+    this.path=path;
+    this.file=file;
+    this.depth=depth;
+    this.text="";
+  }
+
+  mapArtifactContentEntries=function(data){
+    if(data==null){
+      return [];
+    }
+    if ( $.isArray(data)){
+      return $.map(data,function(e){
+        return new ArtifactContentEntry(e.path,e.file,e.depth);
+      })
+    }
+    return new ArtifactContentEntry(data.path,data.file,data.depth);
+  }
 
   MetadataEntry=function(key,value,editable){
     var self=this;
@@ -1172,7 +1200,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
         dataType: 'json',
         success: function(data) {
           mainContent.find("#selected_repository" ).html($("#selected_repository_tmpl" ).tmpl({repositories:data,selected:repositoryId}));
-          var artifactVersionDetailViewModel=new ArtifactVersionDetailViewModel(groupId,artifactId,version);
+          var artifactVersionDetailViewModel=new ArtifactVersionDetailViewModel(groupId,artifactId,version,repositoryId);
           artifactVersionDetailViewModel.display(true);
         }
     });

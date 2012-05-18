@@ -433,7 +433,7 @@
         <a data-toggle="tab" href="#artifact-details-dependency-tree-content">${$.i18n.prop('artifact.detail.tab.header.dependency.tree')}</a>
       </li>
       <li>
-        <a data-toggle="tab" href="#artifact-details-pom-data-content">${$.i18n.prop('artifact.detail.tab.header.pom.content')}</a>
+        <a data-toggle="tab" href="#artifact-details-file-content">${$.i18n.prop('artifact.detail.tab.header.file.content')}</a>
       </li>
       <li>
         <a data-toggle="tab" href="#artifact-details-used-by-content">${$.i18n.prop('artifact.detail.tab.header.used.by')}</a>
@@ -631,7 +631,9 @@
       <div id="artifact-details-dependency-tree-content" class="tab-pane">
       </div>
 
-      <div id="artifact-details-pom-data-content" class="tab-pane">
+      <div id="artifact-details-file-content" class="tab-pane">
+          <div id="artifact_content_tree">
+          </div>
       </div>
 
       <div id="artifact-details-used-by-content" class="tab-pane"></div>
@@ -820,4 +822,20 @@
       </tr>
     {{/each}}
     </tbody>
+</script>
+
+<script id="artifact_content_tree_partial" type="text/html">
+  <ul class="jqueryFileTree" style="display: none;">
+    {{each artifactContentEntries}}
+      {{if $value.file == true}}
+        <li class="file">
+          <a href="#" rel="${$value.path}/">${$value.text}</a>
+        </li>
+      {{else}}
+        <li class="directory collapsed">
+          <a href="#" rel="${$value.path}/">${$value.text}</a>
+        </li>
+      {{/if}}
+    {{/each}}
+  </ul>
 </script>
