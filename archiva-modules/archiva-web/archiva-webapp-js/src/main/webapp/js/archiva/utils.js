@@ -373,6 +373,12 @@ define("utils",["jquery","i18n","jquery.tmpl"], function() {
     return sorted?res.sort():res;
   }
 
+  goToAnchor=function(anchor){
+    var curHref = window.location.href;
+    curHref=curHref.substringBeforeLast("#");
+    window.location.href=curHref+"#"+anchor;
+  }
+
   //------------------------------------
   // utils javascript string extensions
   //------------------------------------
@@ -387,6 +393,10 @@ define("utils",["jquery","i18n","jquery.tmpl"], function() {
 
   String.prototype.substringBeforeLast = function(str) {
     return this.substring(0,this.lastIndexOf(str));
+  }
+
+  String.prototype.substringAfterLast = function(str) {
+    return this.substring(this.lastIndexOf(str)+1);
   }
 
   //-----------------------------------------

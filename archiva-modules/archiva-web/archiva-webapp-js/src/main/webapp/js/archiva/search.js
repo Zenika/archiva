@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knockout.simpleGrid","jqueryFileTree"], function() {
-
-
+define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knockout.simpleGrid","jqueryFileTree","prettify"]
+, function() {
 
   //-----------------------------------------
   // browse part
@@ -270,20 +269,82 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
                   });
                 }
 
-                if ($(e.target).attr("href")=="#artifact-details-file-content") {
-                  $.log("file content:"+self.groupId+":"+self.artifactId+":"+self.version);
+                if ($(e.target).attr("href")=="#artifact-details-files-content") {
+                  mainContent.find("#artifact-details-files-content" ).html(smallSpinnerImg());
+                  var artifactDownloadInfosUrl = "restServices/archivaServices/browseService/artifactDownloadInfos/"+encodeURIComponent(self.groupId);
+                  artifactDownloadInfosUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
+                  artifactDownloadInfosUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
 
-                  var entriesUrl = "restServices/archivaServices/browseService/artifactContentEntries/"+encodeURIComponent(self.groupId);
-                  entriesUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
-                  entriesUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
-                  //entriesUrl+="&p="+encodeURIComponent(artifactContentEntry.name);
+                  $.get(artifactDownloadInfosUrl,function(data){
+                    $("#artifact-details-files-content" ).html($("#artifact-details-files-content_tmpl").tmpl({artifactDownloadInfos:data}));
+                    mainContent.find("#artifact-content-list-files li" ).on("click",function(){
+                      mainContent.find("#artifact_content_tree").html("");
+                      mainContent.find("#artifact-content-text" ).html("");
+                      var idValue = $(this ).attr("id");
+                      var classifier=idValue.substringBeforeLast(":");
+                      var type = idValue.substringAfterLast(":");
+                      $.log("click:" + idValue + " -> " + classifier + ":" + type );
+                      if (type=="pom"){
+                        $.log("show pom");
+                        var pomContentUrl = "restServices/archivaServices/browseService/artifactContentText/"+encodeURIComponent(self.groupId);
+                        pomContentUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
+                        pomContentUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+                        pomContentUrl+="&t=pom";
+                        mainContent.find("#artifact-content-text" ).html(smallSpinnerImg());
+                        $.ajax({
+                          url: pomContentUrl,
+                          dataType: "text",
+                          success: function(data) {
+                            var text = data.replace(/</g,'&lt;');
+                            text=text.replace(/>/g,"&gt;");
+                            mainContent.find("#artifact-content-text" ).html(text);
+                            prettyPrint();
+                            goToAnchor("artifact-content-text-header");
+                          }
+                        });
+                        return;
+                      }
+                      var entriesUrl = "restServices/archivaServices/browseService/artifactContentEntries/"+encodeURIComponent(self.groupId);
+                      entriesUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
+                      entriesUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+                      if(classifier){
+                        entriesUrl+="&c="+classifier;
+                      }
+                      $("#main-content #artifact_content_tree").fileTree({
+                        script: entriesUrl,
+                        root: ""
+                  		  },function(file) {
+                          $.log("file:"+file.substringBeforeLast("/")+',classifier:'+classifier);
+                          var fileContentUrl = "restServices/archivaServices/browseService/artifactContentText/"+encodeURIComponent(self.groupId);
+                          fileContentUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
+                          fileContentUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+                          if(type){
+                            fileContentUrl+="&t="+type;
+                          }
+                          if(classifier){
+                            fileContentUrl+="&c="+classifier;
+                          }
+                          fileContentUrl+="&p="+file.substringBeforeLast("/");
+                          $.ajax({
+                           url: fileContentUrl,
+                           dataType: "text",
+                           success: function(data) {
+                             $.log("foo");
+                             $.log("data:"+data);
+                             var text = data.replace(/</g,'&lt;');
+                             text=text.replace(/>/g,"&gt;");
+                             mainContent.find("#artifact-content-text" ).html(smallSpinnerImg());
+                             mainContent.find("#artifact-content-text" ).html(text);
+                             prettyPrint();
+                             goToAnchor("artifact-content-text-header");
+                           }
+                          });
+                  		  }
+                      );
+                    });
 
-                  $("#main-content #artifact_content_tree").fileTree({
-                    script: entriesUrl,
-                    root: ""
-              		},function(file) {
-              		  //alert(file);
-              		});
+                  });
+
                 }
               });
             }
@@ -387,7 +448,6 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     this.path=path;
     this.file=file;
     this.depth=depth;
-    this.text="";
   }
 
   mapArtifactContentEntries=function(data){
@@ -1201,7 +1261,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
         success: function(data) {
           mainContent.find("#selected_repository" ).html($("#selected_repository_tmpl" ).tmpl({repositories:data,selected:repositoryId}));
           var artifactVersionDetailViewModel=new ArtifactVersionDetailViewModel(groupId,artifactId,version,repositoryId);
-          artifactVersionDetailViewModel.display(true);
+          artifactVersionDetailViewModel.display();
         }
     });
   }

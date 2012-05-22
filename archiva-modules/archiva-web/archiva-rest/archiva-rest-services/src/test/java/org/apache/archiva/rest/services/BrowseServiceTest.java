@@ -20,14 +20,17 @@ package org.apache.archiva.rest.services;
 
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
 import org.apache.archiva.rest.api.model.ArtifactContentEntry;
+import org.apache.archiva.rest.api.model.ArtifactDownloadInfo;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
 import org.apache.archiva.rest.api.model.Entry;
 import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.BrowseService;
+import org.apache.cxf.jaxrs.client.WebClient;
 import org.fest.assertions.MapAssert;
 import org.junit.Test;
 
+import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -301,6 +304,101 @@ public class BrowseServiceTest
             new ArtifactContentEntry( "org/apache/commons/logging/impl", false, 4 ),
             new ArtifactContentEntry( "org/apache/commons/logging/LogSource.class", true, 4 ) );
         deleteTestRepo( testRepoId );
+    }
+
+    @Test
+    public void getArtifactDownloadInfos()
+        throws Exception
+    {
+        String testRepoId = "test-repo";
+        // force guest user creation if not exists
+        if ( getUserService( authorizationHeader ).getGuestUser() == null )
+        {
+            assertNotNull( getUserService( authorizationHeader ).createGuestUser() );
+        }
+
+        createAndIndexRepo( testRepoId, new File( getBasedir(), "src/test/repo-with-osgi" ).getAbsolutePath(), false );
+
+        BrowseService browseService = getBrowseService( authorizationHeader, true );
+
+        List<ArtifactDownloadInfo> artifactDownloadInfos =
+            browseService.getArtifactDownloadInfos( "commons-logging", "commons-logging", "1.1", testRepoId );
+
+        log.info( "artifactDownloadInfos {}", artifactDownloadInfos );
+        assertThat( artifactDownloadInfos ).isNotNull().isNotEmpty().hasSize( 3 );
+        deleteTestRepo( testRepoId );
+    }
+
+
+    @Test
+    public void readArtifactContentText()
+        throws Exception
+    {
+        String testRepoId = "test-repo";
+        // force guest user creation if not exists
+        if ( getUserService( authorizationHeader ).getGuestUser() == null )
+        {
+            assertNotNull( getUserService( authorizationHeader ).createGuestUser() );
+        }
+
+        createAndIndexRepo( testRepoId, new File( getBasedir(), "src/test/repo-with-osgi" ).getAbsolutePath(), false );
+
+        BrowseService browseService = getBrowseService( authorizationHeader, true );
+
+        WebClient.client( browseService ).accept( MediaType.TEXT_PLAIN );
+
+        try
+        {
+            String text =
+                browseService.getArtifactContentText( "commons-logging", "commons-logging", "1.1", "sources", null,
+                                                      "org/apache/commons/logging/LogSource.java", testRepoId );
+
+            log.debug( "text: {}", text );
+
+            assertThat( text ).contains( "package org.apache.commons.logging;" ).contains( "public class LogSource {" );
+        }
+        catch ( Exception e )
+        {
+            log.error( e.getMessage(), e );
+            throw e;
+        }
+    }
+
+
+    @Test
+    public void readArtifactContentTextPom()
+        throws Exception
+    {
+        String testRepoId = "test-repo";
+        // force guest user creation if not exists
+        if ( getUserService( authorizationHeader ).getGuestUser() == null )
+        {
+            assertNotNull( getUserService( authorizationHeader ).createGuestUser() );
+        }
+
+        createAndIndexRepo( testRepoId, new File( getBasedir(), "src/test/repo-with-osgi" ).getAbsolutePath(), false );
+
+        BrowseService browseService = getBrowseService( authorizationHeader, true );
+
+        WebClient.client( browseService ).accept( MediaType.TEXT_PLAIN );
+
+        try
+        {
+            String text =
+                browseService.getArtifactContentText( "commons-logging", "commons-logging", "1.1", null, "pom", null,
+                                                      testRepoId );
+
+            log.info( "text: {}", text );
+
+            assertThat( text ).contains(
+                "<url>http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/</url>" ).contains(
+                "<subscribe>commons-dev-subscribe@jakarta.apache.org</subscribe>" );
+        }
+        catch ( Exception e )
+        {
+            log.error( e.getMessage(), e );
+            throw e;
+        }
     }
 
 
