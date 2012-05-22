@@ -219,9 +219,6 @@ public class DefaultCUDFService
             sb.append( "number: " ).append( artifact.getVersion() ).append( "\n" );
             sb.append( "version: " ).append(
                 convertArtifactVersionToCUDFVersion( artifact, cudfVersionMapper ) ).append( "\n" );
-            sb.append( "url: " );
-            sb.append( convertURLToCUDFURL( artifact.getUrl() ) );
-            sb.append( "\n" );
             sb.append( "type: " ).append( StringUtils.defaultString( artifact.getPackaging() ) ).append( "\n" );
             return sb.toString();
         }
@@ -234,11 +231,6 @@ public class DefaultCUDFService
     private String outputArtifactInCUDFInline( String groupId, String artifactId )
     {
         return groupId + SEPARATOR + artifactId.replaceAll( "_", "-" );
-    }
-
-    private String convertURLToCUDFURL( String url )
-    {
-        return Strings.nullToEmpty( url ).replaceAll( ":", SEPARATOR );
     }
 
     private String convertDependenciesToCUDF( Artifact artifact, List<String> repositories, Queue<Artifact> queue,
@@ -373,7 +365,6 @@ public class DefaultCUDFService
     private String getCUDFPreambule()
     {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
-            + "          url: string = [\"\"],\n"
             + "          type: string = [\"\"]\n\n";
     }
 
