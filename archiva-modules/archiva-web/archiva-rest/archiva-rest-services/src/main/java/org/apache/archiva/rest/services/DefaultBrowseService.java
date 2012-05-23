@@ -894,32 +894,6 @@ public class DefaultBrowseService
         return path;
     }
 
-    protected List<String> getSelectedRepos( String repositoryId )
-        throws ArchivaRestServiceException
-    {
-
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return Collections.emptyList();
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
-        return selectedRepos;
-    }
-
-
     private String collapseNamespaces( RepositorySession repositorySession, MetadataResolver metadataResolver,
                                        Collection<String> repoIds, String n )
         throws MetadataResolutionException

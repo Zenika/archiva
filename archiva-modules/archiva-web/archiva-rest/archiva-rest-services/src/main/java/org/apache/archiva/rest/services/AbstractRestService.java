@@ -129,12 +129,17 @@ public abstract class AbstractRestService
             // check user has karma on the repository
             if ( !selectedRepos.contains( repositoryId ) )
             {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
+                throw new ArchivaRestServiceException( getSelectedRepoExceptionMessage(),
+                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
             }
             selectedRepos = Collections.singletonList( repositoryId );
         }
         return selectedRepos;
+    }
+
+    protected String getSelectedRepoExceptionMessage()
+    {
+        return "browse.root.groups.repositoy.denied";
     }
 
     protected String getPrincipal()

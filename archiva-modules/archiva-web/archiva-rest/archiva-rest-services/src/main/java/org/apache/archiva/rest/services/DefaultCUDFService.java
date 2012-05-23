@@ -106,6 +106,11 @@ public class DefaultCUDFService
         return response.toString();
     }
 
+    @Override
+    protected String getSelectedRepoExceptionMessage() {
+        return "cudf.root.group.repository.denied";
+    }
+
     public Response getConeCUDFFile( String groupId, String artifactId, String version, String type,
                                      String repositoryId )
         throws ArchivaRestServiceException
