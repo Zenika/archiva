@@ -16,28 +16,23 @@ package org.apache.archiva.rest.services;
  * limitations under the License.
  */
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.Collections2;
 import org.apache.archiva.common.utils.VersionComparator;
 import org.apache.archiva.metadata.model.Dependency;
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.metadata.repository.MetadataResolver;
 import org.apache.archiva.metadata.repository.RepositorySession;
+import org.apache.archiva.metadata.repository.storage.maven2.MavenProjectFacet;
 import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
-import org.apache.archiva.rest.api.model.SearchRequest;
 import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
-import org.apache.archiva.rest.api.services.SearchService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,7 +41,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -75,9 +69,6 @@ public class DefaultCUDFService
     @Inject
     private BrowseService browseService;
 
-    @Inject
-    private SearchService searchService;
-
     public String getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId )
         throws ArchivaRestServiceException
     {
@@ -90,7 +81,7 @@ public class DefaultCUDFService
         LinkedList<Artifact> queue = new LinkedList<Artifact>();
         Set<Artifact> known = new TreeSet<Artifact>( new ArtifactComparator() );
 
-        queue.add( getSpecificArtifact( groupId, artifactId, version, type, repositories ) );
+        queue.add( createArtifact(repositoryId, groupId, artifactId, version) );
         Artifact artifact = null;
         while ( ( artifact = queue.poll() ) != null )
         {
@@ -156,7 +147,7 @@ public class DefaultCUDFService
                 VersionsList versionsList = browseService.getVersionsList( groupId, artifactId, repository );
                 for ( String version : versionsList.getVersions() )
                 {
-                    Artifact artifact = getSpecificArtifact( groupId, artifactId, version, null, repositories );
+                    Artifact artifact = createArtifact(repository, groupId, artifactId, version);
                     known.add( artifact );
                     response.append( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
                     response.append(
@@ -166,8 +157,40 @@ public class DefaultCUDFService
             }
             projects = new ArrayList<String>();
         }
-
         return response.toString();
+    }
+
+    private Artifact createArtifact(String repository, String groupId, String artifactId, String version) {
+        Artifact artifact = new Artifact(groupId, artifactId, version);
+        artifact.setPackaging(resolveArtifactPackaging(repository, artifact));
+        return artifact;
+    }
+
+    private String resolveArtifactPackaging(String repository, Artifact artifact) {
+        String packaging = null;
+        RepositorySession repositorySession = null;
+        try {
+            try {
+                repositorySession = repositorySessionFactory.createSession();
+                MetadataResolver metadataResolver = repositorySession.getResolver();
+                ProjectVersionMetadata versionMetadata =
+                       metadataResolver.resolveProjectVersion(repositorySession, repository, artifact.getGroupId(), artifact.getArtifactId(),
+                               artifact.getVersion());
+                MavenProjectFacet projectFacet = (MavenProjectFacet) versionMetadata.getFacet(MavenProjectFacet.FACET_ID);
+                if (projectFacet != null) {
+                    packaging = projectFacet.getPackaging();
+                }
+            } catch (MetadataResolutionException e) {
+                log.error(
+                        "Skipping invalid metadata while compiling shared model for " + artifact.getGroupId() + ":" + artifact.getArtifactId()
+                                + " in repo " + repository + ": " + e.getMessage() );
+            }
+        } finally {
+            if (repositorySession != null) {
+                repositorySession.close();
+            }
+        }
+        return packaging;
     }
 
     public Response getUniverseCUDFFile( String repositoryId )
@@ -208,7 +231,7 @@ public class DefaultCUDFService
         }
     }
 
-    private String outputArtifactInCUDF( Artifact artifact, Map<String, Integer> cudfVersionMapper )
+    private String outputArtifactInCUDF( Artifact artifact, Map<String, Integer> cudfVersionMapper)
         throws ArchivaRestServiceException
     {
         try
@@ -254,9 +277,8 @@ public class DefaultCUDFService
                 Dependency item = it.next();
                 if ( !item.isOptional() && ( item.getScope() == null || "compile".equals( item.getScope() ) ) )
                 {
-                    Artifact art =
-                        getSpecificArtifact( item.getGroupId(), item.getArtifactId(), item.getVersion(), item.getType(),
-                                             repositories );
+                    Artifact art = new Artifact(item.getGroupId(), item.getArtifactId(), item.getVersion());
+                    art.setPackaging(item.getType());
                     artifacts.add( art );
                 }
             }
@@ -366,35 +388,6 @@ public class DefaultCUDFService
     {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
             + "          type: string = [\"\"]\n\n";
-    }
-
-    private Artifact getSpecificArtifact( final String groupId, final String artifactId, final String version,
-                                          final String type, List<String> repositories )
-        throws ArchivaRestServiceException
-    {
-        Predicate matchingPredicate = new Predicate<Artifact>()
-        {
-            public boolean apply( @Nullable Artifact input )
-            {
-                return input != null && groupId.equals( input.getGroupId() ) && artifactId.equals(
-                    input.getArtifactId() ) && version.equals( input.getVersion() ) &&
-                    ( Strings.isNullOrEmpty( type ) ? "jar" : type ).equals( input.getPackaging() ) &&
-                    input.getClassifier() == null;
-            }
-        };
-
-        Collection<Artifact> artifacts = Collections2.filter( searchService.searchArtifacts(
-            new SearchRequest( groupId, artifactId, version, Strings.isNullOrEmpty( type ) ? "jar" : type, null,
-                               repositories ) ), matchingPredicate );
-
-        for ( Artifact artifact : artifacts )
-        {
-            if ( artifact.getVersion().equals( version ) )
-            {
-                return artifact;
-            }
-        }
-        return new Artifact( groupId, artifactId, version );
     }
 
     // FIXME its violate Collections obligation on compareTo / equals methods

@@ -130,7 +130,7 @@ public abstract class AbstractRestService
             if ( !selectedRepos.contains( repositoryId ) )
             {
                 throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode() );
+                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
             }
             selectedRepos = Collections.singletonList( repositoryId );
         }
