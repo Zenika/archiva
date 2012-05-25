@@ -702,3 +702,123 @@
     </tr>
 {% } %}
 </script>
+
+<script id="report-base" type="text/html">
+  <div class="page-header">
+    <h3>${$.i18n.prop('report.title')}</h3>
+  </div>
+
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#stats" data-toggle="tab">${$.i18n.prop('report.statistics.title')}</a></li>
+      <li><a href="#health" data-toggle="tab">${$.i18n.prop('report.health.title')}</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="stats">
+        <form class="form-horizontal" id="report-statistics-form-id">
+          <fieldset id="form-statistics-report">
+            <div class="control-group" class="form-inline">
+              <label for="reportStatisticsRepositoriesAvailable" class="control-label">
+                ${$.i18n.prop('report.statistics.repositories.label')}
+              </label>
+              <div class="controls">
+                <select multiple="multiple" id="reportStatisticsRepositoriesAvailable" data-bind="options: repositoriesAvailabled">
+                </select>
+                <button class="btn btn-small" data-bind="click: removeAll">
+                  &laquo;
+                </button>
+                <button class="btn btn-small" data-bind="click: remove">
+                  &larr;
+                </button>
+                <button class="btn btn-small" data-bind="click: add">
+                  &rarr;
+                </button>
+                <button class="btn btn-small" data-bind="click: addAll">
+                  &raquo;
+                </button>
+
+                <select multiple="multiple" id="repositoriesEnabled" name="repositoriesEnabled"
+                        class="xlarge required">
+                </select>
+
+                <button class="btn btn-small" data-bind="click: up">
+                  &uarr;
+                </button>
+                <button class="btn btn-small" data-bind="click: down">
+                  &darr;
+                </button>
+              </div>
+            </div>
+            <div class="control-group">
+              <label for="rowCountStatistics" class="control-label">
+                ${$.i18n.prop('report.statistics.row-count.label')}
+              </label>
+              <div class="controls">
+                <input type="text" id="rowCountStatistics" name="rowCountStatistics" class="input-small"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label for="startDate" class="control-label">
+                ${$.i18n.prop('report.statistics.start-date.label')}
+              </label>
+              <div class="controls">
+                <input type="text" id="startDate" name="startDate" class="input-small"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label for="endDate" class="control-label">
+                ${$.i18n.prop('report.statistics.end-date.label')}
+              </label>
+              <div class="controls">
+                <input type="text" id="endDate" name="endDate" class="input-small"/>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" data-bind="click: showStatistics">
+                ${$.i18n.prop('report.statistics.btn-view')}
+              </button>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
+      <div class="tab-pane" id="health">
+        <form class="form-horizontal" id="report-health-form-id">
+          <fieldset id="form-health-report">
+            <div class="control-group">
+              <label for="rowCountHealth" class="control-label">
+                ${$.i18n.prop('report.statistics.row-count.label')}
+              </label>
+              <div class="controls">
+                <input type="text" id="rowCountHealth" name="rowCountHealth" class="input-small"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label for="groupId" class="control-label">
+                ${$.i18n.prop('report.health.groupId.label')}
+              </label>
+              <div class="controls">
+                <input type="text" id="groupId" name="groupId"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label for="report.health.repositoryId" class="control-label">
+                ${$.i18n.prop('report.health.repositoryId.label')}
+              </label>
+              <div class="controls">
+                <select id="report.health.repositoryId" name="repositoryId" data-bind="options: repositories,
+                    optionsCaption: '${$.i18n.prop('report.select.all-repositories')}'">
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" data-bind="click: showHealth">
+                ${$.i18n.prop('report.health.btn-view')}
+              </button>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+
+</script>

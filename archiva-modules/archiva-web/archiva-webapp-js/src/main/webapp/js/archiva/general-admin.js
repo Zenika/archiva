@@ -875,4 +875,106 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
     });
   }
 
+  reportStatisticsFormValidator=function(){
+    var validate = $("#report-statistics-form-id").validate({
+      rules: {
+        repositoriesEnabled: {
+          required: true
+        },
+        rowCountStatistics: {
+          required:true,
+          number: true
+        },
+        startDate: {
+          date: true
+        },
+        endDate: {
+          date: true
+        }
+      },
+      showErrors: function(validator, errorMap, errorList) {
+        customShowError("#report-statistics-form-id", validator, errorMap, errorMap);
+      }
+    })
+  }
+  ReportStatisticsViewModel=function(repositories){
+    reportStatisticsFormValidator();
+    this.repositoriesAvailabled = repositories;
+
+    $("#startDate" ).datepicker();
+    $("#endDate" ).datepicker();
+
+    this.showStatistics=function() {
+      if (!$("#report-statistics-form-id").valid()) {
+        return;
+      }
+    }
+
+    this.add=function(){
+      $( "#reportStatisticsRepositoriesAvailable option:selected" ).remove().appendTo("#repositoriesEnabled" ).select();
+    }
+    this.remove=function(){
+      $( "#repositoriesEnabled option:selected" ).remove().appendTo("#reportStatisticsRepositoriesAvailable");
+    }
+    this.addAll=function(){
+      $( "#reportStatisticsRepositoriesAvailable option" ).remove().appendTo( "#repositoriesEnabled" ).attr('selected', 'selected');
+    }
+    this.removeAll=function(){
+      $( "#repositoriesEnabled option" ).remove().appendTo( "#reportStatisticsRepositoriesAvailable" );
+    }
+    this.up=function(){
+    }
+    this.down=function(){
+    }
+  }
+
+  reportHealthFormValidator=function(){
+    var validate = $("#main-content #report-health-form-id").validate({
+      rules: {
+        rowCountHealth: {
+          required: true,
+          number: true
+        },
+        groupId: {
+          required: true
+        },
+        repositoryId: {
+          required: true
+        }
+      },
+      showErrors: function(validator, errorMap, errorList) {
+        customShowError("#main-content #report-health-form-id", validator, errorMap, errorMap);
+      }
+    })
+  }
+
+  ReportHealthViewModel=function(repositories){
+    reportHealthFormValidator();
+    this.repositories = ko.observable( repositories );
+
+    this.showHealth=function() {
+      if (!$("#main-content #report-health-form-id").valid()) {
+        return;
+      }
+    }
+  }
+
+  displayReportsPage=function(){
+    screenChange();
+    var mainContent = $("#main-content");
+    mainContent.html(mediumSpinnerImg());
+    $.ajax("restServices/archivaServices/searchService/observableRepoIds", {
+      type: "GET",
+      dataType: 'json',
+      success: function(data) {
+        var repos = mapStringList( data );
+        mainContent.html( $( "#report-base" ).tmpl() );
+        var statisticsReportViewModel = ReportStatisticsViewModel(repos);
+        var healthReportViewModel = ReportHealthViewModel(repos);
+        ko.applyBindings( statisticsReportViewModel, mainContent.get( 0 ) );
+        ko.applyBindings( healthReportViewModel, mainContent.get( 0 ) );
+      }
+    })
+  }
+
 });
