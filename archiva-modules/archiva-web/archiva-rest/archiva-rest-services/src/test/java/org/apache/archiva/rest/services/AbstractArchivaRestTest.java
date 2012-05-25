@@ -21,17 +21,8 @@ package org.apache.archiva.rest.services;
 
 import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.common.utils.FileUtil;
-import org.apache.archiva.rest.api.services.ArchivaAdministrationService;
-import org.apache.archiva.rest.api.services.BrowseService;
-import org.apache.archiva.rest.api.services.CommonServices;
-import org.apache.archiva.rest.api.services.ManagedRepositoriesService;
-import org.apache.archiva.rest.api.services.NetworkProxyService;
-import org.apache.archiva.rest.api.services.PingService;
-import org.apache.archiva.rest.api.services.ProxyConnectorService;
-import org.apache.archiva.rest.api.services.RemoteRepositoriesService;
-import org.apache.archiva.rest.api.services.RepositoriesService;
-import org.apache.archiva.rest.api.services.RepositoryGroupService;
-import org.apache.archiva.rest.api.services.SearchService;
+import org.apache.archiva.redback.rest.services.FakeCreateAdminService;
+import org.apache.archiva.rest.api.services.*;
 import org.apache.archiva.security.common.ArchivaRoleConstants;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -226,6 +217,13 @@ public abstract class AbstractArchivaRestTest
         }
         return service;
 
+    }
+
+    protected CUDFService getCUDFService(String authzHeader) {
+        CUDFService service = JAXRSClientFactory.create(getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
+                CUDFService.class, Collections.singletonList(new JacksonJaxbJsonProvider()));
+        WebClient.client( service ).header( "Authorization", authzHeader );
+        return service;
     }
 
     protected SearchService getSearchService( String authzHeader )

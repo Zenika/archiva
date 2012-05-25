@@ -1,0 +1,64 @@
+package org.apache.archiva.rest.services;
+
+import org.apache.archiva.redback.rest.api.services.RedbackServiceException;
+import org.apache.archiva.rest.api.services.CUDFService;
+import org.junit.Test;
+
+import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
+ */
+public class CUDFServiceTest extends AbstractArchivaRestTest{
+
+    @Test
+    public void cudfConeTest() throws Exception {
+        String testRepoId = "test-repo";
+        createAndIndexRepo(testRepoId, new File(getBasedir(), "src/test/repo-with-osgi").getAbsolutePath());
+        CUDFService cudfService = getCUDFService(authorizationHeader);
+        String result = cudfService.getConeCUDF("commons-cli", "commons-cli", "1.0", "jar", testRepoId);
+        assertTrue(result.contains("commons-cli%3acommons-cli"));
+        assertTrue(result.contains("type: jar"));
+        assertTrue(result.contains("number: 1.0"));
+        assertEquals(2, numberOfOccurrences(result, "commons-logging%3acommons-logging"));
+        assertEquals(2, numberOfOccurrences(result, "commons-lang%3acommons-lang"));
+    }
+
+    @Test
+    public void cudfUniverseTest() throws Exception {
+        String testRepoId = "test-repo";
+        createAndIndexRepo(testRepoId, new File(getBasedir(), "src/test/repo-with-osgi").getAbsolutePath());
+        CUDFService cudfService = getCUDFService(authorizationHeader);
+        String result = cudfService.getUniverseCUDF(testRepoId).toString();
+        assertTrue(result.contains("commons-cli%3acommons-cli"));
+        assertEquals(7, numberOfOccurrences(result, "commons-logging%3acommons-logging"));
+    }
+
+    @Test
+    public void cudfUniverseWithDependenciesInOtherRepository() throws Exception {
+        String testRepoId1 = "test-repo-1";
+        String testRepoId2 = "test-repo-2";
+
+        createAndIndexRepo(testRepoId1, new File(getBasedir(), "src/test/repo-cudf-1").getAbsolutePath());
+        createAndIndexRepo(testRepoId2, new File(getBasedir(), "src/test/repo-cudf-2").getAbsolutePath());
+
+        CUDFService cudfService = getCUDFService(authorizationHeader);
+        String result = cudfService.getConeCUDF("commons-cli", "commons-cli", "1.0", "jar", testRepoId1);
+        assertTrue(result.contains("commons-cli%3acommons-cli"));
+        assertTrue(result.contains("type: jar"));
+        assertTrue(result.contains("number: 1.0"));
+        assertEquals(2, numberOfOccurrences(result, "commons-logging%3acommons-logging"));
+        assertEquals(2, numberOfOccurrences(result, "commons-lang%3acommons-lang"));
+    }
+
+    private int numberOfOccurrences(String stringToCompute, String regex) {
+        Matcher matcher = Pattern.compile(regex).matcher(stringToCompute);
+        int occurrences = 0;
+        while (matcher.find()) {
+            occurrences++;
+        }
+        return occurrences;
+    }
+}
