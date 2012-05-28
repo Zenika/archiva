@@ -883,7 +883,8 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         },
         rowCountStatistics: {
           required:true,
-          number: true
+          number: true,
+          min: 10
         },
         startDate: {
           date: true
@@ -933,7 +934,8 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       rules: {
         rowCountHealth: {
           required: true,
-          number: true
+          number: true,
+          min: 10
         },
         groupId: {
           required: true
