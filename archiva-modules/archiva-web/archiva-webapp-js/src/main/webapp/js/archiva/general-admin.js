@@ -875,6 +875,9 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
     });
   }
 
+  //---------------------------
+  // report configuration page
+  //---------------------------
   reportStatisticsFormValidator=function(){
     var validate = $("#report-statistics-form-id").validate({
       rules: {
@@ -918,7 +921,8 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       $( "#repositoriesEnabled option:selected" ).remove().appendTo("#reportStatisticsRepositoriesAvailable");
     }
     this.addAll=function(){
-      $( "#reportStatisticsRepositoriesAvailable option" ).remove().appendTo( "#repositoriesEnabled" ).attr('selected', 'selected');
+      $( "#reportStatisticsRepositoriesAvailable option" ).remove().appendTo( "#repositoriesEnabled" ).attr('selected',
+                                                                                                            'selected');
     }
     this.removeAll=function(){
       $( "#repositoriesEnabled option" ).remove().appendTo( "#reportStatisticsRepositoriesAvailable" );
@@ -963,6 +967,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
 
   displayReportsPage=function(){
     screenChange();
+    clearUserMessages();
     var mainContent = $("#main-content");
     mainContent.html(mediumSpinnerImg());
     $.ajax("restServices/archivaServices/searchService/observableRepoIds", {
@@ -971,8 +976,8 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       success: function(data) {
         var repos = mapStringList( data );
         mainContent.html( $( "#report-base" ).tmpl() );
-        var statisticsReportViewModel = ReportStatisticsViewModel(repos);
-        var healthReportViewModel = ReportHealthViewModel(repos);
+        var statisticsReportViewModel = ReportStatisticsViewModel( repos );
+        var healthReportViewModel = ReportHealthViewModel( repos );
         ko.applyBindings( statisticsReportViewModel, mainContent.get( 0 ) );
         ko.applyBindings( healthReportViewModel, mainContent.get( 0 ) );
       }
