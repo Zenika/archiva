@@ -878,6 +878,13 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   //---------------------------
   // report configuration page
   //---------------------------
+  StatisticsReportRequest=function() {
+    this.repositories = ko.observable( [] );
+    this.rowCount = ko.observable(100);
+    this.startDate = ko.observable();
+    this.endDate = ko.observable();
+  }
+
   reportStatisticsFormValidator=function(){
     var validate = $("#report-statistics-form-id").validate({
       rules: {
@@ -901,9 +908,9 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       }
     })
   }
-  ReportStatisticsViewModel=function(repositories){
+  ReportStatisticsViewModel=function(){
     reportStatisticsFormValidator();
-    this.repositoriesAvailabled = repositories;
+    this.statisticsReport = ko.observable( new StatisticsReportRequest() );
 
     $("#startDate" ).datepicker();
     $("#endDate" ).datepicker();
@@ -912,6 +919,32 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       if (!$("#report-statistics-form-id").valid()) {
         return;
       }
+      var mainContent = $("#main-content");
+
+      url = "restServices/archivaServices/repositoriesReport/getStatisticsReport/?repositories="
+        + this.statisticsReport().repositories() + "&rowCount=" + this.statisticsReport().rowCount();
+
+      if(this.statisticsReport().startDate()!=null){
+        url += "&startDate=" + this.statisticsReport().startDate();
+      }
+      if(this.statisticsReport().endDate()!=null){
+        url += "&endDate=" + this.statisticsReport().endDate();
+      }
+
+      $.ajax(url, {
+        type: "GET",
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(data){
+          clearUserMessages();
+          screenChange();
+          mainContent.html( $( "#report-statistics" ).tmpl( {report:data} ) );
+        },
+        error: function(data){
+          clearUserMessages();
+          displayErrorMessage(data);
+        }
+      });
     }
 
     this.add=function(){
@@ -933,6 +966,42 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
     }
   }
 
+  HealthReportRequest=function(){
+    this.repositoryId = ko.observable();
+    this.rowCount = ko.observable(100);
+    this.groupId = ko.observable();
+  }
+  HealthReportResult=function(repositoryId,namespace,project,version,id,message,problem,name,facetId){
+    this.repositoryId = repositoryId;
+    this.namespace = namespace;
+    this.project = project;
+    this.version = version;
+    this.id = id;
+    this.message = message;
+    this.problem = problem;
+    this.name = name;
+    this.facetId = facetId;
+  }
+  mapHealthReportResult=function(data){
+    if(data==null) return;
+    return new HealthReportResult( data.repositoryId, data.namespace, data.project, data.version, data.id, data.message,
+                                   data.problem, data.name, data.facetId );
+  }
+  mapHealthReportResults=function(data){
+    $.log( "mapHealthReportResults" );
+    var repositories=new Array();
+    $.each(data, function(rep){
+      var repository = new Object();
+      repository.name=rep;
+      repository.issues=new Array();
+      $.each(data[rep], function(issue){
+        repository.issues.push( mapHealthReportResult( data[rep][issue] ) );
+      });
+      repositories.push(repository);
+    });
+    return repositories;
+  }
+
   reportHealthFormValidator=function(){
     var validate = $("#main-content #report-health-form-id").validate({
       rules: {
@@ -940,9 +1009,6 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
           required: true,
           number: true,
           min: 10
-        },
-        groupId: {
-          required: true
         },
         repositoryId: {
           required: true
@@ -953,15 +1019,42 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       }
     })
   }
-
-  ReportHealthViewModel=function(repositories){
+  ReportHealthViewModel=function(){
     reportHealthFormValidator();
-    this.repositories = ko.observable( repositories );
+    this.healthReport = ko.observable(new HealthReportRequest());
 
     this.showHealth=function() {
       if (!$("#main-content #report-health-form-id").valid()) {
         return;
       }
+
+      var mainContent = $("#main-content");
+
+      var url =
+        "restServices/archivaServices/repositoriesReport/getHealthReports/" + this.healthReport().repositoryId() + "/"
+          + this.healthReport().rowCount();
+
+      if (this.healthReport().groupId())
+      {
+        url += "?groupId=" + this.healthReport().groupId();
+      }
+
+      $.ajax(url, {
+        type: "GET",
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(data){
+          clearUserMessages();
+          screenChange();
+          var reports = mapHealthReportResults(data);
+          mainContent.html( $( "#report-health" ).tmpl( {reports: reports} ) );
+        },
+        error: function(data){
+          clearUserMessages();
+          console.log(data);
+          displayErrorMessage(data.errorMessage);
+        }
+      });
     }
   }
 
@@ -975,9 +1068,9 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       dataType: 'json',
       success: function(data) {
         var repos = mapStringList( data );
-        mainContent.html( $( "#report-base" ).tmpl() );
-        var statisticsReportViewModel = ReportStatisticsViewModel( repos );
-        var healthReportViewModel = ReportHealthViewModel( repos );
+        mainContent.html( $( "#report-base" ).tmpl( {repositoriesList:repos} ) );
+        var statisticsReportViewModel = ReportStatisticsViewModel( );
+        var healthReportViewModel = ReportHealthViewModel( );
         ko.applyBindings( statisticsReportViewModel, mainContent.get( 0 ) );
         ko.applyBindings( healthReportViewModel, mainContent.get( 0 ) );
       }
