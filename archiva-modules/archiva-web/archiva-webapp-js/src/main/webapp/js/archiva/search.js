@@ -1457,8 +1457,11 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
   }
 
   getCUDFUniverseExtract=function(){
-    $("<form action='restServices/archivaServices/cudfService/universe' method='POST'>"
+    $("<form id='extract-CUDF' style='display: none;' action='restServices/archivaServices/cudfService/universe' method='POST'>"
               + "<input type='text' name='repositoryId' value='"+getSelectedBrowsingRepository()+"'/>"
-              + "</form>").submit();
+              + "<input type='submit'>"
+              + "</form>").appendTo('body');
+      $('#extract-CUDF').submit();
+      $('#extract-CUDF').remove();
   }
 });

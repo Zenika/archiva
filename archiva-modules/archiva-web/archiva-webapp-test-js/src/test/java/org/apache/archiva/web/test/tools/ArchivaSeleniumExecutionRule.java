@@ -38,8 +38,13 @@ public class ArchivaSeleniumExecutionRule
     {
         try
         {
-            ( (AbstractSeleniumTest) target ).open();
-            method.getMethod().invoke( target );
+            AbstractSeleniumTest abstractTest = (AbstractSeleniumTest) target;
+            if (method.getAnnotation(SeleniumNetworkCapture.class) != null)
+            {
+                abstractTest.setNetworkCapture(true);
+            }
+            abstractTest.open();
+            method.getMethod().invoke( abstractTest );
         }
         catch ( Throwable e )
         {
@@ -47,7 +52,6 @@ public class ArchivaSeleniumExecutionRule
                 ( (AbstractSeleniumTest) target ).captureScreenShotOnFailure( e, method.getMethod().getName(),
                                                                               target.getClass().getName() );
 
-            throw new RuntimeException( e.getMessage() + " see screenShot file:" + fileName, e );
         }
         finally
         {

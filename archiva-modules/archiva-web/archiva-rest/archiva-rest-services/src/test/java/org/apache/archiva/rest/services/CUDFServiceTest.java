@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 public class CUDFServiceTest extends AbstractArchivaRestTest{
 
     @Test
-    public void cudfConeTest() throws Exception {
+    public void cudfConeTest() throws Exception
+    {
         String testRepoId = "test-repo";
         createAndIndexRepo(testRepoId, new File(getBasedir(), "src/test/repo-with-osgi").getAbsolutePath());
         CUDFService cudfService = getCUDFService(authorizationHeader);
@@ -27,7 +28,8 @@ public class CUDFServiceTest extends AbstractArchivaRestTest{
     }
 
     @Test
-    public void cudfUniverseTest() throws Exception {
+    public void cudfUniverseTest() throws Exception
+    {
         String testRepoId = "test-repo";
         createAndIndexRepo(testRepoId, new File(getBasedir(), "src/test/repo-with-osgi").getAbsolutePath());
         CUDFService cudfService = getCUDFService(authorizationHeader);
@@ -37,7 +39,8 @@ public class CUDFServiceTest extends AbstractArchivaRestTest{
     }
 
     @Test
-    public void cudfUniverseWithDependenciesInOtherRepository() throws Exception {
+    public void cudfUniverseWithDependenciesInOtherRepository() throws Exception
+    {
         String testRepoId1 = "test-repo-1";
         String testRepoId2 = "test-repo-2";
 
@@ -53,10 +56,12 @@ public class CUDFServiceTest extends AbstractArchivaRestTest{
         assertEquals(2, numberOfOccurrences(result, "commons-lang%3acommons-lang"));
     }
 
-    private int numberOfOccurrences(String stringToCompute, String regex) {
+    private int numberOfOccurrences(String stringToCompute, String regex)
+    {
         Matcher matcher = Pattern.compile(regex).matcher(stringToCompute);
         int occurrences = 0;
-        while (matcher.find()) {
+        while (matcher.find())
+        {
             occurrences++;
         }
         return occurrences;

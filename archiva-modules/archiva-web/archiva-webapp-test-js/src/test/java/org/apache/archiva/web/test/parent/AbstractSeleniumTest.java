@@ -58,6 +58,8 @@ public abstract class AbstractSeleniumTest
 
     public int seleniumPort = Integer.getInteger( "seleniumPort", 4444 );
 
+    public boolean networkCapture = false;
+
     private Selenium selenium = null;
 
     public Properties p;
@@ -108,7 +110,14 @@ public abstract class AbstractSeleniumTest
             if ( getSelenium() == null )
             {
                 selenium = new DefaultSelenium( seleniumHost, seleniumPort, browser, baseUrl );
-                selenium.start();
+                if (networkCapture)
+                {
+                    selenium.start(p.getProperty("SELENIUM_NETWORK_TRAFFIC"));
+                }
+                else
+                {
+                    selenium.start();
+                }
                 selenium.setTimeout( Integer.toString( maxWaitTimeInMs ) );
             }
         }
@@ -691,4 +700,8 @@ public abstract class AbstractSeleniumTest
         return fileName.getAbsolutePath();
     }
 
+    public void setNetworkCapture(boolean networkCapture)
+    {
+        this.networkCapture = networkCapture;
+    }
 }
