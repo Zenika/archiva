@@ -718,14 +718,12 @@
         <form class="form-horizontal" id="report-statistics-form-id">
           <fieldset id="form-statistics-report">
             <div class="control-group" class="form-inline">
-              <label for="reportStatisticsRepositoriesAvailable" class="control-label">
+              <label for="availableRepositories" class="control-label">
                 ${$.i18n.prop('report.statistics.repositories.label')}
               </label>
               <div class="controls">
-                <select multiple="multiple" id="reportStatisticsRepositoriesAvailable">
-                  {{each(i, repoId) repositoriesList}}
-                    <option value="${repoId}">${repoId}</option>
-                  {{/each}}
+                <select multiple="multiple" size='5' id="availableRepositories"
+                        data-bind="options: availableRepositories">
                 </select>
                 <button class="btn btn-small" data-bind="click: removeAll">
                   &laquo;
@@ -759,6 +757,12 @@
               <div class="controls">
                 <input type="text" id="rowCountStatistics" name="rowCountStatistics" class="input-small"
                         data-bind="value: statisticsReport().rowCount"/>
+
+                <button class="btn btn-warning btn-mini" id="rowCount-info-button"
+                        data-original-title="${$.i18n.prop('report.statistics.rowCount.explanations-title')}"
+                        data-content="${$.i18n.prop('report.statistics.rowCount.explanations')}">
+                  <i class="icon-question-sign icon-white"></i>
+                </button>
               </div>
             </div>
             <div class="control-group">
@@ -777,11 +781,15 @@
               <div class="controls">
                 <input type="text" id="endDate" name="endDate" class="input-small"
                         data-bind="value: statisticsReport().endDate"/>
+                  <button class="btn btn-warning btn-mini" id="endDate-info-button"
+                          data-original-title="${$.i18n.prop('report.statistics.endDate.explanations-title')}"
+                          data-content="${$.i18n.prop('report.statistics.endDate.explanations')}">
+                      <i class="icon-question-sign icon-white"></i>
+                  </button>
               </div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" data-bind="click: showStatistics"
-                      data-loading-text="${$.i18n.prop('report.statistics.loading-text')}" >
+              <button type="submit" class="btn btn-primary" data-bind="click: showStatistics">
                 ${$.i18n.prop('report.statistics.btn-view')}
               </button>
             </div>
@@ -824,8 +832,7 @@
               </div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" data-bind="click: showHealth"
-                      data-loading-text="${$.i18n.prop('report.health.loading-text')}" >
+              <button type="submit" class="btn btn-primary" data-bind="click: showHealth">
                 ${$.i18n.prop('report.health.btn-view')}
               </button>
             </div>

@@ -908,12 +908,16 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       }
     })
   }
-  ReportStatisticsViewModel=function(){
+  ReportStatisticsViewModel=function(repositoriesAvailable){
     reportStatisticsFormValidator();
+
+    this.availableRepositories = ko.observableArray( repositoriesAvailable );
     this.statisticsReport = ko.observable( new StatisticsReportRequest() );
 
     $("#startDate" ).datepicker();
     $("#endDate" ).datepicker();
+    $("#endDate-info-button" ).popover();
+    $("#rowCount-info-button" ).popover();
 
     this.showStatistics=function() {
       if (!$("#report-statistics-form-id").valid()) {
@@ -948,22 +952,46 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
     }
 
     this.add=function(){
-      $( "#reportStatisticsRepositoriesAvailable option:selected" ).remove().appendTo("#repositoriesEnabled" ).select();
+      $( "#availableRepositories option:selected" ).remove().appendTo("#repositories" );
     }
     this.remove=function(){
-      $( "#repositoriesEnabled option:selected" ).remove().appendTo("#reportStatisticsRepositoriesAvailable");
+      $( "#repositories option:selected" ).remove().appendTo("#availableRepositories");
     }
     this.addAll=function(){
-      $( "#reportStatisticsRepositoriesAvailable option" ).remove().appendTo( "#repositoriesEnabled" ).attr('selected',
-                                                                                                            'selected');
+      $( "#availableRepositories option" ).remove().appendTo( "#repositories" );
     }
     this.removeAll=function(){
-      $( "#repositoriesEnabled option" ).remove().appendTo( "#reportStatisticsRepositoriesAvailable" );
+      $( "#repositories option" ).remove().appendTo( "#availableRepositories" );
     }
     this.up=function(){
     }
     this.down=function(){
     }
+  }
+  ReportStatisticsResultViewModel=function(){
+    this.reports = ko.observableArray( [] );
+    var self = this;
+
+    this.tableReportViewModel = new ko.simpleGrid.viewModel({
+      data: this.reports,
+      viewModel: this,
+      columns: [
+        { headerText: "Repository", rowText: "repositoryId" },
+        { headerText: "Total File Count", rowText: "totalFileCount" },
+        { headerText: "Total Size", rowText: "totalArtifactFileSize" },
+        { headerText: "Artifact Count", rowText: "totalArtifactCount" },
+        { headerText: "Group Count", rowText: "totalGroupCount" },
+        { headerText: "Project Count", rowText: "totalProjectCount" },
+        { headerText: "Archetypes", rowText: "archetypes" },
+        { headerText: "Jars", rowText: "jar" },
+        { headerText: "Wars", rowText: "war" },
+        { headerText: "Ears", rowText: "ear" },
+        { headerText: "Exes", rowText: "exes" },
+        { headerText: "Dlls", rowText: "dlls" },
+        { headerText: "Zips", rowText: "zip" }
+      ],
+      pageSize: 5
+    });
   }
 
   HealthReportRequest=function(){
@@ -1069,7 +1097,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       success: function(data) {
         var repos = mapStringList( data );
         mainContent.html( $( "#report-base" ).tmpl( {repositoriesList:repos} ) );
-        var statisticsReportViewModel = ReportStatisticsViewModel( );
+        var statisticsReportViewModel = ReportStatisticsViewModel( repos );
         var healthReportViewModel = ReportHealthViewModel( );
         ko.applyBindings( statisticsReportViewModel, mainContent.get( 0 ) );
         ko.applyBindings( healthReportViewModel, mainContent.get( 0 ) );
