@@ -42,7 +42,7 @@ import java.util.TreeMap;
  * DefaultReportRepositoriesService
  *
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
- * @since 2012-05-28 10:34
+ * @since 1.4-M3
  */
 @Service( "reportRepositoriesService#rest" )
 public class DefaultReportRepositoriesService
@@ -57,11 +57,74 @@ public class DefaultReportRepositoriesService
 
     public List<RepositoryStatistics> getStatisticsReport( List<String> repositoriesId, int rowCount, Date startDate,
                                                            Date endDate )
+        throws ArchivaRestServiceException
+    {
+        switch ( repositoriesId.size() )
+        {
+            case 0:
+                throw new ArchivaRestServiceException( "report.statistics.report.missing-repositories",
+                                                       new IllegalStateException() );
+            case 1:
+                return getUniqueRepositoryReport( repositoriesId.get( 0 ), rowCount, startDate, endDate );
+            default:
+                return getMultipleRepositoriesReport( repositoriesId, rowCount );
+        }
+    }
+
+    private List<RepositoryStatistics> getMultipleRepositoriesReport( List<String> repositoriesId, int rowCount )
     {
         RepositorySession repositorySession = repositorySessionFactory.createSession();
         try
         {
-            return Collections.emptyList();
+            MetadataRepository metadataRepository = repositorySession.getRepository();
+            List<RepositoryStatistics> stats = new ArrayList<RepositoryStatistics>();
+            for ( String repo : repositoriesId )
+            {
+                try
+                {
+                    stats.add( repositoryStatisticsManager.getLastStatistics( metadataRepository, repo ) );
+                }
+                catch ( MetadataRepositoryException e )
+                {
+                    log.warn( "Unable to retrieve stats, assuming is empty: " + e.getMessage(), e );
+                }
+            }
+
+            return stats.subList( 0, stats.size() > rowCount ? rowCount : stats.size() );
+        }
+        finally
+        {
+            repositorySession.close();
+        }
+    }
+
+    private List<RepositoryStatistics> getUniqueRepositoryReport( String repositoryId, int rowCount, Date startDate,
+                                                                  Date endDate )
+    {
+        RepositorySession repositorySession = repositorySessionFactory.createSession();
+        try
+        {
+            if ( startDate != null && endDate == null )
+            {
+                endDate = startDate;
+            }
+            MetadataRepository metadataRepository = repositorySession.getRepository();
+            List<RepositoryStatistics> stats = null;
+            try
+            {
+                stats = repositoryStatisticsManager.getStatisticsInRange( metadataRepository, repositoryId, startDate,
+                                                                          endDate );
+            }
+            catch ( MetadataRepositoryException e )
+            {
+                log.warn( "Unable to retrieve stats, assuming is empty: " + e.getMessage(), e );
+            }
+            if ( stats == null || stats.isEmpty() )
+            {
+                return Collections.<RepositoryStatistics>emptyList();
+            }
+
+            return stats.subList( 0, stats.size() > rowCount ? rowCount : stats.size() );
         }
         finally
         {

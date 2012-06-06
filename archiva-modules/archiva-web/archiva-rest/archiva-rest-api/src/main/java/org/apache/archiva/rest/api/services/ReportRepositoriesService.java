@@ -40,16 +40,16 @@ import java.util.Map;
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  * @since 1.4-M3
  */
-@Path( "/repositoriesReport/" )
+@Path( "/reportServices/" )
 public interface ReportRepositoriesService
 {
 
-    @Path( "getStatisticsReport" )
+    @Path( "getStatisticsReport/{rowCount}" )
     @GET
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
-    public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repositories" ) List<String> repositoriesId,
-                                                           @QueryParam( "rowCount" ) int rowCount,
+    public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repository" ) List<String> repositoriesId,
+                                                           @PathParam( "rowCount" ) int rowCount,
                                                            @QueryParam( "startDate" ) Date startDate,
                                                            @QueryParam( "startDate" ) Date endDate )
         throws ArchivaRestServiceException;
