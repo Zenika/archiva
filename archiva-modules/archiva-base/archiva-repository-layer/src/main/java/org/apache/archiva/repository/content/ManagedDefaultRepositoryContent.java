@@ -31,6 +31,7 @@ import org.apache.archiva.repository.ContentNotFoundException;
 import org.apache.archiva.repository.ManagedRepositoryContent;
 import org.apache.archiva.repository.layout.LayoutException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -85,6 +86,41 @@ public class ManagedDefaultRepositoryContent
         if ( filePath.exists() )
         {
             FileUtils.deleteQuietly( filePath );
+        }
+
+        File filePathmd5 = new File( getRepoRoot(), path + ".md5" );
+
+        if ( filePathmd5.exists() )
+        {
+            FileUtils.deleteQuietly( filePathmd5 );
+        }
+
+        File filePathsha1 = new File( getRepoRoot(), path + ".sha1" );
+
+        if ( filePathsha1.exists() )
+        {
+            FileUtils.deleteQuietly( filePathsha1 );
+        }
+    }
+
+    public void deleteGroupId( String groupId )
+        throws ContentNotFoundException
+    {
+
+        String path = StringUtils.replaceChars( groupId, '.', '/' );
+
+        File directory = new File( getRepoRoot(), path );
+
+        if ( directory.exists() )
+        {
+            try
+            {
+                FileUtils.deleteDirectory( directory );
+            }
+            catch ( IOException e )
+            {
+                log.warn( "skip error deleting directory {}:", directory.getPath(), e );
+            }
         }
     }
 

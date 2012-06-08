@@ -35,6 +35,7 @@ import org.apache.archiva.metadata.model.Scm;
 import org.apache.archiva.metadata.repository.MetadataRepository;
 import org.apache.archiva.metadata.repository.MetadataRepositoryException;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,6 +194,27 @@ public class JcrMetadataRepository
 
             node.setProperty( "version", artifactMeta.getVersion() );
 
+            // iterate over available facets to update/add/remove from the artifactMetadata
+            for ( String facetId : metadataFacetFactories.keySet() )
+            {
+                MetadataFacet metadataFacet = artifactMeta.getFacet( facetId );
+                if ( node.hasNode( facetId ) )
+                {
+                    node.getNode( facetId ).remove();
+                }
+                if ( metadataFacet != null )
+                {
+                    // recreate, to ensure properties are removed
+                    Node n = node.addNode( facetId );
+                    n.addMixin( FACET_NODE_TYPE );
+
+                    for ( Map.Entry<String, String> entry : metadataFacet.toProperties().entrySet() )
+                    {
+                        n.setProperty( entry.getKey(), entry.getValue() );
+                    }
+                }
+            }
+            /*
             for ( MetadataFacet facet : artifactMeta.getFacetList() )
             {
                 if ( node.hasNode( facet.getFacetId() ) )
@@ -209,6 +231,7 @@ public class JcrMetadataRepository
                     n.setProperty( entry.getKey(), entry.getValue() );
                 }
             }
+            */
         }
         catch ( RepositoryException e )
         {
@@ -413,6 +436,11 @@ public class JcrMetadataRepository
             Node root = getJcrSession().getRootNode();
             Node node = root.getNode( getFacetPath( repositoryId, facetId, name ) );
 
+            if ( metadataFacetFactories == null )
+            {
+                return metadataFacet;
+            }
+
             MetadataFacetFactory metadataFacetFactory = metadataFacetFactories.get( facetId );
             if ( metadataFacetFactory != null )
             {
@@ -610,24 +638,6 @@ public class JcrMetadataRepository
         return artifacts;
     }
 
-    public void removeArtifact( String repositoryId, String namespace, String projectId, String projectVersion,
-                                String id )
-        throws MetadataRepositoryException
-    {
-        try
-        {
-            Node root = getJcrSession().getRootNode();
-            String path = getArtifactPath( repositoryId, namespace, projectId, projectVersion, id );
-            if ( root.hasNode( path ) )
-            {
-                root.getNode( path ).remove();
-            }
-        }
-        catch ( RepositoryException e )
-        {
-            throw new MetadataRepositoryException( e.getMessage(), e );
-        }
-    }
 
     public void removeRepository( String repositoryId )
         throws MetadataRepositoryException
@@ -987,6 +997,74 @@ public class JcrMetadataRepository
         throws MetadataResolutionException
     {
         return getNodeNames( getProjectPath( repositoryId, namespace, projectId ), PROJECT_VERSION_NODE_TYPE );
+    }
+
+    public void removeArtifact( String repositoryId, String namespace, String projectId, String projectVersion,
+                                String id )
+        throws MetadataRepositoryException
+    {
+        try
+        {
+            Node root = getJcrSession().getRootNode();
+            String path = getArtifactPath( repositoryId, namespace, projectId, projectVersion, id );
+            if ( root.hasNode( path ) )
+            {
+                root.getNode( path ).remove();
+            }
+
+            // remove version
+
+            path = getProjectPath( repositoryId, namespace, projectId );
+
+            Node nodeAtPath = root.getNode( path );
+
+            for ( Node node : JcrUtils.getChildNodes( nodeAtPath ) )
+            {
+                if ( node.isNodeType( PROJECT_VERSION_NODE_TYPE ) && StringUtils.equals( node.getName(),
+                                                                                         projectVersion ) )
+                {
+                    node.remove();
+                }
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
+    }
+
+    public void removeArtifact( String repositoryId, String namespace, String project, String projectVersion,
+                                MetadataFacet metadataFacet )
+        throws MetadataRepositoryException
+    {
+        try
+        {
+            Node root = getJcrSession().getRootNode();
+            String path = getProjectVersionPath( repositoryId, namespace, project, projectVersion );
+
+            if ( root.hasNode( path ) )
+            {
+                Node node = root.getNode( path );
+
+                for ( Node n : JcrUtils.getChildNodes( node ) )
+                {
+                    if ( n.isNodeType( ARTIFACT_NODE_TYPE ) )
+                    {
+                        ArtifactMetadata artifactMetadata = getArtifactFromNode( repositoryId, n );
+                        log.debug( "artifactMetadata: {}", artifactMetadata );
+                        MetadataFacet metadataFacetToRemove = artifactMetadata.getFacet( metadataFacet.getFacetId() );
+                        if ( metadataFacetToRemove != null && metadataFacet.equals( metadataFacetToRemove ) )
+                        {
+                            n.remove();
+                        }
+                    }
+                }
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
     }
 
     public Collection<ArtifactMetadata> getArtifacts( String repositoryId, String namespace, String projectId,

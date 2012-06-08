@@ -202,6 +202,7 @@ public class DefaultSearchService
     // internal
     //-------------------------------------
     protected List<Artifact> getArtifacts( SearchResults searchResults )
+        throws ArchivaRestServiceException
     {
 
         if ( searchResults == null || searchResults.isEmpty() )
@@ -233,71 +234,5 @@ public class DefaultSearchService
         return artifacts;
     }
 
-    /**
-     * TODO add a configuration mechanism to have configured the base archiva url
-     *
-     * @param artifact
-     * @return
-     */
-    private String getArtifactUrl( Artifact artifact )
-    {
 
-        if ( httpServletRequest == null )
-        {
-            return null;
-        }
-        if ( StringUtils.isEmpty( artifact.getUrl() ) )
-        {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        try
-        {
-            sb.append( getBaseUrl( httpServletRequest ) );
-        }
-        catch ( NullPointerException e )
-        {
-            log.warn(
-                "Was not able to create base url for " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":"
-                    + artifact.getVersion()/*, e*/ );
-        }
-
-        sb.append( "/repository" );
-
-        sb.append( '/' ).append( artifact.getContext() );
-
-        sb.append( '/' ).append( StringUtils.replaceChars( artifact.getGroupId(), '.', '/' ) );
-        sb.append( '/' ).append( artifact.getArtifactId() );
-        sb.append( '/' ).append( artifact.getVersion() );
-        sb.append( '/' ).append( artifact.getArtifactId() );
-        sb.append( '-' ).append( artifact.getVersion() );
-        if ( StringUtils.isNotBlank( artifact.getClassifier() ) )
-        {
-            sb.append( '-' ).append( artifact.getClassifier() );
-        }
-        // maven-plugin packaging is a jar
-        if ( StringUtils.equals( "maven-plugin", artifact.getPackaging() ) )
-        {
-            sb.append( "jar" );
-        }
-        else
-        {
-            sb.append( '.' ).append( artifact.getPackaging() );
-        }
-
-        return sb.toString();
-    }
-
-    public String getUrlForArtifact( String groupId, String artifactId, String version, String type,
-                                     String repositoryId )
-        throws ArchivaRestServiceException
-    {
-        List<Artifact> artifacts =
-            searchArtifacts( new SearchRequest( groupId, artifactId, version, type, null, getObservableRepos() ) );
-        if ( artifacts.isEmpty() )
-        {
-            return "";
-        }
-        return artifacts.get( 0 ).getUrl();
-    }
 }

@@ -19,8 +19,8 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
+import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.model.ArtifactContentEntry;
-import org.apache.archiva.rest.api.model.ArtifactDownloadInfo;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
 import org.apache.archiva.rest.api.model.Entry;
@@ -56,6 +56,7 @@ public class BrowseServiceTest
 
         return map;
     }
+
 
     @Test
     public void metadatagetthenadd()
@@ -178,6 +179,29 @@ public class BrowseServiceTest
 
     }
 
+
+    @Test
+    public void browsegroupIdWithReleaseStartNumber()
+        throws Exception
+    {
+
+        String testRepoId = "test-repo";
+        // force guest user creation if not exists
+        if ( getUserService( authorizationHeader ).getGuestUser() == null )
+        {
+            assertNotNull( getUserService( authorizationHeader ).createGuestUser() );
+        }
+
+        createAndIndexRepo( testRepoId, new File( getBasedir(), "src/test/repo-with-osgi" ).getAbsolutePath(), false );
+
+        BrowseService browseService = getBrowseService( authorizationHeader, false );
+        BrowseResult browseResult = browseService.browseGroupId( "commons-logging.commons-logging", testRepoId );
+        log.info( "browseResult: {}", browseResult );
+
+        deleteTestRepo( testRepoId );
+
+    }
+
     @Test
     public void versionsList()
         throws Exception
@@ -249,7 +273,8 @@ public class BrowseServiceTest
         log.info( "artifactContentEntries: {}", artifactContentEntries );
 
         assertThat( artifactContentEntries ).isNotNull().isNotEmpty().hasSize( 2 ).contains(
-            new ArtifactContentEntry( "org", false, 0 ), new ArtifactContentEntry( "META-INF", false, 0 ) );
+            new ArtifactContentEntry( "org", false, 0, testRepoId ),
+            new ArtifactContentEntry( "META-INF", false, 0, testRepoId ) );
         deleteTestRepo( testRepoId );
     }
 
@@ -275,7 +300,7 @@ public class BrowseServiceTest
         log.info( "artifactContentEntries: {}", artifactContentEntries );
 
         assertThat( artifactContentEntries ).isNotNull().isNotEmpty().hasSize( 1 ).contains(
-            new ArtifactContentEntry( "org/apache", false, 1 ) );
+            new ArtifactContentEntry( "org/apache", false, 1, testRepoId ) );
         deleteTestRepo( testRepoId );
     }
 
@@ -301,8 +326,8 @@ public class BrowseServiceTest
         log.info( "artifactContentEntries: {}", artifactContentEntries );
 
         assertThat( artifactContentEntries ).isNotNull().isNotEmpty().hasSize( 10 ).contains(
-            new ArtifactContentEntry( "org/apache/commons/logging/impl", false, 4 ),
-            new ArtifactContentEntry( "org/apache/commons/logging/LogSource.class", true, 4 ) );
+            new ArtifactContentEntry( "org/apache/commons/logging/impl", false, 4, testRepoId ),
+            new ArtifactContentEntry( "org/apache/commons/logging/LogSource.class", true, 4, testRepoId ) );
         deleteTestRepo( testRepoId );
     }
 
@@ -321,7 +346,7 @@ public class BrowseServiceTest
 
         BrowseService browseService = getBrowseService( authorizationHeader, true );
 
-        List<ArtifactDownloadInfo> artifactDownloadInfos =
+        List<Artifact> artifactDownloadInfos =
             browseService.getArtifactDownloadInfos( "commons-logging", "commons-logging", "1.1", testRepoId );
 
         log.info( "artifactDownloadInfos {}", artifactDownloadInfos );
@@ -351,7 +376,8 @@ public class BrowseServiceTest
         {
             String text =
                 browseService.getArtifactContentText( "commons-logging", "commons-logging", "1.1", "sources", null,
-                                                      "org/apache/commons/logging/LogSource.java", testRepoId );
+                                                      "org/apache/commons/logging/LogSource.java",
+                                                      testRepoId ).getContent();
 
             log.debug( "text: {}", text );
 
@@ -386,7 +412,7 @@ public class BrowseServiceTest
         {
             String text =
                 browseService.getArtifactContentText( "commons-logging", "commons-logging", "1.1", null, "pom", null,
-                                                      testRepoId );
+                                                      testRepoId ).getContent();
 
             log.info( "text: {}", text );
 

@@ -521,7 +521,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
     this.networkConfiguration=ko.observable(networkConfiguration);
 
     save=function(){
-      if (!$("#main-content #network-proxy-edit-form").valid()){
+      if (!$("#main-content #network-configuration-edit-form").valid()){
         return;
       }
       clearUserMessages();
@@ -550,9 +550,9 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
           var networkConfiguration=new NetworkConfiguration(data.maxTotal,data.maxTotalPerHost,data.usePooling);
           var networkConfigurationViewModel=new NetworkConfigurationViewModel(networkConfiguration);
           ko.applyBindings(networkConfigurationViewModel,mainContent.get(0));
-          var validator = $("#main-content #network-proxy-edit-form").validate({
+          var validator = mainContent.find("#network-configuration-edit-form").validate({
             showErrors: function(validator, errorMap, errorList) {
-             customShowError(mainContent.find("#network-proxy-edit-form" ).get(0),validator,errorMap,errorMap);
+             customShowError(mainContent.find("#network-configuration-edit-form" ).get(0),validator,errorMap,errorMap);
             }
           });
         }
@@ -561,7 +561,54 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   }
 
   //---------------------------
-  // system status part
+  // UiConfiguration part
+  //---------------------------
+
+  displayUiConfiguration=function(){
+    screenChange();
+    var mainContent=$("#main-content");
+    mainContent.html(mediumSpinnerImg());
+    $.ajax("restServices/archivaServices/archivaAdministrationService/getUiConfiguration", {
+        type: "GET",
+        dataType: 'json',
+        success: function(data){
+          mainContent.html($("#ui-configuration-screen").tmpl());
+          var uiConfiguration=new UiConfiguration(data.showFindArtifacts,data.appletFindEnabled,data.disableEasterEggs,data.applicationUrl);
+          var uiConfigurationViewModel=new UiConfigurationViewModel(uiConfiguration);
+          ko.applyBindings(uiConfigurationViewModel,mainContent.get(0));
+        }
+    });
+  }
+
+  UiConfiguration=function(showFindArtifacts,appletFindEnabled,disableEasterEggs,applicationUrl){
+    this.showFindArtifacts = ko.observable(showFindArtifacts);
+
+    this.appletFindEnabled = ko.observable(appletFindEnabled);
+
+    this.disableEasterEggs = ko.observable(disableEasterEggs);
+
+    this.applicationUrl = ko.observable(applicationUrl);
+  }
+
+  UiConfigurationViewModel=function(uiConfiguration){
+    this.uiConfiguration=ko.observable(uiConfiguration);
+    var self=this;
+    save=function(){
+      $.ajax("restServices/archivaServices/archivaAdministrationService/setUiConfiguration", {
+        type: "POST",
+        contentType: 'application/json',
+        data: ko.toJSON(self.uiConfiguration),
+        dataType: 'json',
+        success: function(data){
+          displaySuccessMessage( $.i18n.prop("ui-configuration.updated"));
+        }
+      });
+    }
+  }
+
+
+  //---------------------------
+  // System status part
   //---------------------------
 
   QueueEntry=function(key,entriesNumber){

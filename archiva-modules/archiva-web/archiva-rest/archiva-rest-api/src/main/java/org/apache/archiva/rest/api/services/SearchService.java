@@ -130,14 +130,4 @@ public interface SearchService
     List<Artifact> getArtifactByChecksum( @QueryParam( "checksum" ) String checksum )
         throws ArchivaRestServiceException;
     */
-
-
-    @Path( "getArtifactURL/{g}/{a}/{v}" )
-    @GET
-    @Produces( MediaType.TEXT_PLAIN )
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
-    String getUrlForArtifact( @PathParam( "g" ) String groupId, @PathParam( "a" ) String artifactId,
-                              @PathParam( "v" ) String version, @QueryParam( "type" ) String type,
-                              @QueryParam( "repositoryId" ) String repositoryId )
-        throws ArchivaRestServiceException;
 }

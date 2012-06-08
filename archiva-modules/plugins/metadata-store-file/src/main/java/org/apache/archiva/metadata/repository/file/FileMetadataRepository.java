@@ -19,6 +19,8 @@ package org.apache.archiva.metadata.repository.file;
  * under the License.
  */
 
+import org.apache.archiva.configuration.ArchivaConfiguration;
+import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
 import org.apache.archiva.metadata.model.ArtifactMetadata;
 import org.apache.archiva.metadata.model.CiManagement;
 import org.apache.archiva.metadata.model.Dependency;
@@ -36,8 +38,6 @@ import org.apache.archiva.metadata.repository.MetadataRepository;
 import org.apache.archiva.metadata.repository.MetadataRepositoryException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.archiva.configuration.ArchivaConfiguration;
-import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -599,6 +599,7 @@ public class FileMetadataRepository
 
     public void removeArtifact( String repoId, String namespace, String project, String version, String id )
     {
+
         File directory = new File( getDirectory( repoId ), namespace + "/" + project + "/" + version );
 
         Properties properties = readOrCreateProperties( directory, PROJECT_VERSION_METADATA_KEY );
@@ -623,13 +624,33 @@ public class FileMetadataRepository
 
         try
         {
-            writeProperties( properties, directory, PROJECT_VERSION_METADATA_KEY );
+
+            FileUtils.deleteDirectory( directory );
+
+            //writeProperties( properties, directory, PROJECT_VERSION_METADATA_KEY );
         }
         catch ( IOException e )
         {
             // TODO
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error( e.getMessage(), e );
         }
+    }
+
+    /**
+     * FIXME implements this !!!!
+     * @param repositoryId
+     * @param namespace
+     * @param project
+     * @param projectVersion
+     * @param projectId
+     * @param metadataFacet  will remove artifacts which have this {@link MetadataFacet} using equals
+     * @throws MetadataRepositoryException
+     */
+    public void removeArtifact( String repositoryId, String namespace, String project, String projectVersion,
+                                 MetadataFacet metadataFacet )
+        throws MetadataRepositoryException
+    {
+        throw new UnsupportedOperationException("not implemented");
     }
 
     public void removeRepository( String repoId )
@@ -733,7 +754,7 @@ public class FileMetadataRepository
         catch ( IOException e )
         {
             // TODO
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error( e.getMessage(), e );
         }
     }
 

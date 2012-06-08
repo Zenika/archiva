@@ -209,8 +209,9 @@ public class DeleteArtifactAction
             artifact.setVersion( version );
             artifact.setClassifier( classifier );
             artifact.setPackaging( type );
+            artifact.setContext( repositoryId );
 
-            repositoriesService.deleteArtifact( artifact, repositoryId );
+            repositoriesService.deleteArtifact( artifact );
         }
         catch ( ArchivaRestServiceException e )
         {
@@ -226,10 +227,7 @@ public class DeleteArtifactAction
 
         if ( StringUtils.isNotEmpty( classifier ) )
         {
-
             msg.append( ":" ).append( classifier );
-
-
         }
         msg.append( ":" ).append( version ).append( "' was successfully deleted from repository '" ).append(
             repositoryId ).append( "'" );

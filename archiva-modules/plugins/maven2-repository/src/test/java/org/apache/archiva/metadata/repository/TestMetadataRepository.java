@@ -198,4 +198,11 @@ public class TestMetadataRepository
     {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
+
+    public void removeArtifact( String repositoryId, String namespace, String project, String version,
+                                MetadataFacet metadataFacet )
+        throws MetadataRepositoryException
+    {
+        throw new UnsupportedOperationException();
+    }
 }

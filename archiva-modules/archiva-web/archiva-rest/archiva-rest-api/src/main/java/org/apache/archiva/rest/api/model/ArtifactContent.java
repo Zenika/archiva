@@ -20,49 +20,47 @@ package org.apache.archiva.rest.api.model;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author Olivier Lamy
  * @since 1.4-M3
  */
-@XmlRootElement( name = "browseResult" )
-public class BrowseResult
+@XmlRootElement( name = "artifactContent" )
+public class ArtifactContent
     implements Serializable
 {
-    private List<BrowseResultEntry> browseResultEntries;
+    private String content;
 
-    private boolean rootLevel;
+    private String repositoryId;
 
-    public BrowseResult()
+    public ArtifactContent()
     {
         // no op
     }
 
-    public BrowseResult( List<BrowseResultEntry> browseResultEntries )
+    public ArtifactContent( String content, String repositoryId )
     {
-        this.browseResultEntries = browseResultEntries;
+        this.content = content;
+        this.repositoryId = repositoryId;
     }
 
-    public List<BrowseResultEntry> getBrowseResultEntries()
+    public String getContent()
     {
-        return browseResultEntries == null ? Collections.<BrowseResultEntry>emptyList() : browseResultEntries;
+        return content;
     }
 
-    public void setBrowseResultEntries( List<BrowseResultEntry> browseResultEntries )
+    public void setContent( String content )
     {
-        this.browseResultEntries = browseResultEntries;
+        this.content = content;
     }
 
-    @Override
-    public String toString()
+    public String getRepositoryId()
     {
-        final StringBuilder sb = new StringBuilder();
-        sb.append( "BrowseResult" );
-        sb.append( "{browseResultEntries=" ).append( browseResultEntries );
-        sb.append( ", rootLevel=" ).append( rootLevel );
-        sb.append( '}' );
-        return sb.toString();
+        return repositoryId;
+    }
+
+    public void setRepositoryId( String repositoryId )
+    {
+        this.repositoryId = repositoryId;
     }
 }
