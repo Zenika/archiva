@@ -104,7 +104,7 @@
               org.apache.archiva.rest.api.services;version=${project.version};-split-package:=merge-first
             </Export-Package>
             <Import-Package>
-              javax.ws.rs,
+              javax.ws.rs.*,
               javax.xml.bind.annotation,
               org.apache.archiva.admin.model.beans;version=${project.version},
               org.apache.archiva.redback.authorization,
