@@ -96,4 +96,13 @@ public interface CUDFService
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
     Response getUniverseCUDFFile( @QueryParam( "repositoryId" ) String repositoryId )
         throws ArchivaRestServiceException;
+
+    @Path( "bgUniverse" )
+    @GET
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Produces( MediaType.TEXT_PLAIN )
+    String backgroundUniverse( @QueryParam( "repositoryId" ) String repositoryId,
+                               @QueryParam( "output" ) String output )
+        throws ArchivaRestServiceException;
+
 }
