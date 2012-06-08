@@ -81,7 +81,7 @@ public interface CUDFService
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
-    CharSequence getUniverseCUDF( @QueryParam( "repositoryId" ) String repositoryId )
+    String getUniverseCUDF( @QueryParam( "repositoryId" ) String repositoryId )
         throws ArchivaRestServiceException;
 
     /**

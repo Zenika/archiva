@@ -81,6 +81,12 @@ public class DefaultCUDFService
         LinkedList<Artifact> queue = new LinkedList<Artifact>();
         Set<Artifact> known = new TreeSet<Artifact>( new ArtifactComparator() );
 
+        // todo: what if the repository is null?? NPE!
+        if ( repositoryId == null )
+        {
+            throw new ArchivaRestServiceException( "Not working if there is no repository", null );
+        }
+
         queue.add( createArtifact(repositoryId, groupId, artifactId, version) );
         Artifact artifact = null;
         while ( ( artifact = queue.poll() ) != null )
@@ -181,6 +187,10 @@ public class DefaultCUDFService
                 ProjectVersionMetadata versionMetadata =
                        metadataResolver.resolveProjectVersion(repositorySession, repository, artifact.getGroupId(), artifact.getArtifactId(),
                                artifact.getVersion());
+                if ( versionMetadata == null )
+                {
+                    return "";
+                }
                 MavenProjectFacet projectFacet = (MavenProjectFacet) versionMetadata.getFacet(MavenProjectFacet.FACET_ID);
                 if (projectFacet != null) {
                     packaging = projectFacet.getPackaging();
