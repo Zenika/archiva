@@ -249,10 +249,12 @@ public class DefaultCUDFService
             @Override
             public void run()
             {
+                File output = new File( outputFilename );
+                BufferedWriter bw = null;
                 try
                 {
-                    File output = new File( outputFilename );
-                    BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
+                    bw = new BufferedWriter( new FileWriter( output ) );
+                    log.info( "Starting CUDF Extract in background" );
                     bw.write( getUniverseCUDF( repositoryId ) );
                     bw.close();
                     log.info(
@@ -260,9 +262,26 @@ public class DefaultCUDFService
                 }
                 catch ( ArchivaRestServiceException e )
                 {
+                    log.error( e.getMessage(), e );
                 }
                 catch (IOException e)
                 {
+                    log.error( e.getMessage(), e );
+                }
+                finally
+                {
+                    if ( bw != null )
+                    {
+                        try
+                        {
+                            bw.close();
+                        }
+                        catch ( IOException e )
+                        {
+                            //nothing to do
+                        }
+                    }
+                    log.info( "CUDF Extraction ended." );
                 }
             }
         }.start();
