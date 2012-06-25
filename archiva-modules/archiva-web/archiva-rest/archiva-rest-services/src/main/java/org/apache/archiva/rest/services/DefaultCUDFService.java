@@ -262,10 +262,12 @@ public class DefaultCUDFService
                 }
                 catch ( ArchivaRestServiceException e )
                 {
+                    log.error( "Error while background cudf extraction" );
                     log.error( e.getMessage(), e );
                 }
                 catch (IOException e)
                 {
+                    log.error( "Error while background cudf extraction" );
                     log.error( e.getMessage(), e );
                 }
                 finally
