@@ -34,15 +34,15 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -55,8 +55,7 @@ import java.util.TreeSet;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
- *         <p/>
- *         FIXME comparator for known artifact break compareTo contract!
+ * @since 1.4-M3
  */
 @Service( "cudfService#rest" )
 public class DefaultCUDFService
@@ -69,58 +68,69 @@ public class DefaultCUDFService
     @Inject
     private BrowseService browseService;
 
-    public String getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId )
+    public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
+                             HttpServletResponse servletResponse )
         throws ArchivaRestServiceException
     {
-        Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
-        StringBuilder response = new StringBuilder();
-        response.append( getCUDFPreambule() );
 
-        List<String> repositories = getSelectedRepos( repositoryId );
-
-        LinkedList<Artifact> queue = new LinkedList<Artifact>();
-        Set<Artifact> known = new TreeSet<Artifact>( new ArtifactComparator() );
-
-        // todo: what if the repository is null?? NPE!
-        if ( repositoryId == null )
+        OutputStream output = null;
+        try
         {
-            throw new ArchivaRestServiceException( "Not working if there is no repository", null );
+            output = servletResponse.getOutputStream();
+            computeCUDFCone( groupId, artifactId, version, type, repositoryId, output );
         }
-
-        queue.add( createArtifact( repositoryId, groupId, artifactId, version ) );
-        Artifact artifact = null;
-        while ( ( artifact = queue.poll() ) != null )
+        catch ( IOException e )
         {
-            if ( !known.contains( artifact ) )
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
+        finally
+        {
+            if ( output != null )
             {
-                known.add( artifact );
-                response.append( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
-                response.append( convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
-                response.append( "\n" );
+                try
+                {
+                    output.close();
+                }
+                catch ( IOException e )
+                {
+                    //NOTHING
+                }
             }
         }
-
-        return response.toString();
-    }
-
-    @Override
-    protected String getSelectedRepoExceptionMessage()
-    {
-        return "cudf.root.group.repository.denied";
     }
 
     public Response getConeCUDFFile( String groupId, String artifactId, String version, String type,
-                                     String repositoryId )
+                                     String repositoryId, boolean keep )
         throws ArchivaRestServiceException
     {
         try
         {
             String fileName = "extractCUDF_" + groupId + "-" + artifactId + "-" + version;
             File output = File.createTempFile( fileName, ".txt" );
-            output.deleteOnExit();
-            BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
-            bw.write( getConeCUDF( groupId, artifactId, version, type, repositoryId ) );
-            bw.close();
+            if ( !keep )
+            {
+                output.deleteOnExit();
+            }
+            FileOutputStream fos = null;
+            try
+            {
+                fos = new FileOutputStream( output );
+                computeCUDFCone( groupId, artifactId, version, type, repositoryId, fos );
+            }
+            finally
+            {
+                if ( fos != null )
+                {
+                    try
+                    {
+                        fos.close();
+                    }
+                    catch ( IOException e )
+                    {
+                        //NOTHING
+                    }
+                }
+            }
             return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
                                                                                      "attachment; filename=" + fileName
                                                                                          + ".txt" ).build();
@@ -131,17 +141,130 @@ public class DefaultCUDFService
         }
     }
 
-    public String getUniverseCUDF( String repositoryId )
+    private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
+                                  OutputStream output )
+        throws ArchivaRestServiceException, IOException
+    {
+        output.write( getCUDFPreambule().getBytes( "UTF-8" ) );
+        Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
+        List<String> repositories = getSelectedRepos( repositoryId );
+        LinkedList<Artifact> queue = new LinkedList<Artifact>();
+        Set<String> known = new TreeSet<String>();
+
+        Artifact root = null;
+        if ( repositoryId == null )
+        {
+            for ( String repoId : repositories )
+            {
+                root = createArtifact( repoId, groupId, artifactId, version, type );
+                if ( root != null )
+                {
+                    break;
+                }
+            }
+        }
+        else
+        {
+            root = createArtifact( repositoryId, groupId, artifactId, version, type );
+        }
+
+        queue.add( root );
+        Artifact artifact = null;
+        while ( ( artifact = queue.poll() ) != null )
+        {
+            if ( !known.contains( artifact ) )
+            {
+                known.add( generateArtifactKey( artifact ) );
+                output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ).getBytes( "UTF-8" ) );
+                output.write(
+                    convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ).getBytes(
+                        "UTF-8" ) );
+                output.write( "\n".getBytes( "UTF-8" ) );
+            }
+        }
+    }
+
+    public void getUniverseCUDF( String repositoryId, HttpServletResponse servletResponse )
         throws ArchivaRestServiceException
     {
+        OutputStream output = null;
+        try
+        {
+            output = servletResponse.getOutputStream();
+            computeCUDFUniverse( repositoryId, output );
+        }
+        catch ( IOException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
+        finally
+        {
+            if ( output != null )
+            {
+                try
+                {
+                    output.close();
+                }
+                catch ( IOException e )
+                {
+                    //NOTHING
+                }
+            }
+        }
+    }
+
+    public Response getUniverseCUDFFile( String repositoryId, boolean keep )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            String fileName = "extractCUDF_universe";
+            File output = File.createTempFile( fileName, ".txt" );
+            if ( !keep )
+            {
+                output.deleteOnExit();
+            }
+            FileOutputStream fos = null;
+            try
+            {
+                fos = new FileOutputStream( output );
+                computeCUDFUniverse( repositoryId, fos );
+            }
+            finally
+            {
+                if ( fos != null )
+                {
+                    try
+                    {
+                        fos.close();
+                    }
+                    catch ( IOException e )
+                    {
+                        //NOTHING
+                    }
+                }
+            }
+            return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
+                                                                                     "attachment; filename=" + fileName
+                                                                                         + ".txt" ).build();
+        }
+        catch ( IOException e )
+        {
+            return null;
+        }
+    }
+
+    private void computeCUDFUniverse( String repositoryId, OutputStream output )
+        throws ArchivaRestServiceException, IOException
+    {
         Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
-        StringBuilder response = new StringBuilder();
-        response.append( getCUDFPreambule() );
+
+        output.write( getCUDFPreambule().getBytes( "UTF-8" ) );
 
         List<String> repositories = getSelectedRepos( repositoryId );
 
         LinkedList<Artifact> queue = new LinkedList<Artifact>();
-        Set<Artifact> known = new TreeSet<Artifact>( new ArtifactComparator() );
+        Set<String> known = new TreeSet<String>();
 
         List<String> projects = new ArrayList<String>();
         for ( String repository : repositories )
@@ -159,24 +282,103 @@ public class DefaultCUDFService
                 VersionsList versionsList = browseService.getVersionsList( groupId, artifactId, repository );
                 for ( String version : versionsList.getVersions() )
                 {
-                    Artifact artifact = createArtifact( repository, groupId, artifactId, version );
-                    known.add( artifact );
-                    response.append( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
-                    response.append(
-                        convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
-                    response.append( "\n" );
+                    Artifact artifact = createArtifact( repository, groupId, artifactId, version, null );
+                    known.add( generateArtifactKey( artifact ) );
+                    output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ).getBytes( "UTF-8" ) );
+                    output.write(
+                        convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ).getBytes(
+                            "UTF-8" ) );
+                    output.write( "\n".getBytes( "UTF-8" ) );
                 }
             }
             projects = new ArrayList<String>();
         }
-        return response.toString();
     }
 
-    private Artifact createArtifact( String repository, String groupId, String artifactId, String version )
+    public String backgroundUniverse( final String repositoryId, String output, HttpServletResponse response )
+        throws ArchivaRestServiceException
+    {
+        final String outputFilename = output == null ? "/home/zenika/universe.cudf" : output;
+        new Thread()
+        {
+            @Override
+            public void run()
+            {
+                File output = new File( outputFilename );
+                FileOutputStream fos = null;
+                try
+                {
+                    fos = new FileOutputStream( output );
+                    log.info( "Starting CUDF Extract in background" );
+                    computeCUDFUniverse( repositoryId, fos );
+                    log.info(
+                        "Background CUDF extraction of Universe is done. Find the output file " + outputFilename );
+                }
+                catch ( ArchivaRestServiceException e )
+                {
+                    log.error( "Error while background cudf extraction" );
+                    log.error( e.getMessage(), e );
+                }
+                catch ( IOException e )
+                {
+                    log.error( "Error while background cudf extraction" );
+                    log.error( e.getMessage(), e );
+                }
+                finally
+                {
+                    if ( fos != null )
+                    {
+                        try
+                        {
+                            fos.close();
+                        }
+                        catch ( IOException e )
+                        {
+                            //nothing to do
+                        }
+                    }
+                    log.info( "CUDF Extraction ended." );
+                }
+            }
+        }.start();
+        return "Started in background";
+    }
+
+    @Override
+    protected String getSelectedRepoExceptionMessage()
+    {
+        return "cudf.root.group.repository.denied";
+    }
+
+    private Artifact createArtifact( String repository, String groupId, String artifactId, String version, String type )
     {
         Artifact artifact = new Artifact( groupId, artifactId, version );
-        artifact.setPackaging( resolveArtifactPackaging( repository, artifact ) );
+        if ( type != null )
+        {
+            artifact.setPackaging( type );
+        }
+        else
+        {
+            artifact.setPackaging( resolveArtifactPackaging( repository, artifact ) );
+        }
         return artifact;
+    }
+
+    private void getRepositoryContent( BrowseResult browseResult, String repository, List<String> projects )
+        throws ArchivaRestServiceException
+    {
+        for ( BrowseResultEntry rootGroupsResultEntry : browseResult.getBrowseResultEntries() )
+        {
+            if ( rootGroupsResultEntry.isProject() )
+            {
+                projects.add( rootGroupsResultEntry.getName() );
+            }
+            else
+            {
+                getRepositoryContent( browseService.browseGroupId( rootGroupsResultEntry.getName(), repository ),
+                                      repository, projects );
+            }
+        }
     }
 
     private String resolveArtifactPackaging( String repository, Artifact artifact )
@@ -219,94 +421,6 @@ public class DefaultCUDFService
         return packaging;
     }
 
-    public Response getUniverseCUDFFile( String repositoryId )
-        throws ArchivaRestServiceException
-    {
-        try
-        {
-            String fileName = "extractCUDF_universe";
-            File output = File.createTempFile( fileName, ".txt" );
-            output.deleteOnExit();
-            BufferedWriter bw = new BufferedWriter( new FileWriter( output ) );
-            bw.write( getUniverseCUDF( repositoryId ) );
-            bw.close();
-            return Response.ok( output, MediaType.APPLICATION_OCTET_STREAM ).header( "Content-Disposition",
-                                                                                     "attachment; filename=" + fileName
-                                                                                         + ".txt" ).build();
-        }
-        catch ( IOException e )
-        {
-            return null;
-        }
-    }
-
-    public String backgroundUniverse( final String repositoryId, String output )
-        throws ArchivaRestServiceException
-    {
-        final String outputFilename = output == null ? "/home/zenika/universe.cudf" : output;
-        new Thread()
-        {
-            @Override
-            public void run()
-            {
-                File output = new File( outputFilename );
-                BufferedWriter bw = null;
-                try
-                {
-                    bw = new BufferedWriter( new FileWriter( output ) );
-                    log.info( "Starting CUDF Extract in background" );
-                    bw.write( getUniverseCUDF( repositoryId ) );
-                    bw.close();
-                    log.info(
-                        "Background CUDF extraction of Universe is done. Find the output file " + outputFilename );
-                }
-                catch ( ArchivaRestServiceException e )
-                {
-                    log.error( "Error while background cudf extraction" );
-                    log.error( e.getMessage(), e );
-                }
-                catch (IOException e)
-                {
-                    log.error( "Error while background cudf extraction" );
-                    log.error( e.getMessage(), e );
-                }
-                finally
-                {
-                    if ( bw != null )
-                    {
-                        try
-                        {
-                            bw.close();
-                        }
-                        catch ( IOException e )
-                        {
-                            //nothing to do
-                        }
-                    }
-                    log.info( "CUDF Extraction ended." );
-                }
-            }
-        }.start();
-        return "Started in background";
-    }
-
-    private void getRepositoryContent( BrowseResult browseResult, String repository, List<String> projects )
-        throws ArchivaRestServiceException
-    {
-        for ( BrowseResultEntry rootGroupsResultEntry : browseResult.getBrowseResultEntries() )
-        {
-            if ( rootGroupsResultEntry.isProject() )
-            {
-                projects.add( rootGroupsResultEntry.getName() );
-            }
-            else
-            {
-                getRepositoryContent( browseService.browseGroupId( rootGroupsResultEntry.getName(), repository ),
-                                      repository, projects );
-            }
-        }
-    }
-
     private String outputArtifactInCUDF( Artifact artifact, Map<String, Integer> cudfVersionMapper )
         throws ArchivaRestServiceException
     {
@@ -333,7 +447,7 @@ public class DefaultCUDFService
     }
 
     private String convertDependenciesToCUDF( Artifact artifact, List<String> repositories, Queue<Artifact> queue,
-                                              Set<Artifact> known, Map<String, Integer> cudfVersionMapper )
+                                              Set<String> known, Map<String, Integer> cudfVersionMapper )
         throws ArchivaRestServiceException
     {
         List<Dependency> dependencies =
@@ -367,7 +481,7 @@ public class DefaultCUDFService
             while ( it.hasNext() )
             {
                 Artifact item = it.next();
-                if ( !known.contains( item ) )
+                if ( !known.contains( generateArtifactKey( item ) ) )
                 {
                     queue.add( item );
                 }
@@ -444,7 +558,7 @@ public class DefaultCUDFService
                     catch ( MetadataResolutionException e )
                     {
                         log.error(
-                            "Skipping invalid metadata while compiling shared model for " + groupId + ":" + artifactId
+                            "Skipping invalid metadata  while compiling shared model for " + groupId + ":" + artifactId
                                 + " in repo " + repoId + ": " + e.getMessage() );
                     }
                 }
@@ -466,40 +580,11 @@ public class DefaultCUDFService
             + "          type: string = [\"\"]\n\n";
     }
 
-    // FIXME its violate Collections obligation on compareTo / equals methods
-    static class ArtifactComparator
-        implements Comparator<Artifact>
+    private String generateArtifactKey( Artifact artifact )
     {
-        public int compare( Artifact o1, Artifact o2 )
-        {
-            int c = o1.getGroupId().compareTo( o2.getGroupId() );
-            if ( c != 0 )
-            {
-                return c;
-            }
-            c = o1.getArtifactId().compareTo( o2.getArtifactId() );
-            if ( c != 0 )
-            {
-                return c;
-            }
-            c = o1.getVersion().compareTo( o2.getVersion() );
-            if ( c != 0 )
-            {
-                return c;
-            }
-            if ( o1.getPackaging() == null && o2.getPackaging() == null )
-            {
-                return 0;
-            }
-            if ( StringUtils.isEmpty( o1.getPackaging() ) )
-            {
-                return -1;
-            }
-            if ( StringUtils.isEmpty( o2.getPackaging() ) )
-            {
-                return 1;
-            }
-            return o1.getPackaging().compareTo( o2.getPackaging() );
-        }
+        StringBuilder sb = new StringBuilder();
+        sb.append( artifact.getGroupId() ).append( "#" ).append( artifact.getArtifactId() ).append( "#" ).append(
+            artifact.getVersion() );
+        return sb.toString();
     }
 }

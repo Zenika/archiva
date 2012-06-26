@@ -18,21 +18,25 @@ package org.apache.archiva.rest.api.services;
 
 import org.apache.archiva.redback.authorization.RedbackAuthorization;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
+ * @since 1.4-M3
  */
 @Path( "/cudfService/" )
 public interface CUDFService
 {
+
     /**
      * Gets the cone extract for the artifact as text response.
      *
@@ -44,12 +48,11 @@ public interface CUDFService
      * @throws ArchivaRestServiceException
      */
     @Path( "cone/{groupId}/{artifactId}/{version}" )
-    @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
-    String getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
-                        @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
-                        @QueryParam( "repositoryId" ) String repositoryId )
+    void getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
+                      @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
+                      @QueryParam( "repositoryId" ) String repositoryId, @Context HttpServletResponse servletResponse )
         throws ArchivaRestServiceException;
 
     /**
@@ -68,7 +71,7 @@ public interface CUDFService
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
     Response getConeCUDFFile( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
                               @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
-                              @QueryParam( "repositoryId" ) String repositoryId )
+                              @QueryParam( "repositoryId" ) String repositoryId, @QueryParam( "keep" ) boolean keep )
         throws ArchivaRestServiceException;
 
     /**
@@ -78,10 +81,10 @@ public interface CUDFService
      * @throws ArchivaRestServiceException
      */
     @Path( "universe" )
-    @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
-    String getUniverseCUDF( @QueryParam( "repositoryId" ) String repositoryId )
+    void getUniverseCUDF( @QueryParam( "repositoryId" ) String repositoryId,
+                          @Context HttpServletResponse servletResponse )
         throws ArchivaRestServiceException;
 
     /**
@@ -94,15 +97,16 @@ public interface CUDFService
     @POST
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
-    Response getUniverseCUDFFile( @QueryParam( "repositoryId" ) String repositoryId )
+    Response getUniverseCUDFFile( @QueryParam( "repositoryId" ) String repositoryId,
+                                  @QueryParam( "keep" ) boolean keep )
         throws ArchivaRestServiceException;
 
     @Path( "bgUniverse" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.TEXT_PLAIN )
-    String backgroundUniverse( @QueryParam( "repositoryId" ) String repositoryId,
-                               @QueryParam( "output" ) String output )
+    String backgroundUniverse( @QueryParam( "repositoryId" ) String repositoryId, @QueryParam( "output" ) String output,
+                               @Context HttpServletResponse servletResponse )
         throws ArchivaRestServiceException;
 
 }
