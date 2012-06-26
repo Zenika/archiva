@@ -82,9 +82,12 @@ public class ArtifactDownloadInfoBuilder
         String extension = FilenameUtils.getExtension( file.getName() );
 
         Artifact artifact = new Artifact( ref.getGroupId(), ref.getArtifactId(), ref.getVersion() );
+        artifact.setRepositoryId( artifactMetadata.getRepositoryId() );
         artifact.setClassifier( classifier );
         artifact.setPackaging( type );
+        artifact.setType( type );
         artifact.setFileExtension( extension );
+        artifact.setPath( managedRepositoryContent.toPath( ref ) );
         // TODO: find a reusable formatter for this
         double s = this.artifactMetadata.getSize();
         String symbol = "b";
@@ -108,6 +111,9 @@ public class ArtifactDownloadInfoBuilder
         artifact.setContext( managedRepositoryContent.getId() );
         DecimalFormat df = new DecimalFormat( "#,###.##", new DecimalFormatSymbols( Locale.US ) );
         artifact.setSize( df.format( s ) + " " + symbol );
+
+        artifact.setId( ref.getArtifactId() + "-" + ref.getVersion() + "." + ref.getType() );
+
         return artifact;
 
     }

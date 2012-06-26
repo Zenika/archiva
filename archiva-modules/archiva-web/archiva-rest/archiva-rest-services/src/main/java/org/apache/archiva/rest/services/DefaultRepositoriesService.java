@@ -98,6 +98,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -653,6 +654,8 @@ public class DefaultRepositoriesService
 
         // TODO more control on artifact fields
 
+        boolean snapshotVersion = VersionUtil.isSnapshot( artifact.getVersion() );
+
         RepositorySession repositorySession = repositorySessionFactory.createSession();
         try
         {
@@ -670,6 +673,13 @@ public class DefaultRepositoriesService
 
             ManagedRepositoryContent repository = repositoryFactory.getManagedRepositoryContent( repositoryId );
 
+            ArtifactReference artifactReference = new ArtifactReference();
+            artifactReference.setArtifactId( artifact.getArtifactId() );
+            artifactReference.setGroupId( artifact.getGroupId() );
+            artifactReference.setVersion( artifact.getVersion() );
+            artifactReference.setClassifier( artifact.getClassifier() );
+            artifactReference.setType( artifact.getPackaging() );
+
             MetadataRepository metadataRepository = repositorySession.getRepository();
 
             String path = repository.toMetadataPath( ref );
@@ -681,12 +691,7 @@ public class DefaultRepositoriesService
                     throw new ArchivaRestServiceException( "You must configure a type/packaging when using classifier",
                                                            400, null );
                 }
-                ArtifactReference artifactReference = new ArtifactReference();
-                artifactReference.setArtifactId( artifact.getArtifactId() );
-                artifactReference.setGroupId( artifact.getGroupId() );
-                artifactReference.setVersion( artifact.getVersion() );
-                artifactReference.setClassifier( artifact.getClassifier() );
-                artifactReference.setType( artifact.getPackaging() );
+
                 repository.deleteArtifact( artifactReference );
 
             }
@@ -705,16 +710,41 @@ public class DefaultRepositoriesService
 
                 // TODO: this should be in the storage mechanism so that it is all tied together
                 // delete from file system
-                repository.deleteVersion( ref );
-
+                if ( !snapshotVersion )
+                {
+                    repository.deleteVersion( ref );
+                }
+                else
+                {
+                    Set<ArtifactReference> related = repository.getRelatedArtifacts( artifactReference );
+                    log.debug( "related: {}", related );
+                    for ( ArtifactReference artifactRef : related )
+                    {
+                        repository.deleteArtifact( artifactRef );
+                    }
+                }
                 File metadataFile = getMetadata( targetPath.getAbsolutePath() );
                 ArchivaRepositoryMetadata metadata = getMetadata( metadataFile );
 
                 updateMetadata( metadata, metadataFile, lastUpdatedTimestamp, artifact );
             }
-            Collection<ArtifactMetadata> artifacts =
-                metadataRepository.getArtifacts( repositoryId, artifact.getGroupId(), artifact.getArtifactId(),
-                                                 artifact.getVersion() );
+            Collection<ArtifactMetadata> artifacts = Collections.emptyList();
+
+            if ( snapshotVersion )
+            {
+                String baseVersion = VersionUtil.getBaseVersion( artifact.getVersion() );
+                artifacts =
+                    metadataRepository.getArtifacts( repositoryId, artifact.getGroupId(), artifact.getArtifactId(),
+                                                     baseVersion );
+            }
+            else
+            {
+                artifacts =
+                    metadataRepository.getArtifacts( repositoryId, artifact.getGroupId(), artifact.getArtifactId(),
+                                                     artifact.getVersion() );
+            }
+
+            log.debug( "artifacts: {}", artifacts );
 
             for ( ArtifactMetadata artifactMetadata : artifacts )
             {
@@ -751,10 +781,18 @@ public class DefaultRepositoriesService
                     }
                     else
                     {
-                        metadataRepository.removeArtifact( artifactMetadata.getRepositoryId(),
-                                                           artifactMetadata.getNamespace(),
-                                                           artifactMetadata.getProject(), artifact.getVersion(),
-                                                           artifactMetadata.getId() );
+                        if ( snapshotVersion )
+                        {
+                            metadataRepository.removeArtifact( artifactMetadata,
+                                                               VersionUtil.getBaseVersion( artifact.getVersion() ) );
+                        }
+                        else
+                        {
+                            metadataRepository.removeArtifact( artifactMetadata.getRepositoryId(),
+                                                               artifactMetadata.getNamespace(),
+                                                               artifactMetadata.getProject(), artifact.getVersion(),
+                                                               artifactMetadata.getId() );
+                        }
                     }
                     // TODO: move into the metadata repository proper - need to differentiate attachment of
                     //       repository metadata to an artifact
@@ -797,6 +835,7 @@ public class DefaultRepositoriesService
         }
         finally
         {
+
             repositorySession.save();
 
             repositorySession.close();
