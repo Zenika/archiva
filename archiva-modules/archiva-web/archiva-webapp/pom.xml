@@ -906,6 +906,7 @@
             <redback.jdbc.driver.name>${redbackTestJdbcDriver}</redback.jdbc.driver.name>
             <basedir>${basedir}</basedir>
             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
+            <buildDirectory>${project.build.directory}</buildDirectory>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -990,7 +991,6 @@
                     org.apache.archiva.web.action*;version=${project.version},
                     org.apache.archiva.web.interceptor*;version=${project.version},
                     org.apache.archiva.web.mapper*;version=${project.version},
-                    org.apache.archiva.web.rss*;version=${project.version},
                     org.apache.archiva.web.tags*;version=${project.version},
                     org.apache.archiva.web.util*;version=${project.version},
                     org.apache.archiva.web.validator*;version=${project.version}

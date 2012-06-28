@@ -39,18 +39,22 @@ public class CacheEntry
 
     private String cacheHitRate;
 
+    private long inMemorySize;
+
     public CacheEntry()
     {
         // no op
     }
 
-    public CacheEntry( String key, long size, long cacheHits, long cacheMiss, String cacheHitRate )
+    public CacheEntry( String key, long size, long cacheHits, long cacheMiss, String cacheHitRate, long inMemorySize )
     {
         this.key = key;
         this.size = size;
         this.cacheHits = cacheHits;
         this.cacheMiss = cacheMiss;
         this.cacheHitRate = cacheHitRate;
+        // size is in bytes so use kb
+        this.inMemorySize = inMemorySize / 1024;
     }
 
     public String getKey()
@@ -103,6 +107,20 @@ public class CacheEntry
         this.cacheHitRate = cacheHitRate;
     }
 
+    /**
+     *
+     * @return cache size in kb
+     */
+    public long getInMemorySize()
+    {
+        return inMemorySize;
+    }
+
+    public void setInMemorySize( long inMemorySize )
+    {
+        this.inMemorySize = inMemorySize;
+    }
+
     @Override
     public String toString()
     {
@@ -112,7 +130,8 @@ public class CacheEntry
         sb.append( ", size=" ).append( size );
         sb.append( ", cacheHits=" ).append( cacheHits );
         sb.append( ", cacheMiss=" ).append( cacheMiss );
-        sb.append( ", cacheHitRate=" ).append( cacheHitRate );
+        sb.append( ", cacheHitRate='" ).append( cacheHitRate ).append( '\'' );
+        sb.append( ", inMemorySize=" ).append( inMemorySize );
         sb.append( '}' );
         return sb.toString();
     }
