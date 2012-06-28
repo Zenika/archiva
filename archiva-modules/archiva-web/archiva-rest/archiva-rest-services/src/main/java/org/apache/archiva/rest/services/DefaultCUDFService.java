@@ -172,7 +172,7 @@ public class DefaultCUDFService
         Artifact artifact = null;
         while ( ( artifact = queue.poll() ) != null )
         {
-            if ( !known.contains( artifact ) )
+            if ( !known.contains( generateArtifactKey( artifact ) ) )
             {
                 known.add( generateArtifactKey( artifact ) );
                 output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ).getBytes( "UTF-8" ) );
