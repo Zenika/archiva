@@ -38,9 +38,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,10 +73,10 @@ public class DefaultCUDFService
         throws ArchivaRestServiceException
     {
 
-        OutputStream output = null;
+        Writer output = null;
         try
         {
-            output = servletResponse.getOutputStream();
+            output = servletResponse.getWriter();
             computeCUDFCone( groupId, artifactId, version, type, repositoryId, output );
         }
         catch ( IOException e )
@@ -111,10 +111,10 @@ public class DefaultCUDFService
             {
                 output.deleteOnExit();
             }
-            FileOutputStream fos = null;
+            FileWriter fos = null;
             try
             {
-                fos = new FileOutputStream( output );
+                fos = new FileWriter( output );
                 computeCUDFCone( groupId, artifactId, version, type, repositoryId, fos );
             }
             finally
@@ -142,10 +142,10 @@ public class DefaultCUDFService
     }
 
     private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                  OutputStream output )
+                                  Writer output )
         throws ArchivaRestServiceException, IOException
     {
-        output.write( getCUDFPreambule().getBytes( "UTF-8" ) );
+        output.write( getCUDFPreambule() );
         Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
         List<String> repositories = getSelectedRepos( repositoryId );
         LinkedList<Artifact> queue = new LinkedList<Artifact>();
@@ -175,11 +175,9 @@ public class DefaultCUDFService
             if ( !known.contains( generateArtifactKey( artifact ) ) )
             {
                 known.add( generateArtifactKey( artifact ) );
-                output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ).getBytes( "UTF-8" ) );
-                output.write(
-                    convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ).getBytes(
-                        "UTF-8" ) );
-                output.write( "\n".getBytes( "UTF-8" ) );
+                output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
+                output.write( convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
+                output.write( "\n" );
             }
         }
     }
@@ -187,10 +185,10 @@ public class DefaultCUDFService
     public void getUniverseCUDF( String repositoryId, HttpServletResponse servletResponse )
         throws ArchivaRestServiceException
     {
-        OutputStream output = null;
+        Writer output = null;
         try
         {
-            output = servletResponse.getOutputStream();
+            output = servletResponse.getWriter();
             computeCUDFUniverse( repositoryId, output );
         }
         catch ( IOException e )
@@ -224,10 +222,10 @@ public class DefaultCUDFService
             {
                 output.deleteOnExit();
             }
-            FileOutputStream fos = null;
+            Writer fos = null;
             try
             {
-                fos = new FileOutputStream( output );
+                fos = new FileWriter( output );
                 computeCUDFUniverse( repositoryId, fos );
             }
             finally
@@ -254,12 +252,12 @@ public class DefaultCUDFService
         }
     }
 
-    private void computeCUDFUniverse( String repositoryId, OutputStream output )
+    private void computeCUDFUniverse( String repositoryId, Writer output )
         throws ArchivaRestServiceException, IOException
     {
         Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
 
-        output.write( getCUDFPreambule().getBytes( "UTF-8" ) );
+        output.write( getCUDFPreambule() );
 
         List<String> repositories = getSelectedRepos( repositoryId );
 
@@ -284,11 +282,10 @@ public class DefaultCUDFService
                 {
                     Artifact artifact = createArtifact( repository, groupId, artifactId, version, null );
                     known.add( generateArtifactKey( artifact ) );
-                    output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ).getBytes( "UTF-8" ) );
+                    output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
                     output.write(
-                        convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ).getBytes(
-                            "UTF-8" ) );
-                    output.write( "\n".getBytes( "UTF-8" ) );
+                        convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
+                    output.write( "\n" );
                 }
             }
             projects = new ArrayList<String>();
@@ -305,10 +302,10 @@ public class DefaultCUDFService
             public void run()
             {
                 File output = new File( outputFilename );
-                FileOutputStream fos = null;
+                FileWriter fos = null;
                 try
                 {
-                    fos = new FileOutputStream( output );
+                    fos = new FileWriter( output );
                     log.info( "Starting CUDF Extract in background" );
                     computeCUDFUniverse( repositoryId, fos );
                     log.info(
