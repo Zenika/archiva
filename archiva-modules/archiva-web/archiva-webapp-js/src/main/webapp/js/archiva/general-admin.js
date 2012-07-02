@@ -925,7 +925,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       }
       var mainContent = $("#main-content");
 
-      url = "restServices/archivaServices/repositoriesReport/getStatisticsReport/?repositories="
+      url = "restServices/archivaServices/reportServices/getStatisticsReport/?repositories="
         + this.statisticsReport().repositories() + "&rowCount=" + this.statisticsReport().rowCount();
 
       if(this.statisticsReport().startDate()!=null){
@@ -1059,7 +1059,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       var mainContent = $("#main-content");
 
       var url =
-        "restServices/archivaServices/repositoriesReport/getHealthReports/" + this.healthReport().repositoryId() + "/"
+        "restServices/archivaServices/reportServices/getHealthReports/" + this.healthReport().repositoryId() + "/"
           + this.healthReport().rowCount();
 
       if (this.healthReport().groupId())

@@ -44,12 +44,12 @@ import java.util.Map;
 public interface ReportRepositoriesService
 {
 
-    @Path( "getStatisticsReport/{rowCount}" )
+    @Path( "getStatisticsReport" )
     @GET
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
-    public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repository" ) List<String> repositoriesId,
-                                                           @PathParam( "rowCount" ) int rowCount,
+    public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repositories" ) List<String> repositoriesId,
+                                                           @QueryParam( "rowCount" ) int rowCount,
                                                            @QueryParam( "startDate" ) Date startDate,
                                                            @QueryParam( "startDate" ) Date endDate )
         throws ArchivaRestServiceException;
@@ -58,7 +58,7 @@ public interface ReportRepositoriesService
     @GET
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
-    public Map<String, List<RepositoryProblemFacet>> getHealthReport( @PathParam( "repository" ) String repository,
+    public List<RepositoryProblemFacet> getHealthReport( @PathParam( "repository" ) String repository,
                                                                       @QueryParam( "groupId" ) String groupId,
                                                                       @PathParam( "rowCount" ) int rowCount )
         throws ArchivaRestServiceException;

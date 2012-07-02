@@ -132,7 +132,7 @@ public class DefaultReportRepositoriesService
         }
     }
 
-    public Map<String, List<RepositoryProblemFacet>> getHealthReport( String repository, String groupId, int rowCount )
+    public List<RepositoryProblemFacet> getHealthReport( String repository, String groupId, int rowCount )
         throws ArchivaRestServiceException
     {
         RepositorySession repositorySession = repositorySessionFactory.createSession();
@@ -167,25 +167,8 @@ public class DefaultReportRepositoriesService
                     }
                 }
             }
-            Map<String, List<RepositoryProblemFacet>> repositoriesMap =
-                new TreeMap<String, List<RepositoryProblemFacet>>();
-            for ( RepositoryProblemFacet problem : problemArtifacts )
-            {
-                List<RepositoryProblemFacet> problemsList;
-                if ( repositoriesMap.containsKey( problem.getRepositoryId() ) )
-                {
-                    problemsList = repositoriesMap.get( problem.getRepositoryId() );
-                }
-                else
-                {
-                    problemsList = new ArrayList<RepositoryProblemFacet>();
-                    repositoriesMap.put( problem.getRepositoryId(), problemsList );
-                }
 
-                problemsList.add( problem );
-            }
-
-            return repositoriesMap;
+            return problemArtifacts;
         }
         catch ( MetadataRepositoryException e )
         {
