@@ -17,7 +17,7 @@
  * under the License.
  */
 define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl","order!knockout","order!knockout.simpleGrid",
-  "jquery.validate","bootstrap"]
+  "knockout.sortable","jquery.validate","bootstrap"]
     , function() {
 
   //-------------------------
@@ -879,7 +879,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   // report configuration page
   //---------------------------
   StatisticsReportRequest=function() {
-    this.repositories = ko.observable( [] );
+    this.repositories = ko.observableArray( [] );
     this.rowCount = ko.observable(100);
     this.startDate = ko.observable();
     this.endDate = ko.observable();
@@ -911,6 +911,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   ReportStatisticsViewModel=function(repositoriesAvailable){
     reportStatisticsFormValidator();
 
+    var self=this;
     this.availableRepositories = ko.observableArray( repositoriesAvailable );
     this.statisticsReport = ko.observable( new StatisticsReportRequest() );
 
@@ -942,7 +943,9 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         success: function(data){
           clearUserMessages();
           screenChange();
-          mainContent.html( $( "#report-statistics" ).tmpl( {report:data} ) );
+          mainContent.html( $( "#report-statistics" ).tmpl() );
+          var reportStatistics = new ReportStatisticsResultViewModel( data );
+          ko.applyBindings( reportStatistics, mainContent.get( 0 ) );
         },
         error: function(data){
           clearUserMessages();
@@ -950,33 +953,16 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         }
       });
     }
-
-    this.add=function(){
-      $( "#availableRepositories option:selected" ).remove().appendTo("#repositories" );
-    }
-    this.remove=function(){
-      $( "#repositories option:selected" ).remove().appendTo("#availableRepositories");
-    }
-    this.addAll=function(){
-      $( "#availableRepositories option" ).remove().appendTo( "#repositories" );
-    }
-    this.removeAll=function(){
-      $( "#repositories option" ).remove().appendTo( "#availableRepositories" );
-    }
-    this.up=function(){
-    }
-    this.down=function(){
-    }
   }
-  ReportStatisticsResultViewModel=function(){
-    this.reports = ko.observableArray( [] );
+  ReportStatisticsResultViewModel=function(report){
+    this.reports = ko.observableArray( report );
     var self = this;
 
     this.tableReportViewModel = new ko.simpleGrid.viewModel({
       data: this.reports,
       viewModel: this,
       columns: [
-        { headerText: "Repository", rowText: "repositoryId" },
+        { headerText: "Repository ID", rowText: "repositoryId" },
         { headerText: "Total File Count", rowText: "totalFileCount" },
         { headerText: "Total Size", rowText: "totalArtifactFileSize" },
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
@@ -990,7 +976,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         { headerText: "Dlls", rowText: "dlls" },
         { headerText: "Zips", rowText: "zip" }
       ],
-      pageSize: 5
+      pageSize: 10
     });
   }
 
@@ -1016,18 +1002,31 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
                                    data.problem, data.name, data.facetId );
   }
   mapHealthReportResults=function(data){
-    $.log( "mapHealthReportResults" );
-    var repositories=new Array();
-    $.each(data, function(rep){
-      var repository = new Object();
-      repository.name=rep;
-      repository.issues=new Array();
-      $.each(data[rep], function(issue){
-        repository.issues.push( mapHealthReportResult( data[rep][issue] ) );
-      });
-      repositories.push(repository);
+    if (data != null)
+    {
+      return $.isArray(data)? $.map(data, function(item){
+        return mapHealthReportResult(item);
+      }):[mapHealthReportResult(data)];
+    }
+    return [];
+  }
+  ReportHealthResultViewModel=function(report){
+    this.reports = ko.observableArray( report );
+    var self = this;
+    this.tableReportViewModel = new ko.simpleGrid.viewModel({
+      data: this.reports,
+      viewModel: this,
+      columns: [
+        { headerText: "ID", rowText: "id" },
+        { headerText: "Namespace", rowText: "namespace" },
+        { headerText: "Project", rowText: "project" },
+        { headerText: "Version", rowText: "version" },
+        { headerText: "Name", rowText: "name" },
+        { headerText: "Problem", rowText: "problem" },
+        { headerText: "Message", rowText: "message" }
+        ],
+      pageSize: 10
     });
-    return repositories;
   }
 
   reportHealthFormValidator=function(){
@@ -1074,12 +1073,12 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         success: function(data){
           clearUserMessages();
           screenChange();
-          var reports = mapHealthReportResults(data);
-          mainContent.html( $( "#report-health" ).tmpl( {reports: reports} ) );
+          var reports = new ReportHealthResultViewModel( mapHealthReportResults( data ) );
+          mainContent.html( $( "#report-health" ).tmpl() );
+          ko.applyBindings( reports, mainContent.get( 0 ) );
         },
         error: function(data){
           clearUserMessages();
-          console.log(data);
           displayErrorMessage(data.errorMessage);
         }
       });

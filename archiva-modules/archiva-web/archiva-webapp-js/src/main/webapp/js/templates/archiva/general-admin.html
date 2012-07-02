@@ -504,7 +504,7 @@
     <p>
         ${$.i18n.prop('apperance-configuration.details-description')}
     </p>
-    
+
     <form id="appearance-configuration-form-id" class="well form-horizontal">
         <fieldset id="appearance-configuration-fielset-id">
             <div class="control-group">
@@ -717,82 +717,67 @@
       <div class="tab-pane active" id="stats">
         <form class="form-horizontal" id="report-statistics-form-id">
           <fieldset id="form-statistics-report">
-            <div class="control-group" class="form-inline">
-              <label for="availableRepositories" class="control-label">
-                ${$.i18n.prop('report.statistics.repositories.label')}
-              </label>
-              <div class="controls">
-                <select multiple="multiple" size='5' id="availableRepositories"
-                        data-bind="options: availableRepositories">
-                </select>
-                <button class="btn btn-small" data-bind="click: removeAll">
-                  &laquo;
-                </button>
-                <button class="btn btn-small" data-bind="click: remove">
-                  &larr;
-                </button>
-                <button class="btn btn-small" data-bind="click: add">
-                  &rarr;
-                </button>
-                <button class="btn btn-small" data-bind="click: addAll">
-                  &raquo;
-                </button>
+            <div class="row-fluid">
+              <div class="span6 row-fluid">
+                <div class="span6 dotted">
+                  <h5>${$.i18n.prop('report.statistics.selected-repositories.label')}</h5>
+                  <hr/>
+                  <div style="min-height: 40px"
+                       data-bind="sortable: { template: 'statistics-repositories-order-tmpl', data:statisticsReport().repositories}"></div>
+                </div>
+                <div class="span6 dotted">
+                  <h5>${$.i18n.prop('repository.groups.available-repositories.label')}</h5>
+                  <hr/>
+                  <div style="min-height: 40px"
+                       data-bind="sortable: {template: 'statistics-repositories-order-tmpl',data:availableRepositories}"></div>
+                </div>
+              </div>
+              <div class="span6 well">
+                  <div class="control-group">
+                      <label for="rowCountStatistics" class="control-label">
+                          ${$.i18n.prop('report.statistics.row-count.label')}
+                      </label>
+                      <div class="controls">
+                          <input type="text" id="rowCountStatistics" name="rowCountStatistics" class="input-small"
+                                 data-bind="value: statisticsReport().rowCount"/>
 
-                <select multiple="multiple" id="repositoriesEnabled" name="repositoriesEnabled"
-                        class="xlarge required" data-bind="value: statisticsReport().repositories">
-                </select>
-
-                <button class="btn btn-small" data-bind="click: up">
-                  &uarr;
-                </button>
-                <button class="btn btn-small" data-bind="click: down">
-                  &darr;
-                </button>
+                          <button class="btn btn-warning btn-mini" id="rowCount-info-button"
+                                  data-original-title="${$.i18n.prop('report.statistics.rowCount.explanations-title')}"
+                                  data-content="${$.i18n.prop('report.statistics.rowCount.explanations')}">
+                              <i class="icon-question-sign icon-white"></i>
+                          </button>
+                      </div>
+                  </div>
+                  <div class="control-group">
+                      <label for="startDate" class="control-label">
+                          ${$.i18n.prop('report.statistics.start-date.label')}
+                      </label>
+                      <div class="controls">
+                          <input type="text" id="startDate" name="startDate" class="input-small"
+                                 data-bind="value: statisticsReport().startDate"/>
+                      </div>
+                  </div>
+                  <div class="control-group">
+                      <label for="endDate" class="control-label">
+                          ${$.i18n.prop('report.statistics.end-date.label')}
+                      </label>
+                      <div class="controls">
+                          <input type="text" id="endDate" name="endDate" class="input-small"
+                                 data-bind="value: statisticsReport().endDate"/>
+                          <button class="btn btn-warning btn-mini" id="endDate-info-button"
+                                  data-original-title="${$.i18n.prop('report.statistics.endDate.explanations-title')}"
+                                  data-content="${$.i18n.prop('report.statistics.endDate.explanations')}">
+                              <i class="icon-question-sign icon-white"></i>
+                          </button>
+                      </div>
+                  </div>
               </div>
             </div>
-            <div class="control-group">
-              <label for="rowCountStatistics" class="control-label">
-                ${$.i18n.prop('report.statistics.row-count.label')}
-              </label>
-              <div class="controls">
-                <input type="text" id="rowCountStatistics" name="rowCountStatistics" class="input-small"
-                        data-bind="value: statisticsReport().rowCount"/>
-
-                <button class="btn btn-warning btn-mini" id="rowCount-info-button"
-                        data-original-title="${$.i18n.prop('report.statistics.rowCount.explanations-title')}"
-                        data-content="${$.i18n.prop('report.statistics.rowCount.explanations')}">
-                  <i class="icon-question-sign icon-white"></i>
-                </button>
+              <div class="form-actions">
+                  <a href="#" class="btn btn-primary" data-bind="click: showStatistics">
+                      ${$.i18n.prop('report.statistics.btn-view')}
+                  </a>
               </div>
-            </div>
-            <div class="control-group">
-              <label for="startDate" class="control-label">
-                ${$.i18n.prop('report.statistics.start-date.label')}
-              </label>
-              <div class="controls">
-                <input type="text" id="startDate" name="startDate" class="input-small"
-                        data-bind="value: statisticsReport().startDate"/>
-              </div>
-            </div>
-            <div class="control-group">
-              <label for="endDate" class="control-label">
-                ${$.i18n.prop('report.statistics.end-date.label')}
-              </label>
-              <div class="controls">
-                <input type="text" id="endDate" name="endDate" class="input-small"
-                        data-bind="value: statisticsReport().endDate"/>
-                  <button class="btn btn-warning btn-mini" id="endDate-info-button"
-                          data-original-title="${$.i18n.prop('report.statistics.endDate.explanations-title')}"
-                          data-content="${$.i18n.prop('report.statistics.endDate.explanations')}">
-                      <i class="icon-question-sign icon-white"></i>
-                  </button>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary" data-bind="click: showStatistics">
-                ${$.i18n.prop('report.statistics.btn-view')}
-              </button>
-            </div>
           </fieldset>
         </form>
       </div>
@@ -832,9 +817,9 @@
               </div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary" data-bind="click: showHealth">
+              <a href="#" class="btn btn-primary" data-bind="click: showHealth">
                 ${$.i18n.prop('report.health.btn-view')}
-              </button>
+              </a>
             </div>
           </fieldset>
         </form>
@@ -842,48 +827,20 @@
     </div>
 </script>
 
+<script id="statistics-repositories-order-tmpl" type="text/html">
+    <div class="well draggable-item">
+        ${$data}
+    </div>
+</script>
+
 <script id="report-health" type="text/html">
     <div class="page-header">
         <h2>${$.i18n.prop('report.health.title')}</h2>
     </div>
-    {{if (reports.length == 0) }}
-    <div class="alert alert-info">${$.i18n.prop('report.message.no-report')}</div>
-    {{else}}
-
-    <ul class="nav nav-tabs">
-        {{each(i, report) reports}}
-          <li class="{{if (i==0)}}active{{/if}}"><a href="#${report.name}" data-toggle="tab">${report.name}</a></li>
-        {{/each}}
-    </ul>
-    <div class="tab-content">
-        {{each(i, report) reports}}
-        <div class="tab-pane {{if (i==0)}}active{{/if}}" id="${report.name}">
-            <table class="table table-bordered table-striped">
-                <thead>
-                <th>${$.i18n.prop('report.health.result.id')}</th>
-                <th>${$.i18n.prop('report.health.result.namespace')}</th>
-                <th>${$.i18n.prop('report.health.result.project')}</th>
-                <th>${$.i18n.prop('report.health.result.version')}</th>
-                <th>${$.i18n.prop('report.health.result.name')}</th>
-                <th>${$.i18n.prop('report.health.result.problem')}</th>
-                <th>${$.i18n.prop('report.health.result.message')}</th>
-                </thead>
-                {{each(j, problem) report.issues}}
-                <tr>
-                    <td>${id}</td>
-                    <td>${namespace}</td>
-                    <td>${project}</td>
-                    <td>${version}</td>
-                    <td>${name}</td>
-                    <td>${problem}</td>
-                    <td>${message}</td>
-                </tr>
-                {{/each}}
+            <table class="table table-bordered table-striped"
+                   data-bind="simpleGrid: tableReportViewModel,simpleGridTemplate:'table-report-tmpl',pageLinksId:'reportHealthPageLinkId'">
             </table>
-        </div>
-        {{/each}}
-    </div>
-    {{/if}}
+            <div id="reportHealthPageLinkId"></div>
 </script>
 
 <script id="report-statistics" type="text/html">
@@ -893,22 +850,27 @@
     <div class="page-header">
         <h3>${$.i18n.prop('report.statistics.title')}</h3>
     </div>
-    <table class="table table-bordered table-striped">
-        <thead>
-        <th>Repository</th>
-        <th>Total File Count</th>
-        <th>Total Size</th>
-        <th>Artifact Count</th>
-        <th>Group Count</th>
-        <th>Project Count</th>
-        <th>Plugins</th>
-        <th>Archetypes</th>
-        <th>Jars</th>
-        <th>Wars</th>
-        <th>Ears</th>
-        <th>Exes</th>
-        <th>Dlls</th>
-        <th>Zips</th>
-        </thead>
+    <table class="table table-bordered table-striped"
+           data-bind="simpleGrid: tableReportViewModel,simpleGridTemplate:'table-report-tmpl',pageLinksId:'reportStatisticsPageLinkId'">
     </table>
+    <div id="reportStatisticsPageLinkId"></div>
+</script>
+<script id="table-report-tmpl" type="text/html">
+    <thead>
+    {{each(i, columnDefinition) columns}}
+      <th>${ columnDefinition.headerText }</th>
+    {{/each}}
+    </thead>
+    <tbody>
+    {{each(i, row) itemsOnCurrentPage()}}
+      <tr>
+        {{each(i, columnDefinition) columns}}
+          {{var val = (typeof columnDefinition.rowText == 'function' ? columnDefinition.rowText(row) : row[columnDefinition.rowText])}}
+          <td>
+              ${val}
+          </td>
+        {{/each}}
+      </tr>
+    {{/each}}
+    </tbody>
 </script>
