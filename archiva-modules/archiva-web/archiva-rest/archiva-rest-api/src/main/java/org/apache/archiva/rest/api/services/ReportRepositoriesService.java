@@ -48,7 +48,7 @@ public interface ReportRepositoriesService
     @GET
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
-    public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repositories" ) List<String> repositoriesId,
+    public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repository" ) List<String> repositoriesId,
                                                            @QueryParam( "rowCount" ) int rowCount,
                                                            @QueryParam( "startDate" ) Date startDate,
                                                            @QueryParam( "startDate" ) Date endDate )

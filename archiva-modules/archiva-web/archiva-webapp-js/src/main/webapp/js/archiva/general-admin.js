@@ -926,8 +926,12 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       }
       var mainContent = $("#main-content");
 
-      url = "restServices/archivaServices/reportServices/getStatisticsReport/?repositories="
-        + this.statisticsReport().repositories() + "&rowCount=" + this.statisticsReport().rowCount();
+      url = "restServices/archivaServices/reportServices/getStatisticsReport/?rowCount="
+        + this.statisticsReport().rowCount();
+
+      for(var i=0;i<this.statisticsReport().repositories().length;i++){
+        url += "&repository=" + this.statisticsReport().repositories()[i];
+      }
 
       if(this.statisticsReport().startDate()!=null){
         url += "&startDate=" + this.statisticsReport().startDate();
@@ -963,6 +967,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       viewModel: this,
       columns: [
         { headerText: "Repository ID", rowText: "repositoryId" },
+        { headerText: "Start Date", rowText: function(item){return new Date(item.scanStartTime);}},
         { headerText: "Total File Count", rowText: "totalFileCount" },
         { headerText: "Total Size", rowText: "totalArtifactFileSize" },
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
