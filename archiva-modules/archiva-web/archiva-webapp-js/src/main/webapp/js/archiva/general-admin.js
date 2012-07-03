@@ -917,7 +917,6 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
 
     $("#startDate" ).datepicker();
     $("#endDate" ).datepicker();
-    $("#endDate-info-button" ).popover();
     $("#rowCount-info-button" ).popover();
 
     this.showStatistics=function() {
@@ -973,13 +972,13 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
         { headerText: "Group Count", rowText: "totalGroupCount" },
         { headerText: "Project Count", rowText: "totalProjectCount" },
-        { headerText: "Archetypes", rowText: "archetypes" },
-        { headerText: "Jars", rowText: "jar" },
-        { headerText: "Wars", rowText: "war" },
-        { headerText: "Ears", rowText: "ear" },
-        { headerText: "Exes", rowText: "exes" },
-        { headerText: "Dlls", rowText: "dlls" },
-        { headerText: "Zips", rowText: "zip" }
+        { headerText: "Archetypes", rowText: "totalCountForType.archetypes" },
+        { headerText: "Jars", rowText: "totalCountForType.jar" },
+        { headerText: "Wars", rowText: "totalCountForType.war" },
+        { headerText: "Ears", rowText: "totalCountForType.ear" },
+        { headerText: "Exes", rowText: "totalCountForType.exes" },
+        { headerText: "Dlls", rowText: "totalCountForType.dlls" },
+        { headerText: "Zips", rowText: "totalCountForType.zip" }
       ],
       pageSize: 10
     });

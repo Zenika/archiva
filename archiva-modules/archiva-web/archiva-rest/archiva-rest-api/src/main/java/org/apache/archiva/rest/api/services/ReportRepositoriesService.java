@@ -51,7 +51,7 @@ public interface ReportRepositoriesService
     public List<RepositoryStatistics> getStatisticsReport( @QueryParam( "repository" ) List<String> repositoriesId,
                                                            @QueryParam( "rowCount" ) int rowCount,
                                                            @QueryParam( "startDate" ) Date startDate,
-                                                           @QueryParam( "startDate" ) Date endDate )
+                                                           @QueryParam( "endDate" ) Date endDate )
         throws ArchivaRestServiceException;
 
     @Path( "getHealthReports/{repository}/{rowCount}" )

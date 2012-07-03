@@ -104,10 +104,6 @@ public class DefaultReportRepositoriesService
         RepositorySession repositorySession = repositorySessionFactory.createSession();
         try
         {
-            if ( startDate != null && endDate == null )
-            {
-                endDate = startDate;
-            }
             MetadataRepository metadataRepository = repositorySession.getRepository();
             List<RepositoryStatistics> stats = null;
             try
