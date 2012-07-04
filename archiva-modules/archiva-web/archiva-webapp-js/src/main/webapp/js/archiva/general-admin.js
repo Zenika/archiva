@@ -977,13 +977,13 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
         { headerText: "Group Count", rowText: "totalGroupCount" },
         { headerText: "Project Count", rowText: "totalProjectCount" },
-        { headerText: "Archetypes", rowText: "totalCountForType.archetypes" },
-        { headerText: "Jars", rowText: "totalCountForType.jar" },
-        { headerText: "Wars", rowText: "totalCountForType.war" },
-        { headerText: "Ears", rowText: "totalCountForType.ear" },
-        { headerText: "Exes", rowText: "totalCountForType.exes" },
-        { headerText: "Dlls", rowText: "totalCountForType.dlls" },
-        { headerText: "Zips", rowText: "totalCountForType.zip" }
+        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom === "" ? item.totalCountForType.pom : "0"} },
+        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar === "" ? item.totalCountForType.jar : "0" } },
+        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war === "" ? item.totalCountForType.war : "0" } },
+        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear === "" ? item.totalCountForType.ear : "0" } },
+        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe === "" ? item.totalCountForType.exe : "0" } },
+        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll === "" ? item.totalCountForType.dll : "0" } },
+        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip === "" ? item.totalCountForType.zip : "0" } }
       ],
       pageSize: 10
     });
