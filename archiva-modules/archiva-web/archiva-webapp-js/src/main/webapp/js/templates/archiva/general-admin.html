@@ -705,31 +705,37 @@
 
 <script id="report-base" type="text/html">
   <div class="page-header">
-    <h3>${$.i18n.prop('report.title')}</h3>
+    <h2>${$.i18n.prop('report.title')}</h2>
   </div>
 
     <ul class="nav nav-tabs">
-      <li class="active"><a href="#stats" data-toggle="tab">${$.i18n.prop('report.statistics.title')}</a></li>
-      <li><a href="#health" data-toggle="tab">${$.i18n.prop('report.health.title')}</a></li>
+      <li class="active" id="report-stat-tab-li"><a href="#report-stat-tab-content" data-toggle="tab">${$.i18n.prop('report.statistics.title')}</a></li>
+      <li id="report-health-tab-li"><a href="#report-health-tab-content" data-toggle="tab">${$.i18n.prop('report.health.title')}</a></li>
+      <li id="report-result-tab-li" class="hide"><a href="#report-result" data-toggle="tab">${$.i18n.prop('report.result.title')}</a></li>
     </ul>
 
     <div class="tab-content">
-      <div class="tab-pane active" id="stats">
+      <div class="tab-pane active" id="report-stat-tab-content">
         <form class="form-horizontal" id="report-statistics-form-id">
           <fieldset id="form-statistics-report">
             <div class="row-fluid">
               <div class="span6 row-fluid">
-                <div class="span6 dotted">
-                  <h5>${$.i18n.prop('report.statistics.selected-repositories.label')}</h5>
-                  <hr/>
-                  <div style="min-height: 40px"
-                       data-bind="sortable: { template: 'statistics-repositories-order-tmpl', data:statisticsReport().repositories}"></div>
+                <div class="row-fluid" id="repositoriesErrorMessage"></div>
+                <div class="row-fluid">
+                  <div class="span6 dotted">
+                    <h5>${$.i18n.prop('report.statistics.selected-repositories.label')}</h5>
+                    <hr/>
+                    <div style="min-height: 40px"
+                         data-bind="sortable: { template: 'statistics-repositories-order-tmpl', data:statisticsReport().repositories}">
+                    </div>
+                  </div>
+                  <div class="span6 dotted">
+                    <h5>${$.i18n.prop('repository.groups.available-repositories.label')}</h5>
+                    <hr/>
+                    <div style="min-height: 40px"
+                         data-bind="sortable: {template: 'statistics-repositories-order-tmpl',data:availableRepositories}">
+                    </div>
                 </div>
-                <div class="span6 dotted">
-                  <h5>${$.i18n.prop('repository.groups.available-repositories.label')}</h5>
-                  <hr/>
-                  <div style="min-height: 40px"
-                       data-bind="sortable: {template: 'statistics-repositories-order-tmpl',data:availableRepositories}"></div>
                 </div>
               </div>
               <div class="span6 well">
@@ -769,15 +775,15 @@
               </div>
             </div>
               <div class="form-actions">
-                  <a href="#" class="btn btn-primary" data-bind="click: showStatistics">
+                  <button class="btn btn-primary" data-bind="click: showStatistics">
                       ${$.i18n.prop('report.statistics.btn-view')}
-                  </a>
+                  </button>
               </div>
           </fieldset>
         </form>
       </div>
 
-      <div class="tab-pane" id="health">
+      <div class="tab-pane" id="report-health-tab-content">
         <form class="form-horizontal" id="report-health-form-id">
           <fieldset id="form-health-report">
             <div class="control-group">
@@ -819,6 +825,8 @@
           </fieldset>
         </form>
       </div>
+
+      <div class="tab-pane" id="report-result">
     </div>
 </script>
 
@@ -830,18 +838,15 @@
 
 <script id="report-health" type="text/html">
     <div class="page-header">
-        <h2>${$.i18n.prop('report.health.title')}</h2>
+        <h3>${$.i18n.prop('report.health.title')}</h3>
     </div>
-            <table class="table table-bordered table-striped"
-                   data-bind="simpleGrid: tableReportViewModel,simpleGridTemplate:'table-report-tmpl',pageLinksId:'reportHealthPageLinkId'">
-            </table>
-            <div id="reportHealthPageLinkId"></div>
+    <table class="table table-bordered table-striped"
+           data-bind="simpleGrid: tableReportViewModel,simpleGridTemplate:'table-report-tmpl',pageLinksId:'reportHealthPageLinkId'">
+    </table>
+    <div id="reportHealthPageLinkId"></div>
 </script>
 
 <script id="report-statistics" type="text/html">
-    <div class="page-header">
-        <h2>${$.i18n.prop('report.title')}</h2>
-    </div>
     <div class="page-header">
         <h3>${$.i18n.prop('report.statistics.title')}</h3>
     </div>

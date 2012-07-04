@@ -888,9 +888,6 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
   reportStatisticsFormValidator=function(){
     var validate = $("#report-statistics-form-id").validate({
       rules: {
-        repositoriesEnabled: {
-          required: true
-        },
         rowCountStatistics: {
           required:true,
           number: true,
@@ -923,7 +920,12 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
       if (!$("#report-statistics-form-id").valid()) {
         return;
       }
-      var mainContent = $("#main-content");
+      if(this.statisticsReport().repositories().length==0){
+        displayErrorMessage( $.i18n.prop('report.statistics.repositories.required'), "repositoriesErrorMessage" );
+        return;
+      }
+      clearUserMessages( "repositoriesErrorMessage" );
+      var resultTabContent = $("#report-result");
 
       url = "restServices/archivaServices/reportServices/getStatisticsReport/?rowCount="
         + this.statisticsReport().rowCount();
@@ -944,15 +946,18 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         contentType: 'application/json',
         dataType: 'json',
         success: function(data){
-          clearUserMessages();
-          screenChange();
-          mainContent.html( $( "#report-statistics" ).tmpl() );
+          resultTabContent.html( $( "#report-statistics" ).tmpl() );
           var reportStatistics = new ReportStatisticsResultViewModel( data );
-          ko.applyBindings( reportStatistics, mainContent.get( 0 ) );
+          ko.applyBindings( reportStatistics, resultTabContent.get( 0 ) );
+          $( "#report-result-tab-li" ).removeClass( "hide" );
+          $( "#report-result-tab-li" ).addClass( "active" );
+          $( "#report-stat-tab-li" ).removeClass( "active" );
+          $( "#report-stat-tab-content" ).removeClass( "active" );
+          resultTabContent.addClass( "active" );
         },
         error: function(data){
-          clearUserMessages();
-          displayErrorMessage(data);
+          var res = $.parseJSON(data.responseText);
+          displayErrorMessage($.i18n.prop(res.errorMessage));
         }
       });
     }
@@ -1059,7 +1064,7 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         return;
       }
 
-      var mainContent = $("#main-content");
+      var resultTabContent = $("#report-result");
 
       var url =
         "restServices/archivaServices/reportServices/getHealthReports/" + this.healthReport().repositoryId() + "/"
@@ -1075,16 +1080,19 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         contentType: 'application/json',
         dataType: 'json',
         success: function(data){
-          clearUserMessages();
-          screenChange();
           var reports = new ReportHealthResultViewModel( mapHealthReportResults( data ) );
-          mainContent.html( $( "#report-health" ).tmpl() );
-          ko.applyBindings( reports, mainContent.get( 0 ) );
+          resultTabContent.html( $( "#report-health" ).tmpl() );
+          ko.applyBindings( reports, resultTabContent.get( 0 ) );
+          $( "#report-result-tab-li" ).removeClass( "hide" );
+          $( "#report-result-tab-li" ).addClass( "active" );
+          $( "#report-health-tab-li" ).removeClass( "active" );
+          $( "#report-health-tab-content" ).removeClass( "active" );
+          resultTabContent.addClass( "active" );
         },
         error: function(data){
-          clearUserMessages();
-          displayErrorMessage(data.errorMessage);
-        }
+            var res = $.parseJSON(data.responseText);
+            displayRestError(res);
+          }
       });
     }
   }

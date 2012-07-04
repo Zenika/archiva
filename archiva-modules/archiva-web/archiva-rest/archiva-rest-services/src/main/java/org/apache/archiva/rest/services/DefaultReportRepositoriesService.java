@@ -62,8 +62,7 @@ public class DefaultReportRepositoriesService
         switch ( repositoriesId.size() )
         {
             case 0:
-                throw new ArchivaRestServiceException( "report.statistics.report.missing-repositories",
-                                                       new IllegalStateException() );
+                throw new ArchivaRestServiceException( "report.statistics.report.missing-repositories", null );
             case 1:
                 return getUniqueRepositoryReport( repositoriesId.get( 0 ), rowCount, startDate, endDate );
             default:
