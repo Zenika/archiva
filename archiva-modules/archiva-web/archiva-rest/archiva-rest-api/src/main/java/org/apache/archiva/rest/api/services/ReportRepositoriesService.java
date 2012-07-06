@@ -57,8 +57,8 @@ public interface ReportRepositoriesService
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     public List<RepositoryProblemFacet> getHealthReport( @PathParam( "repository" ) String repository,
-                                                                      @QueryParam( "groupId" ) String groupId,
-                                                                      @PathParam( "rowCount" ) int rowCount )
+                                                         @QueryParam( "groupId" ) String groupId,
+                                                         @PathParam( "rowCount" ) int rowCount )
         throws ArchivaRestServiceException;
 
 }

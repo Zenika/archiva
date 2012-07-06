@@ -304,7 +304,7 @@ public class RepositoryStatistics
 
     public void setTotalCountForType( String type, long count )
     {
-        totalCountForType.put( type, count );
+        totalCountForType.put( type.replaceAll( "-", "_" ).replaceAll( "\\.", "_" ), count );
     }
     
     private static final class ZeroForNullHashMap<K, V extends Long> extends HashMap<K, V>
