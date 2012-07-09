@@ -282,14 +282,14 @@
 
 <script id="network-configuration-screen" type="text/html">
   <div class="page-header">
-    <h3>${$.i18n.prop('network-configuration.header')}</h3>
+    <h4>${$.i18n.prop('network-configuration.header')}</h4>
   </div>
   <div id="network-configuration-form" data-bind='template: {name:"network-configuration-form-tmpl"}'></div>
 </script>
 
 <script id="network-configuration-form-tmpl" type="text/html">
-    <form id="network-proxy-edit-form" class="well form-horizontal">
-      <fieldset id="network-proxy-edit-fieldset">
+    <form id="network-configuration-edit-form" class="well form-horizontal">
+      <fieldset id="network-configuration-edit-fieldset">
         <div class="control-group">
           <label class="control-label" for="maxTotal">${$.i18n.prop('network-configuration.maxTotal')}</label>
           <div class="controls">
@@ -312,6 +312,28 @@
         </div>
       </fieldset>
       <button id="network-configuration-btn-save" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+    </form>
+</script>
+
+<script id="ui-configuration-screen" type="text/html">
+  <div class="page-header">
+    <h4>${$.i18n.prop('ui-configuration.header')}</h4>
+  </div>
+  <div id="ui-configuration-form" data-bind='template: {name:"ui-configuration-form-tmpl"}'></div>
+</script>
+
+<script id="ui-configuration-form-tmpl" type="text/html">
+    <form id="ui-configuration-edit-form" class="well form-horizontal">
+      <fieldset id="ui-configuration-edit-fieldset">
+        <div class="control-group">
+          <label class="control-label" for="maxTotal">${$.i18n.prop('ui-configuration.applicationUrl')}</label>
+          <div class="controls">
+            <input type="text" class="xlarge required digits" id="applicationUrl" name="applicationUrl" size="8"
+                   data-bind="value: uiConfiguration().applicationUrl"/>
+          </div>
+        </div>
+      </fieldset>
+      <button id="ui-configuration-btn-save" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
     </form>
 </script>
 
@@ -374,6 +396,7 @@
         <th>${$.i18n.prop('system-status.caches.grid.header.cacheHits')}</th>
         <th>${$.i18n.prop('system-status.caches.grid.header.cacheMiss')}</th>
         <th>${$.i18n.prop('system-status.caches.grid.header.cacheHitRate')}</th>
+          <th>${$.i18n.prop('system-status.caches.grid.header.inMemorySize')}</th>
         <th>${$.i18n.prop('system-status.caches.grid.header.flush')}</th>
       </tr>
     </thead>
@@ -385,6 +408,7 @@
         <td>${cacheEntry.cacheHits}</td>
         <td>${cacheEntry.cacheMiss}</td>
         <td>${cacheEntry.cacheHitRate}</td>
+        <td>${cacheEntry.inMemorySize}</td>
         <td>
           <a href="#" onclick="flushCache('${cacheEntry.key}')">
             {{if  cacheEntry.size > 0 }}
@@ -568,7 +592,7 @@
       </div>
     </fieldset>
 
-    <div class="row fileupload-buttonbar">
+    <div class="row-fluid fileupload-buttonbar">
       <div class="span7">
         <span class="btn btn-success fileinput-button">
           <i class="icon-plus icon-white"></i>

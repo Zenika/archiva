@@ -19,9 +19,17 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.admin.model.AuditInformation;
+import org.apache.archiva.admin.model.RepositoryAdminException;
+import org.apache.archiva.admin.model.admin.ArchivaAdministration;
 import org.apache.archiva.audit.AuditEvent;
 import org.apache.archiva.audit.AuditListener;
+import org.apache.archiva.common.utils.VersionUtil;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
+import org.apache.archiva.redback.rest.services.RedbackAuthenticationThreadLocal;
+import org.apache.archiva.redback.rest.services.RedbackRequestInformation;
+import org.apache.archiva.redback.users.User;
+import org.apache.archiva.redback.users.UserManager;
+import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.security.AccessDeniedException;
 import org.apache.archiva.security.ArchivaSecurityException;
@@ -29,10 +37,6 @@ import org.apache.archiva.security.PrincipalNotFoundException;
 import org.apache.archiva.security.UserRepositories;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.archiva.redback.users.User;
-import org.apache.archiva.redback.users.UserManager;
-import org.apache.archiva.redback.rest.services.RedbackAuthenticationThreadLocal;
-import org.apache.archiva.redback.rest.services.RedbackRequestInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -69,6 +73,9 @@ public abstract class AbstractRestService
     @Inject
     @Named( value = "repositorySessionFactory" )
     protected RepositorySessionFactory repositorySessionFactory;
+
+    @Inject
+    protected ArchivaAdministration archivaAdministration;
 
     @Context
     protected HttpServletRequest httpServletRequest;
@@ -129,12 +136,17 @@ public abstract class AbstractRestService
             // check user has karma on the repository
             if ( !selectedRepos.contains( repositoryId ) )
             {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
+                throw new ArchivaRestServiceException( getSelectedRepoExceptionMessage(),
                                                        Response.Status.FORBIDDEN.getStatusCode(), null );
             }
             selectedRepos = Collections.singletonList( repositoryId );
         }
         return selectedRepos;
+    }
+
+    protected String getSelectedRepoExceptionMessage()
+    {
+        return "browse.root.groups.repositoy.denied";
     }
 
     protected String getPrincipal()
@@ -148,11 +160,17 @@ public abstract class AbstractRestService
                 : redbackRequestInformation.getUser().getUsername() );
     }
 
-    protected String getBaseUrl( HttpServletRequest req )
+    protected String getBaseUrl()
+        throws RepositoryAdminException
     {
-        return req.getScheme() + "://" + req.getServerName() + ( req.getServerPort() == 80
-            ? ""
-            : ":" + req.getServerPort() ) + req.getContextPath();
+        String applicationUrl = archivaAdministration.getUiConfiguration().getApplicationUrl();
+        if ( StringUtils.isNotBlank( applicationUrl ) )
+        {
+            return applicationUrl;
+        }
+        return httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + (
+            httpServletRequest.getServerPort() == 80 ? "" : ":" + httpServletRequest.getServerPort() )
+            + httpServletRequest.getContextPath();
     }
 
     protected <T> Map<String, T> getBeansOfType( ApplicationContext applicationContext, Class<T> clazz )
@@ -181,6 +199,62 @@ public abstract class AbstractRestService
         for ( AuditListener auditListener : getAuditListeners() )
         {
             auditListener.auditEvent( auditEvent );
+        }
+    }
+
+    /**
+     * @param artifact
+     * @return
+     */
+    protected String getArtifactUrl( Artifact artifact )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+
+            if ( httpServletRequest == null )
+            {
+                return null;
+            }
+
+            StringBuilder sb = new StringBuilder( getBaseUrl() );
+
+            sb.append( "/repository" );
+
+            sb.append( '/' ).append( artifact.getContext() );
+
+            sb.append( '/' ).append( StringUtils.replaceChars( artifact.getGroupId(), '.', '/' ) );
+            sb.append( '/' ).append( artifact.getArtifactId() );
+            if ( VersionUtil.isSnapshot( artifact.getVersion() ) )
+            {
+                sb.append( '/' ).append( VersionUtil.getBaseVersion( artifact.getVersion() ) );
+            }
+            else
+            {
+                sb.append( '/' ).append( artifact.getVersion() );
+            }
+            sb.append( '/' ).append( artifact.getArtifactId() );
+            sb.append( '-' ).append( artifact.getVersion() );
+            if ( StringUtils.isNotBlank( artifact.getClassifier() ) )
+            {
+                sb.append( '-' ).append( artifact.getClassifier() );
+            }
+            // maven-plugin packaging is a jar
+            if ( StringUtils.equals( "maven-plugin", artifact.getPackaging() ) )
+            {
+                sb.append( "jar" );
+            }
+            else
+            {
+                sb.append( '.' ).append( artifact.getFileExtension() );
+            }
+
+            return sb.toString();
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(),
+                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e );
         }
     }
 }

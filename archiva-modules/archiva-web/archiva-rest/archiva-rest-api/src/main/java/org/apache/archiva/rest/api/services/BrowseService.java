@@ -22,8 +22,8 @@ import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
 import org.apache.archiva.redback.authorization.RedbackAuthorization;
 import org.apache.archiva.rest.api.model.Artifact;
+import org.apache.archiva.rest.api.model.ArtifactContent;
 import org.apache.archiva.rest.api.model.ArtifactContentEntry;
-import org.apache.archiva.rest.api.model.ArtifactDownloadInfo;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.Entry;
 import org.apache.archiva.rest.api.model.TreeEntry;
@@ -164,7 +164,7 @@ public interface BrowseService
     @GET
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( noPermission = true, noRestriction = true )
-    List<ArtifactDownloadInfo> getArtifactDownloadInfos( @PathParam( "g" ) String groupId,
+    List<Artifact> getArtifactDownloadInfos( @PathParam( "g" ) String groupId,
                                                          @PathParam( "a" ) String artifactId,
                                                          @PathParam( "v" ) String version,
                                                          @QueryParam( "repositoryId" ) String repositoryId )
@@ -172,14 +172,14 @@ public interface BrowseService
 
     @Path( "artifactContentText/{g}/{a}/{v}" )
     @GET
-    @Produces( MediaType.TEXT_PLAIN )
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     /**
      * if path is empty content of the file is returned (for pom view)
      */
-    String getArtifactContentText( @PathParam( "g" ) String groupId, @PathParam( "a" ) String artifactId,
-                                   @PathParam( "v" ) String version, @QueryParam( "c" ) String classifier,
-                                   @QueryParam( "t" ) String type, @QueryParam( "p" ) String path,
-                                   @QueryParam( "repositoryId" ) String repositoryId )
+    ArtifactContent getArtifactContentText( @PathParam( "g" ) String groupId, @PathParam( "a" ) String artifactId,
+                                            @PathParam( "v" ) String version, @QueryParam( "c" ) String classifier,
+                                            @QueryParam( "t" ) String type, @QueryParam( "p" ) String path,
+                                            @QueryParam( "repositoryId" ) String repositoryId )
         throws ArchivaRestServiceException;
 }

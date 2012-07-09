@@ -187,4 +187,17 @@ public class TestMetadataRepository
     {
         return Collections.emptyList();
     }
+
+    public void removeArtifact( String repositoryId, String namespace, String project, String version,
+                                MetadataFacet metadataFacet )
+        throws MetadataRepositoryException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void removeArtifact( ArtifactMetadata artifactMetadata, String baseVersion )
+        throws MetadataRepositoryException
+    {
+        throw new UnsupportedOperationException();
+    }
 }

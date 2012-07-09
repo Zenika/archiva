@@ -224,6 +224,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
                       }
                     });
                   }
+                  return;
                 }
                 if ($(e.target).attr("href")=="#artifact-details-used-by-content") {
                   var dependeesContentDiv=mainContent.find("#artifact-details-used-by-content" );
@@ -245,6 +246,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
                       }
                     });
                   }
+                  return;
                 }
 
                 if ($(e.target).attr("href")=="#artifact-details-metadatas-content") {
@@ -267,84 +269,25 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
                       self.entries(entries);
                     }
                   });
+                  return;
                 }
 
-                if ($(e.target).attr("href")=="#artifact-details-files-content") {
-                  mainContent.find("#artifact-details-files-content" ).html(smallSpinnerImg());
+                if ($(e.target).attr("href")=="#artifact-details-download-content") {
+                  mainContent.find("#artifact-details-download-content" ).html(smallSpinnerImg());
                   var artifactDownloadInfosUrl = "restServices/archivaServices/browseService/artifactDownloadInfos/"+encodeURIComponent(self.groupId);
                   artifactDownloadInfosUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
                   artifactDownloadInfosUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
-
                   $.get(artifactDownloadInfosUrl,function(data){
-                    $("#artifact-details-files-content" ).html($("#artifact-details-files-content_tmpl").tmpl({artifactDownloadInfos:data}));
-                    mainContent.find("#artifact-content-list-files li" ).on("click",function(){
-                      mainContent.find("#artifact_content_tree").html("");
-                      mainContent.find("#artifact-content-text" ).html("");
-                      var idValue = $(this ).attr("id");
-                      var classifier=idValue.substringBeforeLast(":");
-                      var type = idValue.substringAfterLast(":");
-                      $.log("click:" + idValue + " -> " + classifier + ":" + type );
-                      if (type=="pom"){
-                        $.log("show pom");
-                        var pomContentUrl = "restServices/archivaServices/browseService/artifactContentText/"+encodeURIComponent(self.groupId);
-                        pomContentUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
-                        pomContentUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
-                        pomContentUrl+="&t=pom";
-                        mainContent.find("#artifact-content-text" ).html(smallSpinnerImg());
-                        $.ajax({
-                          url: pomContentUrl,
-                          dataType: "text",
-                          success: function(data) {
-                            var text = data.replace(/</g,'&lt;');
-                            text=text.replace(/>/g,"&gt;");
-                            mainContent.find("#artifact-content-text" ).html(text);
-                            prettyPrint();
-                            goToAnchor("artifact-content-text-header");
-                          }
-                        });
-                        return;
-                      }
-                      var entriesUrl = "restServices/archivaServices/browseService/artifactContentEntries/"+encodeURIComponent(self.groupId);
-                      entriesUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
-                      entriesUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
-                      if(classifier){
-                        entriesUrl+="&c="+classifier;
-                      }
-                      $("#main-content #artifact_content_tree").fileTree({
-                        script: entriesUrl,
-                        root: ""
-                  		  },function(file) {
-                          $.log("file:"+file.substringBeforeLast("/")+',classifier:'+classifier);
-                          var fileContentUrl = "restServices/archivaServices/browseService/artifactContentText/"+encodeURIComponent(self.groupId);
-                          fileContentUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
-                          fileContentUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
-                          if(type){
-                            fileContentUrl+="&t="+type;
-                          }
-                          if(classifier){
-                            fileContentUrl+="&c="+classifier;
-                          }
-                          fileContentUrl+="&p="+file.substringBeforeLast("/");
-                          $.ajax({
-                           url: fileContentUrl,
-                           dataType: "text",
-                           success: function(data) {
-                             $.log("foo");
-                             $.log("data:"+data);
-                             var text = data.replace(/</g,'&lt;');
-                             text=text.replace(/>/g,"&gt;");
-                             mainContent.find("#artifact-content-text" ).html(smallSpinnerImg());
-                             mainContent.find("#artifact-content-text" ).html(text);
-                             prettyPrint();
-                             goToAnchor("artifact-content-text-header");
-                           }
-                          });
-                  		  }
-                      );
-                    });
-
+                    var artifactDetailsDownloadViewModel = new ArtifactDetailsDownloadViewModel(mapArtifacts(data));
+                    mainContent.find("#artifact-details-download-content" ).attr("data-bind",'template:{name:"artifact-details-download-content_tmpl"}');
+                    ko.applyBindings(artifactDetailsDownloadViewModel,mainContent.find("#artifact-details-download-content" ).get(0));
                   });
+                  return;
+                }
 
+
+                if ($(e.target).attr("href")=="#artifact-details-files-content") {
+                  displayArtifactFilesContent(self);
                 }
               });
             }
@@ -440,6 +383,123 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     this.gridMetatadasViewModel = new ko.simpleGrid.viewModel({
       data: self.entries,
       pageSize: 10
+    });
+
+  }
+
+  ArtifactDetailsDownloadViewModel=function(artifacts){
+    this.artifacts=ko.observableArray(artifacts);
+    var self=this;
+    deleteArtifact=function(artifact){
+
+      clearUserMessages();
+
+      openDialogConfirm(function(){
+        $.ajax({
+          url:"restServices/archivaServices/repositoriesService/deleteArtifact",
+          type:"POST",
+          dataType:"json",
+          contentType: 'application/json',
+          data: ko.toJSON(artifact),
+          success:function(data){
+            self.artifacts.remove(artifact);
+            displaySuccessMessage( $.i18n.prop('artifact.deleted'));
+          },
+          error:function(data){
+            displayRestError(data,"user-messages");
+          },
+          complete:function(){
+            closeDialogConfirm();
+          }
+        });
+      }, $.i18n.prop('ok'),
+          $.i18n.prop('cancel'),
+          $.i18n.prop('artifact.delete.confirm.title'),
+          $.i18n.prop('artifact.delete.confirm.save'));
+
+
+
+    }
+
+    this.deleteKarma = hasKarma('archiva-delete-artifact');
+
+  }
+
+  displayArtifactFilesContent=function(self){
+    var mainContent = $("#main-content");
+    mainContent.find("#artifact-details-files-content" ).html(smallSpinnerImg());
+    var artifactDownloadInfosUrl = "restServices/archivaServices/browseService/artifactDownloadInfos/"+encodeURIComponent(self.groupId);
+    artifactDownloadInfosUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(self.version);
+    artifactDownloadInfosUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+
+    $.get(artifactDownloadInfosUrl,function(data){
+      $("#artifact-details-files-content" ).html($("#artifact-details-files-content_tmpl").tmpl({artifactDownloadInfos:data}));
+      mainContent.find("#artifact-content-list-files li" ).on("click",function(){
+        mainContent.find("#artifact_content_tree").html("");
+        mainContent.find("#artifact-content-text" ).html("");
+        var idValue = $(this ).attr("id");
+        var splitted = idValue.split(":");
+
+        var classifier=splitted[0];//idValue.substringBeforeLast(":");
+        var version=splitted[1];
+        var type = splitted[2];
+
+        $.log("click:" + idValue + " -> " + classifier + ":" + type + ":" + version);
+        if (type=="pom"){
+          $.log("show pom");
+          var pomContentUrl = "restServices/archivaServices/browseService/artifactContentText/"+encodeURIComponent(self.groupId);
+          pomContentUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(version);
+          pomContentUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+          pomContentUrl+="&t=pom";
+          mainContent.find("#artifact-content-text" ).html(smallSpinnerImg());
+          $.ajax({
+            url: pomContentUrl,
+            success: function(data) {
+              var text = data.content.replace(/</g,'&lt;');
+              text=text.replace(/>/g,"&gt;");
+              mainContent.find("#artifact-content-text" ).html(text);
+              prettyPrint();
+              goToAnchor("artifact-content-text-header");
+            }
+          });
+          return;
+        }
+        var entriesUrl = "restServices/archivaServices/browseService/artifactContentEntries/"+encodeURIComponent(self.groupId);
+        entriesUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(version);
+        entriesUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+        if(classifier){
+          entriesUrl+="&c="+encodeURIComponent(classifier);
+        }
+        $("#main-content #artifact_content_tree").fileTree({
+          script: entriesUrl,
+          root: ""
+    		  },function(file) {
+            $.log("file:"+file.substringBeforeLast("/")+',classifier:'+classifier);
+            var fileContentUrl = "restServices/archivaServices/browseService/artifactContentText/"+encodeURIComponent(self.groupId);
+            fileContentUrl+="/"+encodeURIComponent(self.artifactId)+"/"+encodeURIComponent(version);
+            fileContentUrl+="?repositoryId="+encodeURIComponent(getSelectedBrowsingRepository());
+            if(type){
+              fileContentUrl+="&t="+encodeURIComponent(type);
+            }
+            if(classifier){
+              fileContentUrl+="&c="+encodeURIComponent(classifier);
+            }
+            fileContentUrl+="&p="+encodeURIComponent(file.substringBeforeLast("/"));
+            $.ajax({
+             url: fileContentUrl,
+             success: function(data) {
+               var text = data.content.replace(/</g,'&lt;');
+               text=text.replace(/>/g,"&gt;");
+               mainContent.find("#artifact-content-text" ).html(smallSpinnerImg());
+               mainContent.find("#artifact-content-text" ).html(text);
+               prettyPrint();
+               goToAnchor("artifact-content-text-header");
+             }
+            });
+    		  }
+        );
+      });
+
     });
 
   }
@@ -615,7 +675,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
       var repoId=selectedOption.val();
       return repoId;
     }
-    return null;
+    return "";
   }
 
   enableAutocompleBrowse=function(groupId){
@@ -849,7 +909,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
       }
       return projectVersionMetadata;
     }
-    return null;
+    return new ProjectVersionMetadata();
   }
 
   MavenFacet=function(packaging,parent){
@@ -999,7 +1059,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
   //-----------------------------------------
   Artifact=function(context,url,groupId,artifactId,repositoryId,version,prefix,goals,bundleVersion,bundleSymbolicName,
                     bundleExportPackage,bundleExportService,bundleDescription,bundleName,bundleLicense,bundleDocUrl,
-                    bundleImportPackage,bundleRequireBundle,classifier,packaging,fileExtension){
+                    bundleImportPackage,bundleRequireBundle,classifier,packaging,fileExtension,size){
 
     var self=this;
 
@@ -1078,6 +1138,8 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
     //private String fileExtension;
     this.fileExtension=fileExtension;
 
+    this.size=size;
+
     this.crumbEntries=function(){
       return calculateCrumbEntries(self.groupId,self.artifactId,self.version);
     }
@@ -1109,7 +1171,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
 
   mapArtifacts=function(data){
     if (data){
-      return $.isArray(data )? $.map(data,function(item){return mapArtifact(item)}) : [data];
+      return $.isArray(data)? $.map(data,function(item){return mapArtifact(item)}) : [data];
     }
     return [];
   }
@@ -1120,7 +1182,7 @@ define("search",["jquery","i18n","jquery.tmpl","choosen","order!knockout","knock
                         data.goals,data.bundleVersion,data.bundleSymbolicName,
                         data.bundleExportPackage,data.bundleExportService,data.bundleDescription,data.bundleName,
                         data.bundleLicense,data.bundleDocUrl,
-                        data.bundleImportPackage,data.bundleRequireBundle,data.classifier,data.packaging,data.fileExtension);
+                        data.bundleImportPackage,data.bundleRequireBundle,data.classifier,data.packaging,data.fileExtension,data.size);
     }
     return null;
   }

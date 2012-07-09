@@ -37,6 +37,7 @@ import org.apache.archiva.metadata.repository.MetadataRepositoryException;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.metadata.repository.RepositorySession;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
+import org.apache.archiva.metadata.repository.storage.maven2.MavenArtifactFacet;
 import org.apache.archiva.model.ArchivaRepositoryMetadata;
 import org.apache.archiva.model.ArtifactReference;
 import org.apache.archiva.model.VersionedReference;
@@ -97,6 +98,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -132,9 +134,6 @@ public class DefaultRepositoriesService
 
     @Inject
     private RepositoryContentFactory repositoryFactory;
-
-    @Inject
-    private ArchivaAdministration archivaAdministration;
 
     @Inject
     @Named( value = "archivaTaskScheduler#repository" )
@@ -623,10 +622,11 @@ public class DefaultRepositoriesService
         }
     }
 
-    public Boolean deleteArtifact( Artifact artifact, String repositoryId )
+    public Boolean deleteArtifact( Artifact artifact )
         throws ArchivaRestServiceException
     {
 
+        String repositoryId = artifact.getContext();
         if ( StringUtils.isEmpty( repositoryId ) )
         {
             throw new ArchivaRestServiceException( "repositoryId cannot be null", 400, null );
@@ -654,6 +654,8 @@ public class DefaultRepositoriesService
 
         // TODO more control on artifact fields
 
+        boolean snapshotVersion = VersionUtil.isSnapshot( artifact.getVersion() );
+
         RepositorySession repositorySession = repositorySessionFactory.createSession();
         try
         {
@@ -671,6 +673,17 @@ public class DefaultRepositoriesService
 
             ManagedRepositoryContent repository = repositoryFactory.getManagedRepositoryContent( repositoryId );
 
+            ArtifactReference artifactReference = new ArtifactReference();
+            artifactReference.setArtifactId( artifact.getArtifactId() );
+            artifactReference.setGroupId( artifact.getGroupId() );
+            artifactReference.setVersion( artifact.getVersion() );
+            artifactReference.setClassifier( artifact.getClassifier() );
+            artifactReference.setType( artifact.getPackaging() );
+
+            MetadataRepository metadataRepository = repositorySession.getRepository();
+
+            String path = repository.toMetadataPath( ref );
+
             if ( StringUtils.isNotBlank( artifact.getClassifier() ) )
             {
                 if ( StringUtils.isBlank( artifact.getPackaging() ) )
@@ -678,53 +691,109 @@ public class DefaultRepositoriesService
                     throw new ArchivaRestServiceException( "You must configure a type/packaging when using classifier",
                                                            400, null );
                 }
-                ArtifactReference artifactReference = new ArtifactReference();
-                artifactReference.setArtifactId( artifact.getArtifactId() );
-                artifactReference.setGroupId( artifact.getGroupId() );
-                artifactReference.setVersion( artifact.getVersion() );
-                artifactReference.setClassifier( artifact.getClassifier() );
-                artifactReference.setType( artifact.getPackaging() );
+
                 repository.deleteArtifact( artifactReference );
 
-                // TODO cleanup facet which contains classifier information
-                return Boolean.TRUE;
             }
-
-            String path = repository.toMetadataPath( ref );
-            int index = path.lastIndexOf( '/' );
-            path = path.substring( 0, index );
-            File targetPath = new File( repoConfig.getLocation(), path );
-
-            if ( !targetPath.exists() )
+            else
             {
-                throw new ContentNotFoundException(
-                    artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion() );
+
+                int index = path.lastIndexOf( '/' );
+                path = path.substring( 0, index );
+                File targetPath = new File( repoConfig.getLocation(), path );
+
+                if ( !targetPath.exists() )
+                {
+                    throw new ContentNotFoundException(
+                        artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion() );
+                }
+
+                // TODO: this should be in the storage mechanism so that it is all tied together
+                // delete from file system
+                if ( !snapshotVersion )
+                {
+                    repository.deleteVersion( ref );
+                }
+                else
+                {
+                    Set<ArtifactReference> related = repository.getRelatedArtifacts( artifactReference );
+                    log.debug( "related: {}", related );
+                    for ( ArtifactReference artifactRef : related )
+                    {
+                        repository.deleteArtifact( artifactRef );
+                    }
+                }
+                File metadataFile = getMetadata( targetPath.getAbsolutePath() );
+                ArchivaRepositoryMetadata metadata = getMetadata( metadataFile );
+
+                updateMetadata( metadata, metadataFile, lastUpdatedTimestamp, artifact );
+            }
+            Collection<ArtifactMetadata> artifacts = Collections.emptyList();
+
+            if ( snapshotVersion )
+            {
+                String baseVersion = VersionUtil.getBaseVersion( artifact.getVersion() );
+                artifacts =
+                    metadataRepository.getArtifacts( repositoryId, artifact.getGroupId(), artifact.getArtifactId(),
+                                                     baseVersion );
+            }
+            else
+            {
+                artifacts =
+                    metadataRepository.getArtifacts( repositoryId, artifact.getGroupId(), artifact.getArtifactId(),
+                                                     artifact.getVersion() );
             }
 
-            // TODO: this should be in the storage mechanism so that it is all tied together
-            // delete from file system
-            repository.deleteVersion( ref );
-
-            File metadataFile = getMetadata( targetPath.getAbsolutePath() );
-            ArchivaRepositoryMetadata metadata = getMetadata( metadataFile );
-
-            updateMetadata( metadata, metadataFile, lastUpdatedTimestamp, artifact );
-
-            MetadataRepository metadataRepository = repositorySession.getRepository();
-
-            Collection<ArtifactMetadata> artifacts =
-                metadataRepository.getArtifacts( repositoryId, artifact.getGroupId(), artifact.getArtifactId(),
-                                                 artifact.getVersion() );
+            log.debug( "artifacts: {}", artifacts );
 
             for ( ArtifactMetadata artifactMetadata : artifacts )
             {
-                // TODO: mismatch between artifact (snapshot) version and project (base) version here
-                if ( artifact.getVersion().equals( artifact.getVersion() ) )
-                {
-                    metadataRepository.removeArtifact( artifactMetadata.getRepositoryId(),
-                                                       artifactMetadata.getNamespace(), artifactMetadata.getProject(),
-                                                       artifact.getVersion(), artifactMetadata.getId() );
 
+                // TODO: mismatch between artifact (snapshot) version and project (base) version here
+                if ( artifactMetadata.getVersion().equals( artifact.getVersion() ) )
+                {
+                    if ( StringUtils.isNotBlank( artifact.getClassifier() ) )
+                    {
+                        if ( StringUtils.isBlank( artifact.getPackaging() ) )
+                        {
+                            throw new ArchivaRestServiceException(
+                                "You must configure a type/packaging when using classifier", 400, null );
+                        }
+                        // cleanup facet which contains classifier information
+                        MavenArtifactFacet mavenArtifactFacet =
+                            (MavenArtifactFacet) artifactMetadata.getFacet( MavenArtifactFacet.FACET_ID );
+
+                        if ( StringUtils.equals( artifact.getClassifier(), mavenArtifactFacet.getClassifier() ) )
+                        {
+                            artifactMetadata.removeFacet( MavenArtifactFacet.FACET_ID );
+                            String groupId = artifact.getGroupId(), artifactId = artifact.getArtifactId(), version =
+                                artifact.getVersion();
+                            //metadataRepository.updateArtifact( repositoryId, groupId, artifactId, version,
+                            //                                   artifactMetadata );
+                            // String repositoryId, String namespace, String project, String version, String projectId, MetadataFacet metadataFacet
+                            MavenArtifactFacet mavenArtifactFacetToCompare = new MavenArtifactFacet();
+                            mavenArtifactFacetToCompare.setClassifier( artifact.getClassifier() );
+                            metadataRepository.removeArtifact( repositoryId, groupId, artifactId, version,
+                                                               mavenArtifactFacetToCompare );
+                            metadataRepository.save();
+                        }
+
+                    }
+                    else
+                    {
+                        if ( snapshotVersion )
+                        {
+                            metadataRepository.removeArtifact( artifactMetadata,
+                                                               VersionUtil.getBaseVersion( artifact.getVersion() ) );
+                        }
+                        else
+                        {
+                            metadataRepository.removeArtifact( artifactMetadata.getRepositoryId(),
+                                                               artifactMetadata.getNamespace(),
+                                                               artifactMetadata.getProject(), artifact.getVersion(),
+                                                               artifactMetadata.getId() );
+                        }
+                    }
                     // TODO: move into the metadata repository proper - need to differentiate attachment of
                     //       repository metadata to an artifact
                     for ( RepositoryListener listener : listeners )
@@ -737,9 +806,9 @@ public class DefaultRepositoriesService
                     triggerAuditEvent( repositoryId, path, AuditEvent.REMOVE_FILE );
                 }
             }
-            repositorySession.save();
-        }
 
+
+        }
         catch ( ContentNotFoundException e )
         {
             throw new ArchivaRestServiceException( "Artifact does not exist: " + e.getMessage(), 400, e );
@@ -765,11 +834,46 @@ public class DefaultRepositoriesService
             throw new ArchivaRestServiceException( "RepositoryAdmin exception: " + e.getMessage(), 500, e );
         }
         finally
-
         {
+
+            repositorySession.save();
+
             repositorySession.close();
         }
         return Boolean.TRUE;
+    }
+
+    public Boolean deleteGroupId( String groupId, String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        if ( StringUtils.isEmpty( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "repositoryId cannot be null", 400, null );
+        }
+
+        if ( !isAuthorizedToDeleteArtifacts( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "not authorized to delete artifacts", 403, null );
+        }
+
+        if ( StringUtils.isEmpty( groupId ) )
+        {
+            throw new ArchivaRestServiceException( "artifact.groupId cannot be null", 400, null );
+        }
+
+        try
+        {
+            ManagedRepositoryContent repository = repositoryFactory.getManagedRepositoryContent( repositoryId );
+
+            repository.deleteGroupId( groupId );
+
+        }
+        catch ( RepositoryException e )
+        {
+            log.error( e.getMessage(), e );
+            throw new ArchivaRestServiceException( "Repository exception: " + e.getMessage(), 500, e );
+        }
+        return true;
     }
 
     public Boolean isAuthorizedToDeleteArtifacts( String repoId )

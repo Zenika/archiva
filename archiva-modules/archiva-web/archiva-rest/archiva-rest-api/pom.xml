@@ -105,12 +105,14 @@
             </Export-Package>
             <Import-Package>
               javax.ws.rs,
+              javax.ws.rs.core,
               javax.xml.bind.annotation,
               org.apache.archiva.admin.model.beans;version=${project.version},
               org.apache.archiva.redback.authorization,
               org.apache.archiva.metadata.model,
               org.apache.archiva.repository.scanner,
-              org.codehaus.jackson.annotate
+              org.codehaus.jackson.annotate,
+              javax.servlet.http
             </Import-Package>
           </instructions>
         </configuration>

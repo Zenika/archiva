@@ -326,12 +326,24 @@ define("redback.user",["jquery","order!utils","i18n","jquery.validate","order!kn
     }
     if (window.modalLoginWindow==null) {
       window.modalLoginWindow = $("#modal-login").modal();
-      window.modalLoginWindow.bind('hidden', function () {
+      window.modalLoginWindow.on('hidden', function () {
         $("#modal-login-err-message").hide();
-      })
+        removeValidationErrorMessages("#user-login-form");
+      });
+      // focus on user name
+      window.modalLoginWindow.on('shown', function (e) {
+        $("#user-login-form-username" ).focus();
+      });
+      window.modalLoginWindow.keypress( function (event) {
+        if (event.which==13){
+          $("#modal-login-ok" ).trigger("click");
+        }
+      });
     }
 
-    $("#user-login-form").validate({
+    var userLoginForm = $("#user-login-form");
+
+    userLoginForm.validate({
       showErrors: function(validator, errorMap, errorList) {
         customShowError("#user-login-form",validator,errorMap,errorMap);
       }
@@ -347,9 +359,8 @@ define("redback.user",["jquery","order!utils","i18n","jquery.validate","order!kn
       passwordReset();
     });
 
-
-
   }
+
 
   /**
    * callback success function on rest login call.
@@ -451,6 +462,11 @@ define("redback.user",["jquery","order!utils","i18n","jquery.validate","order!kn
     );
   }
 
+  ResetPasswordRequest=function(username,applicationUrl){
+    this.username=username;
+    this.applicationUrl=applicationUrl;
+  }
+
   passwordReset=function(){
     var username = $("#user-login-form-username" ).val();
     if(username.trim().length<1){
@@ -466,17 +482,28 @@ define("redback.user",["jquery","order!utils","i18n","jquery.validate","order!kn
       window.modalLoginWindow.modal('hide');
     }
     $("#user-messages" ).html(mediumSpinnerImg());
-    $.ajax("restServices/redbackServices/userService/resetPassword/"+encodeURIComponent(username), {
-      type: "GET",
-      success: function(result) {
-        clearUserMessages();
-        displayInfoMessage($.i18n.prop("password.reset.success"));
-      },
-      error: function(result) {
-        clearUserMessages();
-        var obj = jQuery.parseJSON(result.responseText);
-        displayRedbackError(obj);
-      }
+
+    $.ajax({
+        url: "restServices/archivaServices/archivaAdministrationService/applicationUrl",
+        type: "GET",
+        dataType: 'text',
+        success: function(data){
+
+          $.ajax("restServices/redbackServices/userService/resetPassword", {
+            type: "POST",
+            data:  JSON.stringify(new ResetPasswordRequest(username,data)),
+            contentType: "application/json",
+            success: function(result) {
+              clearUserMessages();
+              displayInfoMessage($.i18n.prop("password.reset.success"));
+            },
+            error: function(result) {
+              clearUserMessages();
+              var obj = jQuery.parseJSON(result.responseText);
+              displayRedbackError(obj);
+            }
+          });
+        }
     });
   }
 

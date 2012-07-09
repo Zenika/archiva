@@ -39,8 +39,8 @@ import org.apache.archiva.repository.RepositoryContentFactory;
 import org.apache.archiva.repository.RepositoryException;
 import org.apache.archiva.repository.RepositoryNotFoundException;
 import org.apache.archiva.rest.api.model.Artifact;
+import org.apache.archiva.rest.api.model.ArtifactContent;
 import org.apache.archiva.rest.api.model.ArtifactContentEntry;
-import org.apache.archiva.rest.api.model.ArtifactDownloadInfo;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
 import org.apache.archiva.rest.api.model.Entry;
@@ -65,6 +65,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -203,7 +204,8 @@ public class DefaultBrowseService
 
         try
         {
-            return new VersionsList( new ArrayList<String>( getVersions( selectedRepos, groupId, artifactId ) ) );
+            Collection<String> versions = getVersions( selectedRepos, groupId, artifactId );
+            return new VersionsList( new ArrayList<String>( versions ) );
         }
         catch ( MetadataResolutionException e )
         {
@@ -226,8 +228,9 @@ public class DefaultBrowseService
 
             for ( String repoId : selectedRepos )
             {
-                versions.addAll(
-                    metadataResolver.resolveProjectVersions( repositorySession, repoId, groupId, artifactId ) );
+                Collection<String> projectVersions =
+                    metadataResolver.resolveProjectVersions( repositorySession, repoId, groupId, artifactId );
+                versions.addAll( projectVersions );
             }
 
             List<String> sortedVersions = new ArrayList<String>( versions );
@@ -630,11 +633,11 @@ public class DefaultBrowseService
                     repositoryContentFactory.getManagedRepositoryContent( repoId );
                 ArchivaArtifact archivaArtifact = new ArchivaArtifact( groupId, artifactId, version, classifier,
                                                                        StringUtils.isEmpty( type ) ? "jar" : type,
-                                                                       repositoryId );
+                                                                       repoId );
                 File file = managedRepositoryContent.toFile( archivaArtifact );
                 if ( file.exists() )
                 {
-                    return readFileEntries( file, path );
+                    return readFileEntries( file, path, repoId );
                 }
             }
         }
@@ -659,13 +662,13 @@ public class DefaultBrowseService
         return Collections.emptyList();
     }
 
-    public List<ArtifactDownloadInfo> getArtifactDownloadInfos( String groupId, String artifactId, String version,
-                                                                String repositoryId )
+    public List<Artifact> getArtifactDownloadInfos( String groupId, String artifactId, String version,
+                                                    String repositoryId )
         throws ArchivaRestServiceException
     {
         List<String> selectedRepos = getSelectedRepos( repositoryId );
 
-        List<ArtifactDownloadInfo> artifactDownloadInfos = new ArrayList<ArtifactDownloadInfo>();
+        List<Artifact> artifactDownloadInfos = new ArrayList<Artifact>();
 
         RepositorySession session = repositorySessionFactory.createSession();
 
@@ -684,8 +687,11 @@ public class DefaultBrowseService
 
                     ArtifactDownloadInfoBuilder builder =
                         new ArtifactDownloadInfoBuilder().forArtifactMetadata( artifact ).withManagedRepositoryContent(
-                            repositoryContentFactory.getManagedRepositoryContent( repositoryId ) );
-                    artifactDownloadInfos.add( builder.build() );
+                            repositoryContentFactory.getManagedRepositoryContent( repoId ) );
+                    Artifact art = builder.build();
+
+                    art.setUrl( getArtifactUrl( art ) );
+                    artifactDownloadInfos.add( art );
                 }
 
             }
@@ -713,8 +719,8 @@ public class DefaultBrowseService
         return artifactDownloadInfos;
     }
 
-    public String getArtifactContentText( String groupId, String artifactId, String version, String classifier,
-                                          String type, String path, String repositoryId )
+    public ArtifactContent getArtifactContentText( String groupId, String artifactId, String version, String classifier,
+                                                   String type, String path, String repositoryId )
         throws ArchivaRestServiceException
     {
         List<String> selectedRepos = getSelectedRepos( repositoryId );
@@ -727,12 +733,12 @@ public class DefaultBrowseService
                     repositoryContentFactory.getManagedRepositoryContent( repoId );
                 ArchivaArtifact archivaArtifact = new ArchivaArtifact( groupId, artifactId, version, classifier,
                                                                        StringUtils.isEmpty( type ) ? "jar" : type,
-                                                                       repositoryId );
+                                                                       repoId );
                 File file = managedRepositoryContent.toFile( archivaArtifact );
                 if ( !file.exists() )
                 {
-                    // 404 ?
-                    return "";
+                    log.debug( "file: {} not exists for repository: {} try next repository", file, repoId );
+                    continue;
                 }
                 if ( StringUtils.isNotBlank( path ) )
                 {
@@ -742,14 +748,14 @@ public class DefaultBrowseService
                     InputStream inputStream = jarFile.getInputStream( zipEntry );
                     try
                     {
-                        return IOUtils.toString( inputStream );
+                        return new ArtifactContent( IOUtils.toString( inputStream ), repoId );
                     }
                     finally
                     {
                         IOUtils.closeQuietly( inputStream );
                     }
                 }
-                return FileUtils.readFileToString( file );
+                return new ArtifactContent( FileUtils.readFileToString( file ), repoId );
             }
         }
         catch ( IOException e )
@@ -770,14 +776,17 @@ public class DefaultBrowseService
             throw new ArchivaRestServiceException( e.getMessage(),
                                                    Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e );
         }
-        return "";
+        log.debug( "artifact: {}:{}:{}:{}:{} not found",
+                   Arrays.asList( groupId, artifactId, version, classifier, type ).toArray( new String[5] ) );
+        // 404 ?
+        return new ArtifactContent();
     }
 
     //---------------------------
     // internals
     //---------------------------
 
-    protected List<ArtifactContentEntry> readFileEntries( File file, String filterPath )
+    protected List<ArtifactContentEntry> readFileEntries( File file, String filterPath, String repoId )
         throws IOException
     {
         Map<String, ArtifactContentEntry> artifactContentEntryMap = new HashMap<String, ArtifactContentEntry>();
@@ -804,7 +813,7 @@ public class DefaultBrowseService
 
                     artifactContentEntryMap.put( entryRootPath,
                                                  new ArtifactContentEntry( entryRootPath, !currentEntry.isDirectory(),
-                                                                           depth ) );
+                                                                           depth, repoId ) );
                 }
                 else
                 {
@@ -813,7 +822,7 @@ public class DefaultBrowseService
                     {
                         artifactContentEntryMap.put( cleanedEntryName, new ArtifactContentEntry( cleanedEntryName,
                                                                                                  !currentEntry.isDirectory(),
-                                                                                                 depth ) );
+                                                                                                 depth, repoId ) );
                     }
                 }
             }
@@ -893,32 +902,6 @@ public class DefaultBrowseService
         }
         return path;
     }
-
-    protected List<String> getSelectedRepos( String repositoryId )
-        throws ArchivaRestServiceException
-    {
-
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            // FIXME 403 ???
-            return Collections.emptyList();
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
-        return selectedRepos;
-    }
-
 
     private String collapseNamespaces( RepositorySession repositorySession, MetadataResolver metadataResolver,
                                        Collection<String> repoIds, String n )

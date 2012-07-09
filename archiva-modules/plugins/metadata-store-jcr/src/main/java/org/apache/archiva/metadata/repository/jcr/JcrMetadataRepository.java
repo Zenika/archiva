@@ -35,6 +35,7 @@ import org.apache.archiva.metadata.model.Scm;
 import org.apache.archiva.metadata.repository.MetadataRepository;
 import org.apache.archiva.metadata.repository.MetadataRepositoryException;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,8 +101,6 @@ public class JcrMetadataRepository
     {
         this.metadataFacetFactories = metadataFacetFactories;
         this.repository = repository;
-
-        //session = repository.login( new SimpleCredentials( "admin", "admin".toCharArray() ) );
     }
 
 
@@ -193,20 +192,28 @@ public class JcrMetadataRepository
 
             node.setProperty( "version", artifactMeta.getVersion() );
 
-            for ( MetadataFacet facet : artifactMeta.getFacetList() )
+            // iterate over available facets to update/add/remove from the artifactMetadata
+            for ( String facetId : metadataFacetFactories.keySet() )
             {
-                if ( node.hasNode( facet.getFacetId() ) )
+                MetadataFacet metadataFacet = artifactMeta.getFacet( facetId );
+                if ( metadataFacet == null )
                 {
-                    node.getNode( facet.getFacetId() ).remove();
+                    continue;
                 }
-
-                // recreate, to ensure properties are removed
-                Node n = node.addNode( facet.getFacetId() );
-                n.addMixin( FACET_NODE_TYPE );
-
-                for ( Map.Entry<String, String> entry : facet.toProperties().entrySet() )
+                if ( node.hasNode( facetId ) )
                 {
-                    n.setProperty( entry.getKey(), entry.getValue() );
+                    node.getNode( facetId ).remove();
+                }
+                if ( metadataFacet != null )
+                {
+                    // recreate, to ensure properties are removed
+                    Node n = node.addNode( facetId );
+                    n.addMixin( FACET_NODE_TYPE );
+
+                    for ( Map.Entry<String, String> entry : metadataFacet.toProperties().entrySet() )
+                    {
+                        n.setProperty( entry.getKey(), entry.getValue() );
+                    }
                 }
             }
         }
@@ -413,6 +420,11 @@ public class JcrMetadataRepository
             Node root = getJcrSession().getRootNode();
             Node node = root.getNode( getFacetPath( repositoryId, facetId, name ) );
 
+            if ( metadataFacetFactories == null )
+            {
+                return metadataFacet;
+            }
+
             MetadataFacetFactory metadataFacetFactory = metadataFacetFactories.get( facetId );
             if ( metadataFacetFactory != null )
             {
@@ -610,24 +622,6 @@ public class JcrMetadataRepository
         return artifacts;
     }
 
-    public void removeArtifact( String repositoryId, String namespace, String projectId, String projectVersion,
-                                String id )
-        throws MetadataRepositoryException
-    {
-        try
-        {
-            Node root = getJcrSession().getRootNode();
-            String path = getArtifactPath( repositoryId, namespace, projectId, projectVersion, id );
-            if ( root.hasNode( path ) )
-            {
-                root.getNode( path ).remove();
-            }
-        }
-        catch ( RepositoryException e )
-        {
-            throw new MetadataRepositoryException( e.getMessage(), e );
-        }
-    }
 
     public void removeRepository( String repositoryId )
         throws MetadataRepositoryException
@@ -989,6 +983,116 @@ public class JcrMetadataRepository
         return getNodeNames( getProjectPath( repositoryId, namespace, projectId ), PROJECT_VERSION_NODE_TYPE );
     }
 
+    public void removeArtifact( ArtifactMetadata artifactMetadata, String baseVersion )
+        throws MetadataRepositoryException
+    {
+
+        String repositoryId = artifactMetadata.getRepositoryId();
+
+        try
+        {
+            Node root = getJcrSession().getRootNode();
+            String path =
+                getProjectVersionPath( repositoryId, artifactMetadata.getNamespace(), artifactMetadata.getProject(),
+                                       baseVersion );
+
+            if ( root.hasNode( path ) )
+            {
+                Node node = root.getNode( path );
+
+                for ( Node n : JcrUtils.getChildNodes( node ) )
+                {
+                    if ( n.isNodeType( ARTIFACT_NODE_TYPE ) )
+                    {
+                        if ( n.hasProperty( "version" ) )
+                        {
+                            String version = n.getProperty( "version" ).getString();
+                            if ( StringUtils.equals( version, artifactMetadata.getVersion() ) )
+                            {
+                                n.remove();
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
+
+
+    }
+
+    public void removeArtifact( String repositoryId, String namespace, String projectId, String projectVersion,
+                                String id )
+        throws MetadataRepositoryException
+    {
+        try
+        {
+            Node root = getJcrSession().getRootNode();
+            String path = getArtifactPath( repositoryId, namespace, projectId, projectVersion, id );
+            if ( root.hasNode( path ) )
+            {
+                root.getNode( path ).remove();
+            }
+
+            // remove version
+
+            path = getProjectPath( repositoryId, namespace, projectId );
+
+            Node nodeAtPath = root.getNode( path );
+
+            for ( Node node : JcrUtils.getChildNodes( nodeAtPath ) )
+            {
+                if ( node.isNodeType( PROJECT_VERSION_NODE_TYPE ) && StringUtils.equals( node.getName(),
+                                                                                         projectVersion ) )
+                {
+                    node.remove();
+                }
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
+    }
+
+    public void removeArtifact( String repositoryId, String namespace, String project, String projectVersion,
+                                MetadataFacet metadataFacet )
+        throws MetadataRepositoryException
+    {
+        try
+        {
+            Node root = getJcrSession().getRootNode();
+            String path = getProjectVersionPath( repositoryId, namespace, project, projectVersion );
+
+            if ( root.hasNode( path ) )
+            {
+                Node node = root.getNode( path );
+
+                for ( Node n : JcrUtils.getChildNodes( node ) )
+                {
+                    if ( n.isNodeType( ARTIFACT_NODE_TYPE ) )
+                    {
+                        ArtifactMetadata artifactMetadata = getArtifactFromNode( repositoryId, n );
+                        log.debug( "artifactMetadata: {}", artifactMetadata );
+                        MetadataFacet metadataFacetToRemove = artifactMetadata.getFacet( metadataFacet.getFacetId() );
+                        if ( metadataFacetToRemove != null && metadataFacet.equals( metadataFacetToRemove ) )
+                        {
+                            n.remove();
+                        }
+                    }
+                }
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
+    }
+
     public Collection<ArtifactMetadata> getArtifacts( String repositoryId, String namespace, String projectId,
                                                       String projectVersion )
         throws MetadataResolutionException
@@ -1340,9 +1444,7 @@ public class JcrMetadataRepository
     {
         if ( this.jcrSession == null || !this.jcrSession.isLive() )
         {
-
             jcrSession = repository.login( new SimpleCredentials( "admin", "admin".toCharArray() ) );
-
         }
         return this.jcrSession;
     }

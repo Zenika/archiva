@@ -31,8 +31,12 @@
   <properties>
     <archiva.baseRestUrl />
     <rest.admin.pwd />
-    <test.useTomcat>false</test.useTomcat>
-    <jettyVersion>7.5.3.v20111011</jettyVersion>
+    <!--
+    <redbackTestJdbcUrl>jdbc:derby:memory:users-test;create=true</redbackTestJdbcUrl>
+    <redbackTestJdbcDriver>org.apache.derby.jdbc.EmbeddedDriver</redbackTestJdbcDriver>
+    -->
+    <redbackTestJdbcUrl>jdbc:hsqldb:mem:redback-test</redbackTestJdbcUrl>
+    <redbackTestJdbcDriver>org.hsqldb.jdbcDriver</redbackTestJdbcDriver>
   </properties>
 
   <dependencies>
@@ -181,6 +185,10 @@
           <groupId>org.codehaus.jettison</groupId>
           <artifactId>jettison</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-servlet_2.5_spec</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -224,19 +232,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${jettyVersion}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-plus</artifactId>
-      <version>${jettyVersion}</version>
-      <scope>test</scope>
-    </dependency>
-
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -245,8 +240,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -288,6 +283,27 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-queries</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-memory</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-highlighter</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-repository-admin-default</artifactId>
       <scope>test</scope>
@@ -309,6 +325,31 @@
       <groupId>org.easytesting</groupId>
       <artifactId>fest-assert</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+      <version>${tomcat7Version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-juli</artifactId>
+      <version>${tomcat7Version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-logging-juli</artifactId>
+      <version>${tomcat7Version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-servlet-api</artifactId>
+      <version>${tomcat7Version}</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -343,16 +384,19 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <argLine>-Xmx512m -Xms512m -server</argLine>
           <systemPropertyVariables>
             <appserver.base>${project.build.directory}/appserver-base</appserver.base>
             <plexus.home>${project.build.directory}/appserver-base</plexus.home>
             <derby.system.home>${project.build.directory}/appserver-base</derby.system.home>
             <archiva.baseRestUrl>${archiva.baseRestUrl}</archiva.baseRestUrl>
             <rest.admin.pwd>${rest.admin.pwd}</rest.admin.pwd>
-            <test.useTomcat>${test.useTomcat}</test.useTomcat>
             <redback.jdbc.url>${redbackTestJdbcUrl}</redback.jdbc.url>
             <redback.jdbc.driver.name>${redbackTestJdbcDriver}</redback.jdbc.driver.name>
             <basedir>${basedir}</basedir>
+            <org.apache.jackrabbit.maxCacheMemory>1</org.apache.jackrabbit.maxCacheMemory>
+            <org.apache.jackrabbit.maxMemoryPerCache>1</org.apache.jackrabbit.maxMemoryPerCache>
+            <!--org.apache.jackrabbit.minMemoryPerCache>1</org.apache.jackrabbit.minMemoryPerCache-->
           </systemPropertyVariables>
         </configuration>
       </plugin>

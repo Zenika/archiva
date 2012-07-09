@@ -37,14 +37,6 @@
   <name>Apache Archiva</name>
   <url>http://archiva.apache.org</url>
 
-  <distributionManagement>
-    <repository>
-      <id>vmbuild.staging</id>
-      <name>Apache Release Staging Repository on VMBuild</name>
-      <url>http://vmbuild.apache.org/archiva/repository/archiva-releases-stage</url>
-    </repository>
-  </distributionManagement>
-
   <modules>
     <module>archiva-cli</module>
     <module>archiva-modules</module>
@@ -65,7 +57,7 @@
     <commons-codec.version>1.6</commons-codec.version>
     <commons-collections.version>3.2.1</commons-collections.version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
-    <commons-io.version>2.1</commons-io.version>
+    <commons-io.version>2.2</commons-io.version>
     <commons-lang.version>2.6</commons-lang.version>
     <struts.version>2.2.3.1</struts.version>
     <maven3x.version>3.0.4</maven3x.version>
@@ -80,15 +72,15 @@
     <redback.registry.version>2.0-SNAPSHOT</redback.registry.version>
     <redback.spring-utils.version>2.0-SNAPSHOT</redback.spring-utils.version>
     <redback.taskqueue.version>2.0-SNAPSHOT</redback.taskqueue.version>
-    <slf4j.version>1.6.4</slf4j.version>
+    <slf4j.version>1.6.6</slf4j.version>
     <binder.version>0.11</binder.version>
     <spring.version>3.1.1.RELEASE</spring.version>
-    <jackrabbit.version>2.4.1</jackrabbit.version>
+    <jackrabbit.version>2.5.0</jackrabbit.version>
     <javax.jcr.version>2.0</javax.jcr.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
     <lucene.version>3.0.3</lucene.version>
-    <cxfVersion>2.6.0</cxfVersion>
+    <cxfVersion>2.6.1</cxfVersion>
     <derbyVersion>10.8.2.2</derbyVersion>
     <httpclient.version>4.1.3</httpclient.version>
     <httpclient.core.version>4.1.4</httpclient.core.version>
@@ -104,7 +96,7 @@
     <plexus-expression-evaluator.version>2.0-SNAPSHOT</plexus-expression-evaluator.version>
     <plexus-utils.version>1.5.5</plexus-utils.version>
     <asfTomcatMavenPluginVersion>2.0-SNAPSHOT</asfTomcatMavenPluginVersion>
-    <tomcat7Version>7.0.27</tomcat7Version>
+    <tomcat7Version>7.0.28</tomcat7Version>
   </properties>
 
   <dependencyManagement>
@@ -663,9 +655,9 @@
         <version>1.6.1</version>
       </dependency>
       <dependency>
-        <groupId>hsqldb</groupId>
+        <groupId>org.hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
-        <version>1.8.0.7</version>
+        <version>2.2.8</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -682,7 +674,7 @@
       <dependency>
         <groupId>jpox</groupId>
         <artifactId>jpox</artifactId>
-        <version>1.1.9</version>
+        <version>1.1.9-1</version>
         <exclusions>
           <exclusion>
             <groupId>javax.transaction</groupId>
@@ -709,7 +701,7 @@
       <dependency>
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
-        <version>1.2.14</version>
+        <version>1.2.17</version>
       </dependency>
       <dependency>
         <groupId>org.apache.archiva</groupId>
@@ -724,6 +716,16 @@
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-queries</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-memory</artifactId>
+        <version>${lucene.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lucene</groupId>
+        <artifactId>lucene-highlighter</artifactId>
         <version>${lucene.version}</version>
       </dependency>
       <dependency>
@@ -1400,11 +1402,10 @@
         </exclusions>
       </dependency>
 
-      <!-- 2.5.0 upgrade cause NPE with jpox 2nd level cache -->
       <dependency>
         <groupId>net.sf.ehcache</groupId>
         <artifactId>ehcache-core</artifactId>
-        <version>2.4.7</version>
+        <version>2.5.2</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -1631,28 +1632,6 @@
           </dependency>
         </dependencies>
        </plugin>
-      <!-- make sure our code doesn't have 1.6 dependencies -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>animal-sniffer-maven-plugin</artifactId>
-        <version>1.7</version>
-        <configuration>
-          <signature>
-            <groupId>org.codehaus.mojo.signature</groupId>
-            <artifactId>java15</artifactId>
-            <version>1.0</version>
-          </signature>
-        </configuration>
-        <executions>
-          <execution>
-            <id>check-java-1.5-compat</id>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
@@ -1688,7 +1667,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>appassembler-maven-plugin</artifactId>
-          <version>1.2</version>
+          <version>1.2.3-SNAPSHOT</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>

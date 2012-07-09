@@ -19,6 +19,8 @@ package org.apache.archiva.metadata.repository.file;
  * under the License.
  */
 
+import org.apache.archiva.configuration.ArchivaConfiguration;
+import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
 import org.apache.archiva.metadata.model.ArtifactMetadata;
 import org.apache.archiva.metadata.model.CiManagement;
 import org.apache.archiva.metadata.model.Dependency;
@@ -36,8 +38,6 @@ import org.apache.archiva.metadata.repository.MetadataRepository;
 import org.apache.archiva.metadata.repository.MetadataRepositoryException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.archiva.configuration.ArchivaConfiguration;
-import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -597,11 +597,17 @@ public class FileMetadataRepository
         return artifacts;
     }
 
-    public void removeArtifact( String repoId, String namespace, String project, String version, String id )
+    public void removeArtifact( ArtifactMetadata artifactMetadata, String baseVersion )
+        throws MetadataRepositoryException
     {
-        File directory = new File( getDirectory( repoId ), namespace + "/" + project + "/" + version );
+
+        File directory = new File( getDirectory( artifactMetadata.getRepositoryId() ),
+                                   artifactMetadata.getNamespace() + "/" + artifactMetadata.getProject() + "/"
+                                       + baseVersion );
 
         Properties properties = readOrCreateProperties( directory, PROJECT_VERSION_METADATA_KEY );
+
+        String id = artifactMetadata.getId();
 
         properties.remove( "artifact:updated:" + id );
         properties.remove( "artifact:whenGathered:" + id );
@@ -628,8 +634,66 @@ public class FileMetadataRepository
         catch ( IOException e )
         {
             // TODO
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error( e.getMessage(), e );
         }
+
+    }
+
+    public void removeArtifact( String repoId, String namespace, String project, String version, String id )
+    {
+
+        File directory = new File( getDirectory( repoId ), namespace + "/" + project + "/" + version );
+
+        Properties properties = readOrCreateProperties( directory, PROJECT_VERSION_METADATA_KEY );
+
+        properties.remove( "artifact:updated:" + id );
+        properties.remove( "artifact:whenGathered:" + id );
+        properties.remove( "artifact:size:" + id );
+        properties.remove( "artifact:md5:" + id );
+        properties.remove( "artifact:sha1:" + id );
+        properties.remove( "artifact:version:" + id );
+        properties.remove( "artifact:facetIds:" + id );
+
+        String prefix = "artifact:facet:" + id + ":";
+        for ( Object key : new ArrayList<Object>( properties.keySet() ) )
+        {
+            String property = (String) key;
+            if ( property.startsWith( prefix ) )
+            {
+                properties.remove( property );
+            }
+        }
+
+        try
+        {
+
+            FileUtils.deleteDirectory( directory );
+
+            //writeProperties( properties, directory, PROJECT_VERSION_METADATA_KEY );
+        }
+        catch ( IOException e )
+        {
+            // TODO
+            log.error( e.getMessage(), e );
+        }
+    }
+
+    /**
+     * FIXME implements this !!!!
+     *
+     * @param repositoryId
+     * @param namespace
+     * @param project
+     * @param projectVersion
+     * @param projectId
+     * @param metadataFacet  will remove artifacts which have this {@link MetadataFacet} using equals
+     * @throws MetadataRepositoryException
+     */
+    public void removeArtifact( String repositoryId, String namespace, String project, String projectVersion,
+                                MetadataFacet metadataFacet )
+        throws MetadataRepositoryException
+    {
+        throw new UnsupportedOperationException( "not implemented" );
     }
 
     public void removeRepository( String repoId )
@@ -733,7 +797,7 @@ public class FileMetadataRepository
         catch ( IOException e )
         {
             // TODO
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error( e.getMessage(), e );
         }
     }
 

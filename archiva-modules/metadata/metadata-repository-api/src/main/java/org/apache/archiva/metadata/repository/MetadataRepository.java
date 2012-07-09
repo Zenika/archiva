@@ -80,6 +80,29 @@ public interface MetadataRepository
         throws MetadataRepositoryException;
 
     /**
+     * used for deleting timestamped version of SNAPSHOT artifacts
+     * @param artifactMetadata the artifactMetadata with the timestamped version (2.0-20120618.214135-2)
+     * @param baseVersion      the base version of the snapshot (2.0-SNAPSHOT)
+     * @throws MetadataRepositoryException
+     * @since 1.4-M3
+     */
+    void removeArtifact( ArtifactMetadata artifactMetadata, String baseVersion )
+        throws MetadataRepositoryException;
+
+    /**
+     * @param repositoryId
+     * @param namespace
+     * @param project
+     * @param version
+     * @param metadataFacet will remove artifacts which have this {@link MetadataFacet} using equals
+     * @throws MetadataRepositoryException
+     * @since 1.4-M3
+     */
+    void removeArtifact( String repositoryId, String namespace, String project, String version,
+                         MetadataFacet metadataFacet )
+        throws MetadataRepositoryException;
+
+    /**
      * Delete a repository's metadata. This includes all associated metadata facets.
      *
      * @param repositoryId the repository to delete

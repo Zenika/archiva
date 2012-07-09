@@ -339,12 +339,11 @@
 
 
       <div id="search-results" class="tab-pane">
-        <div class="row">
-          <div class="span3">
+        <div class="row-fluid">
+          <div class="span6">
             <a href="#" class="btn btn-warning" data-bind="click: removeFilter" id="remove-filter-id">${$.i18n.prop('search.artifact.result.filter')}</a>
           </div>
-          <div class="span4" id="search-result-number-div">
-
+          <div class="span6" id="search-result-number-div">
           </div>
         </div>
         <table class="table table-striped table-bordered" id="search-results-grid">
@@ -436,6 +435,9 @@
         <a data-toggle="tab" href="#artifact-details-files-content">${$.i18n.prop('artifact.detail.tab.header.file.content')}</a>
       </li>
       <li>
+        <a data-toggle="tab" href="#artifact-details-download-content">${$.i18n.prop('artifact.detail.tab.header.file.download')}</a>
+      </li>
+      <li>
         <a data-toggle="tab" href="#artifact-details-used-by-content">${$.i18n.prop('artifact.detail.tab.header.used.by')}</a>
       </li>
       <li>
@@ -469,17 +471,23 @@
                 </tr>
                 <tr>
                   <th>${$.i18n.prop('browse.artifact.packaging')}</th>
-                  <td>${projectVersionMetadata.mavenFacet.packaging}</td>
+                  {{if projectVersionMetadata.mavenFacet}}
+                    <td>${projectVersionMetadata.mavenFacet.packaging}</td>
+                  {{else}}
+                    <td></td>
+                  {{/if}}
                 </tr>
-                {{if projectVersionMetadata.mavenFacet.parent }}
-                <tr>
-                  <th>${$.i18n.prop('browse.artifact.parent')}</th>
-                  <td>
-                    <a href="#" data-bind="click: displayParent">
-                    ${projectVersionMetadata.mavenFacet.parent.groupId}:${projectVersionMetadata.mavenFacet.parent.artifactId}:${projectVersionMetadata.mavenFacet.parent.version}
-                    </a>
-                  </td>
-                </tr>
+                {{if projectVersionMetadata.mavenFacet}}
+                  {{if projectVersionMetadata.mavenFacet.parent }}
+                  <tr>
+                    <th>${$.i18n.prop('browse.artifact.parent')}</th>
+                    <td>
+                      <a href="#" data-bind="click: displayParent">
+                      ${projectVersionMetadata.mavenFacet.parent.groupId}:${projectVersionMetadata.mavenFacet.parent.artifactId}:${projectVersionMetadata.mavenFacet.parent.version}
+                      </a>
+                    </td>
+                  </tr>
+                  {{/if}}
                 {{/if}}
               </tbody>
             </table>
@@ -632,7 +640,9 @@
       </div>
 
       <div id="artifact-details-files-content" class="tab-pane">
+      </div>
 
+      <div id="artifact-details-download-content" class="tab-pane">
       </div>
 
       <div id="artifact-details-used-by-content" class="tab-pane"></div>
@@ -840,23 +850,37 @@
 </script>
 
 <script id="artifact-details-files-content_tmpl" type="text/html">
-      <div class="row">
-        <div class="span4">
+      <div class="row-fluid">
+        <div class="span5">
            <ul id="artifact-content-list-files">
            {{each artifactDownloadInfos}}
-             <li id="${$value.classifier}:${$value.type}">
-               <a href="#">${$value.type}</a>
+             <li id="${$value.classifier}:${$value.version}:${$value.packaging}">
+               <a href="#">${$value.packaging}:${$value.version}&nbsp;-&nbsp;${$value.size}</a>
              </li>
            {{/each}}
            </ul>
         </div>
-        <div class="span8">
+        <div class="span7">
           <div id="artifact_content_tree">
           </div>
         </div>
       </div>
-      <h4 id="artifact-content-text-header">Content</h4>
+      <h4 id="artifact-content-text-header">${$.i18n.prop('browse.artifact.content.header')}</h4>
       <div class="source">
          <pre class="prettyprint linenums" id="artifact-content-text"></pre>
       </div>
+</script>
+
+<script id="artifact-details-download-content_tmpl" type="text/html">
+    <ul id="artifact-download-list-files">
+    {{each(i, row) artifacts()}}
+      <li>
+        {{if deleteKarma}}
+          <a href="#" data-bind="click: function(){deleteArtifact(row)}"><img src="images/trash.png"/></a>&nbsp;<a href="${row.url}">${row.packaging}:${row.version}&nbsp;-&nbsp;${row.size}</a>
+        {{else}}
+          <a href="${row.url}">${row.packaging}:${row.version}&nbsp;-&nbsp;${row.size}</a>
+        {{/if}}
+      </li>
+    {{/each}}
+    </ul>
 </script>
