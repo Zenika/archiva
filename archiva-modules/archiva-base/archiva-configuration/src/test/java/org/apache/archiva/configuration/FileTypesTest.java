@@ -23,12 +23,12 @@ import junit.framework.TestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.inject.Inject;
+import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 
-@RunWith( SpringJUnit4ClassRunner.class )
-@ContextConfiguration( locations = {"classpath*:/META-INF/spring-context.xml"} )
+@RunWith( ArchivaSpringJUnit4ClassRunner.class )
+@ContextConfiguration( locations = { "classpath*:/META-INF/spring-context.xml" } )
 public class FileTypesTest
     extends TestCase
 {
@@ -67,13 +67,20 @@ public class FileTypesTest
     {
         assertTrue( filetypes.matchesDefaultExclusions( "repository/test/.index/nexus-maven-repository-index.gz" ) );
         assertTrue( filetypes.matchesDefaultExclusions( "repository/test/.index/nexus-maven-repository-index.zip" ) );
-        assertTrue( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.tar.gz.sha1" ) );
-        assertTrue( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.tar.gz.md5" ) );
-        assertTrue( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/maven-metadata.xml" ) );
-        assertTrue( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/maven-metadata.xml.sha1" ) );
-        assertTrue( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/maven-metadata.xml.md5" ) );
-        
-        assertFalse( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.zip" ) );
-        assertFalse( filetypes.matchesDefaultExclusions( "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.tar.gz" ) );
+        assertTrue( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.tar.gz.sha1" ) );
+        assertTrue( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.tar.gz.md5" ) );
+        assertTrue( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/maven-metadata.xml" ) );
+        assertTrue( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/maven-metadata.xml.sha1" ) );
+        assertTrue( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/maven-metadata.xml.md5" ) );
+
+        assertFalse( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.zip" ) );
+        assertFalse( filetypes.matchesDefaultExclusions(
+            "repository/test/org/apache/derby/derby/10.2.2.0/derby-10.2.2.0-bin.tar.gz" ) );
     }
 }

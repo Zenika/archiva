@@ -24,15 +24,17 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
 import java.io.StringWriter;
+import org.junit.Test;
 
 /**
  * XMLWriterTest 
  *
- * @version $Id$
+ *
  */
 public class XMLWriterTest
     extends AbstractArchivaXmlTestCase
 {
+    @Test
     public void testWrite()
         throws Exception
     {

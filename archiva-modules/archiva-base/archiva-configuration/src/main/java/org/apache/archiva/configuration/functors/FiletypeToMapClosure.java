@@ -19,16 +19,16 @@ package org.apache.archiva.configuration.functors;
  * under the License.
  */
 
-import org.apache.commons.collections.Closure;
 import org.apache.archiva.configuration.FileType;
+import org.apache.commons.collections.Closure;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * FiletypeToMapClosure 
+ * FiletypeToMapClosure
  *
- * @version $Id$
+ *
  */
 public class FiletypeToMapClosure
     implements Closure

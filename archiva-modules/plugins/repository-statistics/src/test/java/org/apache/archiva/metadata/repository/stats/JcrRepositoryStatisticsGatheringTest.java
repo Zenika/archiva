@@ -39,9 +39,14 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.zip.GZIPInputStream;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.mockito.Mockito.*;
-
+@RunWith( ArchivaBlockJUnit4ClassRunner.class )
 public class JcrRepositoryStatisticsGatheringTest
     extends TestCase
 {
@@ -58,7 +63,8 @@ public class JcrRepositoryStatisticsGatheringTest
     private Session session;
 
     @Override
-    protected void setUp()
+    @Before
+    public void setUp()
         throws Exception
     {
         super.setUp();
@@ -66,6 +72,9 @@ public class JcrRepositoryStatisticsGatheringTest
         File confFile = new File( "src/test/repository.xml" );
         File dir = new File( "target/jcr" );
         FileUtils.deleteDirectory( dir );
+
+        assertTrue( confFile.exists() );
+        assertFalse( dir.exists() );
 
         TransientRepository repository = new TransientRepository( confFile, dir );
         session = repository.login( new SimpleCredentials( "username", "password".toCharArray() ) );
@@ -100,14 +109,19 @@ public class JcrRepositoryStatisticsGatheringTest
     }
 
     @Override
-    protected void tearDown()
+    @After
+    public void tearDown()
         throws Exception
     {
-        session.logout();
+        if ( session != null )
+        {
+            session.logout();
+        }
 
         super.tearDown();
     }
 
+    @Test
     public void testJcrStatisticsQuery()
         throws Exception
     {
@@ -138,6 +152,7 @@ public class JcrRepositoryStatisticsGatheringTest
         expectedStatistics.setTotalCountForType( "xml", 3 );
         expectedStatistics.setTotalCountForType( "war", 2 );
         expectedStatistics.setTotalCountForType( "pom", 144 );
+        expectedStatistics.setRepositoryId( TEST_REPO );
 
         verify( metadataRepository ).addMetadataFacet( TEST_REPO, expectedStatistics );
     }

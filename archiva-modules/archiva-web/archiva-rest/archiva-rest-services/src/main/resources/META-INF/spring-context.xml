@@ -70,6 +70,7 @@
       <ref bean="browseService#rest"/>
       <ref bean="systemStatusService#rest"/>
       <ref bean="cudfService#rest"/>
+      <ref bean="reportRepositoriesService#rest" />
     </jaxrs:serviceBeans>
 
     <jaxrs:outInterceptors>
