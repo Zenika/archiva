@@ -370,6 +370,8 @@
               <exclude>src/test/repo-with-osgi/**</exclude>
               <exclude>src/test/repo-with-classifier-only/**</exclude>
               <exclude>src/test/repo-with-snapshots/**</exclude>
+              <exclude>src/test/repo-cudf-1/**</exclude>
+              <exclude>src/test/repo-cudf-2/**</exclude>
             </excludes>
           </configuration>
         </plugin>
