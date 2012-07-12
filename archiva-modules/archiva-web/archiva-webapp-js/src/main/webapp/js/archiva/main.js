@@ -52,25 +52,7 @@ function() {
     });
   }
 
-  // handle url with registration link
-  checkUrlParams=function(){
-    var validateMeId = $.urlParam('validateMe');
-    if (validateMeId) {
-      validateKey(validateMeId);
-      return;
-    }
-    var resetPassword= $.urlParam('resetPassword');
-    if (resetPassword){
-      resetPasswordForm(resetPassword);
-      return;
-    }
-    // by default display search screen
-    window.sammyArchivaApplication.setLocation("#search");
-  }
 
-  hasKarma=function(karmaName){
-    return $.inArray(karmaName,window.redbackModel.operatioNames)>=0;
-  }
 
   decorateMenuWithKarma=function(user) {
     var username = user.username;
@@ -127,45 +109,6 @@ function() {
       $(this).hide();
     });
     $.log("hideElementWithKarma");
-  }
-
-  userLoggedCallbackFn=function(user){
-    $.log("userLoggedCallbackFn:"+ (user?user.username:null));
-
-    if (!user) {
-      $("#login-link").show();
-      $("#register-link").show();
-      $("#change-password-link").hide();
-      checkUrlParams();
-    } else {
-      $("#change-password-link").show();
-      $("#logout-link").show();
-      $("#register-link").hide();
-      $("#login-link").hide();
-      decorateMenuWithKarma(user);
-    }
-  }
-
-  checkSecurityLinks=function(){
-    userLogged(userLoggedCallbackFn);
-  }
-
-  checkCreateAdminLink=function(){
-    $.ajax("restServices/redbackServices/userService/isAdminUserExists", {
-      type: "GET",
-      dataType: 'json',
-      success: function(data) {
-        var adminExists = data;
-        if (adminExists == false) {
-          $("#create-admin-link").show();
-          $("#login-link").hide();
-          $("#register-link").hide();
-        } else {
-          $("#create-admin-link").hide();
-        }
-        $.log("adminExists:"+adminExists);
-      }
-    });
   }
 
   //------------------------------------//
@@ -239,63 +182,139 @@ function() {
       this.activeMenuId = ko.observable();
           
       window.sammyArchivaApplication = Sammy(function () {
-                // #artifact-(optionnal repositoryId)
-                // format groupId:artifactId org.apache.maven.plugins:maven-jar-plugin
-                // or  groupId:artifactId:version org.apache.maven.plugins:maven-jar-plugin:2.3.1
-                this.get('#artifact/:groupId/:artifactId',function(context){
-                  var groupId= this.params['groupId'];
-                  var artifactId= this.params['artifactId'];
-                  $.log("get #artifact:"+groupId+":"+artifactId);
-                  goToBrowseArtifactDetail(groupId,artifactId);//,null,null);
-                  return;
+        this.get('#open-admin-create-box',function(){
+          $.log("#open-admin-create-box");
+          adminCreateBox();
+        });
 
-                });
-                this.get('#artifact:repositoryId/:groupId/:artifactId/:version',function(context){
+        // #artifact-(optionnal repositoryId)
+        // format groupId:artifactId org.apache.maven.plugins:maven-jar-plugin
+        // or  groupId:artifactId:version org.apache.maven.plugins:maven-jar-plugin:2.3.1
+        this.get('#artifact/:groupId/:artifactId',function(context){
+          var groupId= this.params['groupId'];
+          var artifactId= this.params['artifactId'];
+          $.log("get #artifact:"+groupId+":"+artifactId);
+          goToBrowseArtifactDetail(groupId,artifactId);//,null,null);
+          return;
 
-                  var repositoryId = this.params['repositoryId'];
-                  var groupId= this.params['groupId'];
-                  var artifactId= this.params['artifactId'];
-                  var version= this.params['version'];
+        });
+        this.get('#artifact:repositoryId/:groupId/:artifactId/:version',function(context){
 
-                  if(!version){
-                    displayBrowseArtifactDetail(splitted[0],splitted[1]);//,null,null);
-                  } else {
-                    generalDisplayArtifactDetailsVersionView(groupId,artifactId,version,repositoryId);
-                  }
-                });
-                this.get('#browse/:groupId',function(context){
-                  var groupId = this.params['groupId'];
-                  if (groupId){
-                    displayBrowseGroupId(groupId);
-                  } else {
-                    displayBrowse(true);
-                  }
-                });
-                this.get('#:folder', function () {
-                    self.activeMenuId(this.params.folder);
-                    ko.utils.arrayFirst(self.artifactMenuItems.concat(self.cudfMenuItems, self.usersMenuItems, self.administrationMenuItems), function(p) {
-                        if ( p.href == "#"+self.activeMenuId()) {
-                          p.func();
-                          return;
-                        }
-                    });
-                    
-                });
-                //this.get('', function () { this.app.runRoute('get', '#search') });
-          } );
-      sammyArchivaApplication.run();
+          var repositoryId = this.params['repositoryId'];
+          var groupId= this.params['groupId'];
+          var artifactId= this.params['artifactId'];
+          var version= this.params['version'];
+
+          if(!version){
+            displayBrowseArtifactDetail(splitted[0],splitted[1]);//,null,null);
+          } else {
+            generalDisplayArtifactDetailsVersionView(groupId,artifactId,version,repositoryId);
+          }
+        });
+        this.get('#browse/:groupId',function(context){
+          var groupId = this.params['groupId'];
+          if (groupId){
+            displayBrowseGroupId(groupId);
+          } else {
+            displayBrowse(true);
+          }
+        });
+        this.get('#:folder', function () {
+          var folder = this.params.folder;
+          self.activeMenuId(folder);
+          var baseItems = self.artifactMenuItems?self.artifactMenuItems:[];
+          ko.utils.arrayFirst(baseItems.concat(self.usersMenuItems, self.administrationMenuItems), function(p) {
+            if ( p.href == "#"+self.activeMenuId()) {
+              p.func();
+              return;
+            }
+          });
+        });
+        //this.get('', function () { this.app.runRoute('get', '#search') });
+      });
+  }
+
+  userLoggedCallbackFn=function(user){
+    $.log("userLoggedCallbackFn:"+ (user?user.username:null));
+
+    if (!user) {
+      $("#login-link").show();
+      $("#register-link").show();
+      $("#change-password-link").hide();
+      checkUrlParams();
+    } else {
+      $("#change-password-link").show();
+      $("#logout-link").show();
+      $("#register-link").hide();
+      $("#login-link").hide();
+      decorateMenuWithKarma(user);
+    }
+  }
+
+  checkSecurityLinks=function(){
+    userLogged(userLoggedCallbackFn);
+  }
+
+  checkCreateAdminLink=function(callbackFn){
+    $.ajax("restServices/redbackServices/userService/isAdminUserExists", {
+      type: "GET",
+      dataType: 'json',
+      success: function(data) {
+        var adminExists = data;
+        if (adminExists == false) {
+          $("#create-admin-link").show();
+          $("#login-link").hide();
+          $("#register-link").hide();
+        } else {
+          $("#create-admin-link").hide();
+        }
+        if(callbackFn){
+          callbackFn()
+        }
+        $.log("adminExists:"+adminExists);
+      }
+    });
+  }
+
+  // handle url with registration link
+  checkUrlParams=function(){
+    var validateMeId = $.urlParam('validateMe');
+    if (validateMeId) {
+      validateKey(validateMeId);
+      return;
+    }
+    var resetPassword= $.urlParam('resetPassword');
+    if (resetPassword){
+      resetPasswordForm(resetPassword);
+      return;
+    }
+
+    var matches = window.location.toString().match(/^[^#]*(#.+)$/);
+    var hash = matches ? matches[1] : '';
+    $.log("location:"+window.sammyArchivaApplication.getLocation()+",hash:"+hash);
+    // by default display search screen
+    if(!hash){
+      window.sammyArchivaApplication.setLocation("#search");
+    }
+
+  }
+
+  hasKarma=function(karmaName){
+    return $.inArray(karmaName,window.redbackModel.operatioNames)>=0;
   }
 
   startArchivaApplication=function(){
+
     $.log("startArchivaApplication");
     $('#topbar-menu-container').html($("#topbar_menu_tmpl" ).tmpl());
     $('#sidebar-content').html($("#main_menu_tmpl").tmpl());
 
     ko.bindingHandlers.redbackP = {
-            init: function(element, valueAccessor) {
-                $(element).attr("redback-permissions",valueAccessor);
-                }
+      init: function(element, valueAccessor) {
+          $(element).attr("redback-permissions",valueAccessor);
+          }
     };
+
     ko.applyBindings(new MainMenuViewModel());
 
     hideElementWithKarma();
@@ -303,8 +322,6 @@ function() {
     checkCreateAdminLink();
     $('#footer-content').html($('#footer-tmpl').tmpl(window.archivaRuntimeInfo));
 
-    
-    
     $( "#quick-search-autocomplete" ).autocomplete({
       minLength: 3,
       delay: 600,
@@ -342,6 +359,8 @@ function() {
 								.appendTo( ul );
 						};
     updateAppearanceToolBar();
+
+    window.sammyArchivaApplication.run();
 
   }
 

@@ -148,9 +148,6 @@
                     }
                 });
 
-
-
-
                 require(['jquery','i18n','sammy','startup','utils','domReady!'], function (domReady) {
                     loadi18n(function () {
                       $.ajax({
@@ -162,13 +159,9 @@
                               window.archivaRuntimeInfo=data;
 
                               require(['sammy','archiva.main','domReady!'],function (domReady) {
-                                      $.log("startArchivaApplication");
-                                      startArchivaApplication();
-                                      $("#loadingDiv").hide();
+                                  startArchivaApplication();
+                                  $("#loadingDiv").hide();
                               })
-
-
-
                           }
                         })
                     })
