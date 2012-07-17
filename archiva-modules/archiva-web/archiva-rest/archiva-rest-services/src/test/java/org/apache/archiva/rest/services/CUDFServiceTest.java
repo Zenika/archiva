@@ -29,7 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
+ * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  */
 public class CUDFServiceTest extends AbstractArchivaRestTest{
 

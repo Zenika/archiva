@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
+ * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

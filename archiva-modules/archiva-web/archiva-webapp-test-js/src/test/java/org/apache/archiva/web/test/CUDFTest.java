@@ -6,7 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
+ * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  */
 public class CUDFTest extends ArchivaAdminTest {
 
