@@ -1,5 +1,4 @@
 package org.apache.archiva.rest.services;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,74 +18,21 @@ package org.apache.archiva.rest.services;
  * under the License.
  */
 
-import org.apache.archiva.redback.rest.api.services.RedbackServiceException;
-import org.apache.archiva.rest.api.services.CUDFService;
-import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
+ * @since 1.4-M3
  */
-public class CUDFServiceTest extends AbstractArchivaRestTest{
+public class CUDFServiceTest
+    extends AbstractArchivaRestTest
+{
 
     @Test
-    @Ignore
-    public void cudfConeTest() throws Exception
+    public void charToHexaConverto()
     {
-//        String testRepoId = "test-repo";
-//        createAndIndexRepo(testRepoId, new File(getBasedir(), "src/test/repo-with-osgi").getAbsolutePath());
-//        CUDFService cudfService = getCUDFService(authorizationHeader);
-//        String result = cudfService.getConeCUDF("commons-cli", "commons-cli", "1.0", "jar", testRepoId);
-//        assertTrue(result.contains("commons-cli%3acommons-cli"));
-//        assertTrue(result.contains("type: jar"));
-//        assertTrue(result.contains("number: 1.0"));
-//        assertEquals(2, numberOfOccurrences(result, "commons-logging%3acommons-logging"));
-//        assertEquals(2, numberOfOccurrences(result, "commons-lang%3acommons-lang"));
-    }
-
-    @Test
-    @Ignore
-    public void cudfUniverseTest() throws Exception
-    {
-//        String testRepoId = "test-repo";
-//        createAndIndexRepo(testRepoId, new File(getBasedir(), "src/test/repo-with-osgi").getAbsolutePath());
-//        CUDFService cudfService = getCUDFService(authorizationHeader);
-//        String result = cudfService.getUniverseCUDF(testRepoId).toString();
-//        assertTrue(result.contains("commons-cli%3acommons-cli"));
-//        assertEquals(7, numberOfOccurrences(result, "commons-logging%3acommons-logging"));
-    }
-
-    @Test
-    @Ignore
-    public void cudfUniverseWithDependenciesInOtherRepository() throws Exception
-    {
-//        String testRepoId1 = "test-repo-1";
-//        String testRepoId2 = "test-repo-2";
-//
-//        createAndIndexRepo(testRepoId1, new File(getBasedir(), "src/test/repo-cudf-1").getAbsolutePath());
-//        createAndIndexRepo(testRepoId2, new File(getBasedir(), "src/test/repo-cudf-2").getAbsolutePath());
-//
-//        CUDFService cudfService = getCUDFService(authorizationHeader);
-//        String result = cudfService.getConeCUDF("commons-cli", "commons-cli", "1.0", "jar", testRepoId1);
-//        assertTrue(result.contains("commons-cli%3acommons-cli"));
-//        assertTrue(result.contains("type: jar"));
-//        assertTrue(result.contains("number: 1.0"));
-//        assertEquals(2, numberOfOccurrences(result, "commons-logging%3acommons-logging"));
-//        assertEquals(2, numberOfOccurrences(result, "commons-lang%3acommons-lang"));
-    }
-
-    private int numberOfOccurrences(String stringToCompute, String regex)
-    {
-        Matcher matcher = Pattern.compile(regex).matcher(stringToCompute);
-        int occurrences = 0;
-        while (matcher.find())
-        {
-            occurrences++;
-        }
-        return occurrences;
+        DefaultCUDFService defaultCUDFService = new DefaultCUDFService();
+        assertTrue( "%3a".equalsIgnoreCase( defaultCUDFService.encodingString( ":" ) ) );
+        assertTrue( "%5f".equalsIgnoreCase( defaultCUDFService.encodingString( "_" ) ) );
     }
 }

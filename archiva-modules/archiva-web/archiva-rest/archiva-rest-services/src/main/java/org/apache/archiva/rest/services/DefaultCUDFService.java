@@ -65,7 +65,19 @@ public class DefaultCUDFService
     implements CUDFService
 {
 
-    private static final String SEPARATOR = "%3a";
+    private final Map<String, String> illegals = new HashMap<String, String>();
+
+    public DefaultCUDFService()
+    {
+        super();
+        initiateIllegalsCharatersForCUDF();
+    }
+
+    private void initiateIllegalsCharatersForCUDF()
+    {
+        illegals.put( "_", Integer.toHexString( '_' ) );
+        illegals.put( ":", Integer.toHexString( ':' ) );
+    }
 
     @Inject
     private BrowseService browseService;
@@ -267,6 +279,8 @@ public class DefaultCUDFService
         Set<String> known = new TreeSet<String>();
 
         List<String> projects = new ArrayList<String>();
+
+        String artifactKnownKey = null;
         for ( String repository : repositories )
         {
             BrowseResult rootGroupsResult = browseService.getRootGroups( repository );
@@ -283,11 +297,15 @@ public class DefaultCUDFService
                 for ( String version : versionsList.getVersions() )
                 {
                     Artifact artifact = createArtifact( repository, groupId, artifactId, version, null );
-                    known.add( generateArtifactKey( artifact ) );
-                    output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
-                    output.write(
-                        convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
-                    output.write( "\n" );
+                    artifactKnownKey = generateArtifactKey( artifact );
+                    if ( !known.contains( artifactKnownKey ) )
+                    {
+                        known.add( artifactKnownKey );
+                        output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
+                        output.write(
+                            convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
+                        output.write( "\n" );
+                    }
                 }
             }
             projects = new ArrayList<String>();
@@ -440,9 +458,24 @@ public class DefaultCUDFService
         }
     }
 
-    private String outputArtifactInCUDFInline( String groupId, String artifactId )
+    String outputArtifactInCUDFInline( String groupId, String artifactId )
     {
-        return groupId + SEPARATOR + artifactId.replaceAll( "_", "-" );
+        return encodingString( groupId + ':' + artifactId );
+    }
+
+    /**
+     * Returns the input string with all illegal characters replace by their equivalent in hexa
+     *
+     * @param input
+     * @return the input with hexa in place of the illegal characters
+     */
+    String encodingString( String input )
+    {
+        for ( String illegal : illegals.keySet() )
+        {
+            input = input.replaceAll( illegal, '%' + illegals.get( illegal ) );
+        }
+        return input;
     }
 
     private String convertDependenciesToCUDF( Artifact artifact, List<String> repositories, Queue<Artifact> queue,
