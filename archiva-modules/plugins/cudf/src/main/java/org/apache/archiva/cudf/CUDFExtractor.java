@@ -38,36 +38,51 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CUDFExtractor {
+public class CUDFExtractor
+{
 
     private static final String SEPARATOR = "%3a";
 
-    private Logger log = LoggerFactory.getLogger(CUDFExtractor.class);
+    private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
+
     private List<String> repositories;
+
     private Writer writer;
 
-    public CUDFExtractor(Writer writer) {
+    public CUDFExtractor( Writer writer )
+    {
         this.writer = writer;
     }
 
-    public void computeCUDFUniverse(List<String> repositoryIds, RepositorySessionFactory repositorySessionFactory) throws IOException {
+    public void computeCUDFUniverse( List<String> repositoryIds, RepositorySessionFactory repositorySessionFactory )
+        throws IOException
+    {
         this.repositories = repositoryIds;
 
-        this.writer.write(getCUDFPreambule());
-        for (String repositoryId : repositoryIds) {
+        this.writer.write( getCUDFPreambule() );
+        for ( String repositoryId : repositoryIds )
+        {
             RepositorySession repositorySession = null;
-            try {
+            try
+            {
                 repositorySession = repositorySessionFactory.createSession();
                 MetadataResolver metadataResolver = repositorySession.getResolver();
-                Collection<String> rootNamespaces = metadataResolver.resolveRootNamespaces(repositorySession, repositoryId);
-                for (String rootNamespace : rootNamespaces) {
-                    resolveNamespaces(repositorySession, metadataResolver, repositoryId, rootNamespace);
+                Collection<String> rootNamespaces =
+                    metadataResolver.resolveRootNamespaces( repositorySession, repositoryId );
+                for ( String rootNamespace : rootNamespaces )
+                {
+                    resolveNamespaces( repositorySession, metadataResolver, repositoryId, rootNamespace );
                 }
                 repositorySession.close();
-            } catch (MetadataResolutionException e) {
-                throw new RuntimeException("Unable to extract CUDF Cone", e);
-            } finally {
-                if (repositorySession != null) {
+            }
+            catch ( MetadataResolutionException e )
+            {
+                throw new RuntimeException( "Unable to extract CUDF Cone", e );
+            }
+            finally
+            {
+                if ( repositorySession != null )
+                {
                     repositorySession.close();
                 }
             }
@@ -76,18 +91,29 @@ public class CUDFExtractor {
         this.writer.close();
     }
 
-    public void computeCUDFCone(String groupId, String artifactId, String version, String type, String repositoryId, RepositorySessionFactory repositorySessionFactory) throws IOException {
-        this.writer.append(getCUDFPreambule());
+    public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
+                                 RepositorySessionFactory repositorySessionFactory )
+        throws IOException
+    {
+        this.writer.append( getCUDFPreambule() );
         RepositorySession repositorySession = null;
-        try {
+        try
+        {
             repositorySession = repositorySessionFactory.createSession();
             MetadataResolver metadataResolver = repositorySession.getResolver();
-            resolveProjectVersionMetadata(repositorySession, metadataResolver, repositoryId, groupId, artifactId, version,
-                    getCUDFVersion(repositorySession, metadataResolver, groupId, artifactId, version));
-        } catch (MetadataResolutionException e) {
-            throw new RuntimeException("Unable to extract CUDF Cone", e);
-        } finally {
-            if (repositorySession != null) {
+            resolveProjectVersionMetadata( repositorySession, metadataResolver, repositoryId, groupId, artifactId,
+                                           version,
+                                           getCUDFVersion( repositorySession, metadataResolver, groupId, artifactId,
+                                                           version ) );
+        }
+        catch ( MetadataResolutionException e )
+        {
+            throw new RuntimeException( "Unable to extract CUDF Cone", e );
+        }
+        finally
+        {
+            if ( repositorySession != null )
+            {
                 repositorySession.close();
             }
         }
@@ -95,121 +121,184 @@ public class CUDFExtractor {
         this.writer.close();
     }
 
-    private void resolveNamespaces(RepositorySession session, MetadataResolver metadataResolver, String repositoryId, String namespace) throws MetadataResolutionException {
-        Collection<String> namespaces = metadataResolver.resolveNamespaces(session, repositoryId, namespace);
-        if (namespaces.size() == 0) {
-            resolveProjects(session, metadataResolver, repositoryId, namespace);
-        } else {
-            for (String currentNamespace : namespaces) {
-                resolveNamespaces(session, metadataResolver, repositoryId, namespace + "." + currentNamespace);
+    private void resolveNamespaces( RepositorySession session, MetadataResolver metadataResolver, String repositoryId,
+                                    String namespace )
+        throws MetadataResolutionException
+    {
+        Collection<String> namespaces = metadataResolver.resolveNamespaces( session, repositoryId, namespace );
+        if ( namespaces.size() == 0 )
+        {
+            resolveProjects( session, metadataResolver, repositoryId, namespace );
+        }
+        else
+        {
+            for ( String currentNamespace : namespaces )
+            {
+                resolveNamespaces( session, metadataResolver, repositoryId, namespace + "." + currentNamespace );
             }
         }
     }
 
-    private void resolveProjects(RepositorySession session, MetadataResolver metadataResolver, String repositoryId, String namespace) throws MetadataResolutionException {
-        Collection<String> projects = metadataResolver.resolveProjects(session, repositoryId, namespace);
-        if (projects.size() != 0) {
-            for (String project : projects) {
-                resolveProjectVersions(session, metadataResolver, repositoryId, namespace, project);
+    private void resolveProjects( RepositorySession session, MetadataResolver metadataResolver, String repositoryId,
+                                  String namespace )
+        throws MetadataResolutionException
+    {
+        Collection<String> projects = metadataResolver.resolveProjects( session, repositoryId, namespace );
+        if ( projects.size() != 0 )
+        {
+            for ( String project : projects )
+            {
+                resolveProjectVersions( session, metadataResolver, repositoryId, namespace, project );
             }
         }
     }
 
-    private void resolveProjectVersions(RepositorySession session, MetadataResolver metadataResolver, String repositoryId, String namespace, String project) {
-        try {
-            List<String> projectVersions = new LinkedList<String>(metadataResolver.resolveProjectVersions(session, repositoryId, namespace, project));
-            Collections.sort(projectVersions, VersionComparator.getInstance());
-            if (projectVersions.size() != 0) {
-                for (int i = 0; i < projectVersions.size(); i++) {
-                    resolveProjectVersionMetadata(session, metadataResolver, repositoryId, namespace, project, projectVersions.get(i), i + 1);
+    private void resolveProjectVersions( RepositorySession session, MetadataResolver metadataResolver,
+                                         String repositoryId, String namespace, String project )
+    {
+        try
+        {
+            List<String> projectVersions = new LinkedList<String>(
+                metadataResolver.resolveProjectVersions( session, repositoryId, namespace, project ) );
+            Collections.sort( projectVersions, VersionComparator.getInstance() );
+            if ( projectVersions.size() != 0 )
+            {
+                for ( int i = 0; i < projectVersions.size(); i++ )
+                {
+                    resolveProjectVersionMetadata( session, metadataResolver, repositoryId, namespace, project,
+                                                   projectVersions.get( i ), i + 1 );
                 }
             }
-        } catch (MetadataResolutionException e) {
-            log.warn("Metadata Resolution Error", e);
+        }
+        catch ( MetadataResolutionException e )
+        {
+            log.warn( "Metadata Resolution Error", e );
         }
     }
 
-    private void resolveProjectVersionMetadata(RepositorySession session, MetadataResolver metadataResolver, String repositoryId, String namespace, String project, String projectVersion, int version) throws MetadataResolutionException {
-        ProjectVersionMetadata projectVersionMetadata = metadataResolver.resolveProjectVersion(session, repositoryId, namespace, project, projectVersion);
-        if (projectVersionMetadata != null) {
-            try {
-                writer.append("package: ").append(outputArtifactInCUDFInline(extractOrganisation(projectVersionMetadata), extractName(projectVersionMetadata))).append('\n');
-                writer.append("number: ").append(projectVersionMetadata.getVersion()).append('\n');
-                writer.append("version: ").append(Integer.toString(version)).append('\n');
-                writer.append("type: ").append(extractPackaging(projectVersionMetadata)).append('\n');
-                if (hasDependencies(projectVersionMetadata)) {
-                    writer.append("depends: ").append(extractDependencies(session, projectVersionMetadata.getDependencies(), metadataResolver)).append('\n');
+    private void resolveProjectVersionMetadata( RepositorySession session, MetadataResolver metadataResolver,
+                                                String repositoryId, String namespace, String project,
+                                                String projectVersion, int version )
+        throws MetadataResolutionException
+    {
+        ProjectVersionMetadata projectVersionMetadata =
+            metadataResolver.resolveProjectVersion( session, repositoryId, namespace, project, projectVersion );
+        if ( projectVersionMetadata != null )
+        {
+            try
+            {
+                writer.append( "package: " ).append(
+                    outputArtifactInCUDFInline( extractOrganisation( projectVersionMetadata ),
+                                                extractName( projectVersionMetadata ) ) ).append( '\n' );
+                writer.append( "number: " ).append( projectVersionMetadata.getVersion() ).append( '\n' );
+                writer.append( "version: " ).append( Integer.toString( version ) ).append( '\n' );
+                writer.append( "type: " ).append( extractPackaging( projectVersionMetadata ) ).append( '\n' );
+                if ( hasDependencies( projectVersionMetadata ) )
+                {
+                    writer.append( "depends: " ).append(
+                        extractDependencies( session, projectVersionMetadata.getDependencies(),
+                                             metadataResolver ) ).append( '\n' );
                 }
-                writer.append('\n');
+                writer.append( '\n' );
                 writer.flush();
-            } catch (IOException e) {
-                throw new RuntimeException("Unable to write CUDF", e);
+            }
+            catch ( IOException e )
+            {
+                throw new RuntimeException( "Unable to write CUDF", e );
             }
         }
     }
 
-    private boolean hasDependencies(ProjectVersionMetadata projectVersionMetadata) {
+    private boolean hasDependencies( ProjectVersionMetadata projectVersionMetadata )
+    {
         return projectVersionMetadata.getDependencies().size() != 0;
     }
 
-    private StringBuilder extractDependencies(RepositorySession repositorySession, List<Dependency> dependencies, MetadataResolver metadataResolver) throws MetadataResolutionException {
-        StringBuilder builder = new StringBuilder(50);
+    private StringBuilder extractDependencies( RepositorySession repositorySession, List<Dependency> dependencies,
+                                               MetadataResolver metadataResolver )
+        throws MetadataResolutionException
+    {
+        StringBuilder builder = new StringBuilder( 50 );
         Iterator<Dependency> iterator = dependencies.iterator();
-        while (iterator.hasNext()) {
+        while ( iterator.hasNext() )
+        {
             Dependency dependency = iterator.next();
-            builder.append(outputArtifactInCUDFInline(dependency.getGroupId(), dependency.getArtifactId()));
-            builder.append(" = ");
-            builder.append(getCUDFVersion(repositorySession, metadataResolver, dependency));
-            if (iterator.hasNext()) {
-                builder.append(", ");
+            builder.append( outputArtifactInCUDFInline( dependency.getGroupId(), dependency.getArtifactId() ) );
+            builder.append( " = " );
+            builder.append( getCUDFVersion( repositorySession, metadataResolver, dependency ) );
+            if ( iterator.hasNext() )
+            {
+                builder.append( ", " );
             }
         }
         return builder;
     }
 
-    private int getCUDFVersion(RepositorySession repositorySession, MetadataResolver metadataResolver, Dependency dependency) throws MetadataResolutionException {
-        return getCUDFVersion(repositorySession, metadataResolver, dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion());
+    private int getCUDFVersion( RepositorySession repositorySession, MetadataResolver metadataResolver,
+                                Dependency dependency )
+        throws MetadataResolutionException
+    {
+        return getCUDFVersion( repositorySession, metadataResolver, dependency.getGroupId(), dependency.getArtifactId(),
+                               dependency.getVersion() );
     }
 
-    private int getCUDFVersion(RepositorySession repositorySession, MetadataResolver metadataResolver, String groupId, String artifactId, String version) throws MetadataResolutionException {
+    private int getCUDFVersion( RepositorySession repositorySession, MetadataResolver metadataResolver, String groupId,
+                                String artifactId, String version )
+        throws MetadataResolutionException
+    {
         List<String> projectVersions = new LinkedList<String>();
-        for (String repositoryId : repositories) {
-            projectVersions.addAll(metadataResolver.resolveProjectVersions(repositorySession, repositoryId, groupId, artifactId));
+        for ( String repositoryId : repositories )
+        {
+            projectVersions.addAll(
+                metadataResolver.resolveProjectVersions( repositorySession, repositoryId, groupId, artifactId ) );
         }
-        Collections.sort(projectVersions, VersionComparator.getInstance());
-        return projectVersions.indexOf(version);
+        Collections.sort( projectVersions, VersionComparator.getInstance() );
+        return projectVersions.indexOf( version );
     }
 
-    private String extractPackaging(ProjectVersionMetadata projectVersionMetadata) {
-        MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet(MavenProjectFacet.FACET_ID);
-        if (facet != null) {
+    private String extractPackaging( ProjectVersionMetadata projectVersionMetadata )
+    {
+        MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet( MavenProjectFacet.FACET_ID );
+        if ( facet != null )
+        {
             return facet.getPackaging() == null ? "" : facet.getPackaging();
-        } else {
+        }
+        else
+        {
             return "";
         }
     }
 
-    private String extractOrganisation(ProjectVersionMetadata projectVersionMetadata) {
-        MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet(MavenProjectFacet.FACET_ID);
-        if (facet != null) {
+    private String extractOrganisation( ProjectVersionMetadata projectVersionMetadata )
+    {
+        MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet( MavenProjectFacet.FACET_ID );
+        if ( facet != null )
+        {
             return facet.getGroupId() == null ? "" : facet.getGroupId();
-        } else {
+        }
+        else
+        {
             return "";
         }
     }
 
-    private String extractName(ProjectVersionMetadata projectVersionMetadata) {
-        MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet(MavenProjectFacet.FACET_ID);
-        if (facet != null) {
+    private String extractName( ProjectVersionMetadata projectVersionMetadata )
+    {
+        MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet( MavenProjectFacet.FACET_ID );
+        if ( facet != null )
+        {
             return facet.getArtifactId() == null ? "" : facet.getArtifactId();
-        } else {
+        }
+        else
+        {
             return "";
         }
     }
 
-    private String getCUDFPreambule() {
+    private String getCUDFPreambule()
+    {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
-                + "          type: string = [\"\"]\n\n";
+            + "          type: string = [\"\"]\n\n";
     }
 
     /**
@@ -217,11 +306,9 @@ public class CUDFExtractor {
      * @param name         (artifactId)
      * @return organisation:name => org.apache.archiva:archiva
      */
-    private String outputArtifactInCUDFInline(String organisation, String name) {
-        return new StringBuilder(30)
-                .append(organisation)
-                .append(SEPARATOR)
-                .append(name.replaceAll("_", "-"))
-                .toString();
+    private String outputArtifactInCUDFInline( String organisation, String name )
+    {
+        return new StringBuilder( 30 ).append( organisation ).append( SEPARATOR ).append(
+            name.replaceAll( "_", "-" ) ).toString();
     }
 }

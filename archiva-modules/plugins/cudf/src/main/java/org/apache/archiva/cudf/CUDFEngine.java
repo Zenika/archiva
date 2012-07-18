@@ -24,10 +24,13 @@ import java.util.List;
 /**
  * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
  */
-public interface CUDFEngine {
+public interface CUDFEngine
+{
 
-    public void computeCUDFCone(String groupId, String artifactId, String version, String type, String repositoryId,
-                                Writer output) throws IOException;
+    public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
+                                 Writer output )
+        throws IOException;
 
-    public void computeCUDFUniverse(List<String> repositoryId, Writer writer) throws IOException;
+    public void computeCUDFUniverse( List<String> repositoryId, Writer writer )
+        throws IOException;
 }
