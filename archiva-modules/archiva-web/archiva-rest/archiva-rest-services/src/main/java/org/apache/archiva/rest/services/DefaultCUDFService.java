@@ -66,11 +66,6 @@ public class DefaultCUDFService
     implements CUDFService
 {
 
-    private static final String SEPARATOR = "%3a";
-
-    @Inject
-    private BrowseService browseService;
-
     @Inject
     private CUDFEngine cudfEngine;
 
