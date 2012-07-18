@@ -429,6 +429,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.archiva</groupId>
+        <artifactId>cudf</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.archiva.redback.components</groupId>
         <artifactId>spring-utils</artifactId>
         <version>${redback.spring-utils.version}</version>

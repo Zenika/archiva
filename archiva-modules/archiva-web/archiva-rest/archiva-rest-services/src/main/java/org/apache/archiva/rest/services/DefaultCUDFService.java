@@ -19,6 +19,7 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.common.utils.VersionComparator;
+import org.apache.archiva.cudf.CUDFEngine;
 import org.apache.archiva.metadata.model.Dependency;
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
@@ -65,22 +66,14 @@ public class DefaultCUDFService
     implements CUDFService
 {
 
-    private final Map<String, String> illegals = new HashMap<String, String>();
-
-    public DefaultCUDFService()
-    {
-        super();
-        initiateIllegalsCharatersForCUDF();
-    }
-
-    private void initiateIllegalsCharatersForCUDF()
-    {
-        illegals.put( "_", Integer.toHexString( '_' ) );
-        illegals.put( ":", Integer.toHexString( ':' ) );
-    }
+    private static final String SEPARATOR = "%3a";
 
     @Inject
     private BrowseService browseService;
+
+    @Inject
+    private CUDFEngine cudfEngine;
+
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
                              HttpServletResponse servletResponse )
@@ -91,7 +84,7 @@ public class DefaultCUDFService
         try
         {
             output = servletResponse.getWriter();
-            computeCUDFCone( groupId, artifactId, version, type, repositoryId, output );
+            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, output );
         }
         catch ( IOException e )
         {
@@ -129,7 +122,7 @@ public class DefaultCUDFService
             try
             {
                 fos = new FileWriter( output );
-                computeCUDFCone( groupId, artifactId, version, type, repositoryId, fos );
+                cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, fos );
             }
             finally
             {
@@ -155,47 +148,6 @@ public class DefaultCUDFService
         }
     }
 
-    private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                  Writer output )
-        throws ArchivaRestServiceException, IOException
-    {
-        output.write( getCUDFPreambule() );
-        Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
-        List<String> repositories = getSelectedRepos( repositoryId );
-        LinkedList<Artifact> queue = new LinkedList<Artifact>();
-        Set<String> known = new TreeSet<String>();
-
-        Artifact root = null;
-        if ( repositoryId == null )
-        {
-            for ( String repoId : repositories )
-            {
-                root = createArtifact( repoId, groupId, artifactId, version, type );
-                if ( root != null )
-                {
-                    break;
-                }
-            }
-        }
-        else
-        {
-            root = createArtifact( repositoryId, groupId, artifactId, version, type );
-        }
-
-        queue.add( root );
-        Artifact artifact = null;
-        while ( ( artifact = queue.poll() ) != null )
-        {
-            if ( !known.contains( generateArtifactKey( artifact ) ) )
-            {
-                known.add( generateArtifactKey( artifact ) );
-                output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
-                output.write( convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
-                output.write( "\n" );
-            }
-        }
-    }
-
     public void getUniverseCUDF( String repositoryId, HttpServletResponse servletResponse )
         throws ArchivaRestServiceException
     {
@@ -203,7 +155,7 @@ public class DefaultCUDFService
         try
         {
             output = servletResponse.getWriter();
-            computeCUDFUniverse( repositoryId, output );
+            cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), output );
         }
         catch ( IOException e )
         {
@@ -240,7 +192,7 @@ public class DefaultCUDFService
             try
             {
                 fos = new FileWriter( output );
-                computeCUDFUniverse( repositoryId, fos );
+                cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), fos );
             }
             finally
             {
@@ -266,52 +218,6 @@ public class DefaultCUDFService
         }
     }
 
-    private void computeCUDFUniverse( String repositoryId, Writer output )
-        throws ArchivaRestServiceException, IOException
-    {
-        Map<String, Integer> cudfVersionMapper = new HashMap<String, Integer>();
-
-        output.write( getCUDFPreambule() );
-
-        List<String> repositories = getSelectedRepos( repositoryId );
-
-        LinkedList<Artifact> queue = new LinkedList<Artifact>();
-        Set<String> known = new TreeSet<String>();
-
-        List<String> projects = new ArrayList<String>();
-
-        String artifactKnownKey = null;
-        for ( String repository : repositories )
-        {
-            BrowseResult rootGroupsResult = browseService.getRootGroups( repository );
-            for ( BrowseResultEntry rootGroupsResultEntry : rootGroupsResult.getBrowseResultEntries() )
-            {
-                getRepositoryContent( browseService.browseGroupId( rootGroupsResultEntry.getName(), repository ),
-                                      repository, projects );
-            }
-            for ( String project : projects )
-            {
-                String groupId = project.substring( 0, project.lastIndexOf( "." ) );
-                String artifactId = project.substring( project.lastIndexOf( "." ) + 1 );
-                VersionsList versionsList = browseService.getVersionsList( groupId, artifactId, repository );
-                for ( String version : versionsList.getVersions() )
-                {
-                    Artifact artifact = createArtifact( repository, groupId, artifactId, version, null );
-                    artifactKnownKey = generateArtifactKey( artifact );
-                    if ( !known.contains( artifactKnownKey ) )
-                    {
-                        known.add( artifactKnownKey );
-                        output.write( outputArtifactInCUDF( artifact, cudfVersionMapper ) );
-                        output.write(
-                            convertDependenciesToCUDF( artifact, repositories, queue, known, cudfVersionMapper ) );
-                        output.write( "\n" );
-                    }
-                }
-            }
-            projects = new ArrayList<String>();
-        }
-    }
-
     public String backgroundUniverse( final String repositoryId, String output, HttpServletResponse response )
         throws ArchivaRestServiceException
     {
@@ -327,7 +233,7 @@ public class DefaultCUDFService
                 {
                     fos = new FileWriter( output );
                     log.info( "Starting CUDF Extract in background" );
-                    computeCUDFUniverse( repositoryId, fos );
+                    cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), fos );
                     log.info(
                         "Background CUDF extraction of Universe is done. Find the output file " + outputFilename );
                 }
@@ -367,256 +273,4 @@ public class DefaultCUDFService
         return "cudf.root.group.repository.denied";
     }
 
-    private Artifact createArtifact( String repository, String groupId, String artifactId, String version, String type )
-    {
-        Artifact artifact = new Artifact( groupId, artifactId, version );
-        if ( type != null )
-        {
-            artifact.setPackaging( type );
-        }
-        else
-        {
-            artifact.setPackaging( resolveArtifactPackaging( repository, artifact ) );
-        }
-        return artifact;
-    }
-
-    private void getRepositoryContent( BrowseResult browseResult, String repository, List<String> projects )
-        throws ArchivaRestServiceException
-    {
-        for ( BrowseResultEntry rootGroupsResultEntry : browseResult.getBrowseResultEntries() )
-        {
-            if ( rootGroupsResultEntry.isProject() )
-            {
-                projects.add( rootGroupsResultEntry.getName() );
-            }
-            else
-            {
-                getRepositoryContent( browseService.browseGroupId( rootGroupsResultEntry.getName(), repository ),
-                                      repository, projects );
-            }
-        }
-    }
-
-    private String resolveArtifactPackaging( String repository, Artifact artifact )
-    {
-        String packaging = null;
-        RepositorySession repositorySession = null;
-        try
-        {
-            try
-            {
-                repositorySession = repositorySessionFactory.createSession();
-                MetadataResolver metadataResolver = repositorySession.getResolver();
-                ProjectVersionMetadata versionMetadata =
-                    metadataResolver.resolveProjectVersion( repositorySession, repository, artifact.getGroupId(),
-                                                            artifact.getArtifactId(), artifact.getVersion() );
-                if ( versionMetadata == null )
-                {
-                    return "";
-                }
-                MavenProjectFacet projectFacet =
-                    (MavenProjectFacet) versionMetadata.getFacet( MavenProjectFacet.FACET_ID );
-                if ( projectFacet != null )
-                {
-                    packaging = projectFacet.getPackaging();
-                }
-            }
-            catch ( MetadataResolutionException e )
-            {
-                log.error( "Skipping invalid metadata while compiling shared model for " + artifact.getGroupId() + ":"
-                               + artifact.getArtifactId() + " in repo " + repository + ": " + e.getMessage() );
-            }
-        }
-        finally
-        {
-            if ( repositorySession != null )
-            {
-                repositorySession.close();
-            }
-        }
-        return packaging;
-    }
-
-    private String outputArtifactInCUDF( Artifact artifact, Map<String, Integer> cudfVersionMapper )
-        throws ArchivaRestServiceException
-    {
-        try
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.append( "package: " ).append(
-                outputArtifactInCUDFInline( artifact.getGroupId(), artifact.getArtifactId() ) ).append( "\n" );
-            sb.append( "number: " ).append( artifact.getVersion() ).append( "\n" );
-            sb.append( "version: " ).append(
-                convertArtifactVersionToCUDFVersion( artifact, cudfVersionMapper ) ).append( "\n" );
-            sb.append( "type: " ).append( StringUtils.defaultString( artifact.getPackaging() ) ).append( "\n" );
-            return sb.toString();
-        }
-        catch ( IllegalStateException e )
-        {
-            return "";
-        }
-    }
-
-    String outputArtifactInCUDFInline( String groupId, String artifactId )
-    {
-        return encodingString( groupId + ':' + artifactId );
-    }
-
-    /**
-     * Returns the input string with all illegal characters replace by their equivalent in hexa
-     *
-     * @param input
-     * @return the input with hexa in place of the illegal characters
-     */
-    String encodingString( String input )
-    {
-        for ( String illegal : illegals.keySet() )
-        {
-            input = input.replaceAll( illegal, '%' + illegals.get( illegal ) );
-        }
-        return input;
-    }
-
-    private String convertDependenciesToCUDF( Artifact artifact, List<String> repositories, Queue<Artifact> queue,
-                                              Set<String> known, Map<String, Integer> cudfVersionMapper )
-        throws ArchivaRestServiceException
-    {
-        List<Dependency> dependencies =
-            getDependencies( artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), repositories );
-        if ( dependencies.isEmpty() )
-        {
-            return "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        List<Artifact> artifacts = new ArrayList<Artifact>();
-
-        {
-            Iterator<Dependency> it = dependencies.iterator();
-            while ( it.hasNext() )
-            {
-                Dependency item = it.next();
-                if ( !item.isOptional() && ( item.getScope() == null || "compile".equals( item.getScope() ) ) )
-                {
-                    Artifact art = new Artifact( item.getGroupId(), item.getArtifactId(), item.getVersion() );
-                    art.setPackaging( item.getType() );
-                    artifacts.add( art );
-                }
-            }
-        }
-
-        if ( !artifacts.isEmpty() )
-        {
-            Iterator<Artifact> it = artifacts.iterator();
-            sb.append( "depends: " );
-            while ( it.hasNext() )
-            {
-                Artifact item = it.next();
-                if ( !known.contains( generateArtifactKey( item ) ) )
-                {
-                    queue.add( item );
-                }
-                sb.append( outputArtifactInCUDFInline( item.getGroupId(), item.getArtifactId() ) ).append( " = " ).
-                    append( convertArtifactVersionToCUDFVersion( item, cudfVersionMapper ) );
-                if ( it.hasNext() )
-                {
-                    sb.append( ", " );
-                }
-            }
-
-            sb.append( "\n" );
-        }
-        return sb.toString();
-    }
-
-    private int convertArtifactVersionToCUDFVersion( Artifact artifact, Map<String, Integer> cudfVersionMapper )
-        throws IllegalStateException
-    {
-        String storeVersionKey = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
-        if ( cudfVersionMapper.containsKey( storeVersionKey ) )
-        {
-            return cudfVersionMapper.get( storeVersionKey );
-        }
-        List<String> versionList;
-        RepositorySession repositorySession = repositorySessionFactory.createSession();
-        try
-        {
-            MetadataResolver metadataResolver = repositorySession.getResolver();
-
-            Set<String> versions = new LinkedHashSet<String>();
-
-            for ( String repoId : getObservableRepos() )
-            {
-                versions.addAll(
-                    metadataResolver.resolveProjectVersions( repositorySession, repoId, artifact.getGroupId(),
-                                                             artifact.getArtifactId() ) );
-            }
-            versionList = new ArrayList<String>( versions );
-            Collections.sort( versionList, VersionComparator.getInstance() );
-        }
-        catch ( MetadataResolutionException e )
-        {
-            return 0;
-        }
-        finally
-        {
-            repositorySession.close();
-        }
-        int cudfVersion = versionList.indexOf( artifact.getVersion() ) + 1;
-        cudfVersionMapper.put( storeVersionKey, cudfVersion );
-        return cudfVersion;
-    }
-
-    private List<Dependency> getDependencies( String groupId, String artifactId, String version,
-                                              List<String> repositories )
-    {
-        RepositorySession repositorySession = null;
-        try
-        {
-            repositorySession = repositorySessionFactory.createSession();
-            MetadataResolver metadataResolver = repositorySession.getResolver();
-            ProjectVersionMetadata versionMetadata = null;
-            for ( String repoId : repositories )
-            {
-                if ( versionMetadata == null || versionMetadata.isIncomplete() )
-                {
-                    try
-                    {
-                        versionMetadata =
-                            metadataResolver.resolveProjectVersion( repositorySession, repoId, groupId, artifactId,
-                                                                    version );
-                    }
-                    catch ( MetadataResolutionException e )
-                    {
-                        log.error(
-                            "Skipping invalid metadata  while compiling shared model for " + groupId + ":" + artifactId
-                                + " in repo " + repoId + ": " + e.getMessage() );
-                    }
-                }
-            }
-            return versionMetadata != null ? versionMetadata.getDependencies() : Collections.<Dependency>emptyList();
-        }
-        finally
-        {
-            if ( repositorySession != null )
-            {
-                repositorySession.close();
-            }
-        }
-    }
-
-    private String getCUDFPreambule()
-    {
-        return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
-            + "          type: string = [\"\"]\n\n";
-    }
-
-    private String generateArtifactKey( Artifact artifact )
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.append( artifact.getGroupId() ).append( "#" ).append( artifact.getArtifactId() ).append( "#" ).append(
-            artifact.getVersion() );
-        return sb.toString();
-    }
 }
