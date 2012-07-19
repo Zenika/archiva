@@ -34,14 +34,21 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
+ * @since 1.4-M3
+ */
 public class CUDFExtractor
 {
 
     private static final String SEPARATOR = "%3a";
+    private final Map<String, String> illegals = new HashMap<String, String>();
 
     private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
 
@@ -52,6 +59,13 @@ public class CUDFExtractor
     public CUDFExtractor( Writer writer )
     {
         this.writer = writer;
+        initiateIllegalsCharatersForCUDF();
+    }
+
+    private void initiateIllegalsCharatersForCUDF()
+    {
+        illegals.put( "_", Integer.toHexString( '_' ) );
+        illegals.put( ":", Integer.toHexString( ':' ) );
     }
 
     public void computeCUDFUniverse( List<String> repositoryIds, RepositorySessionFactory repositorySessionFactory )
@@ -92,9 +106,10 @@ public class CUDFExtractor
     }
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                 RepositorySessionFactory repositorySessionFactory )
+                                 List<String> repositories, RepositorySessionFactory repositorySessionFactory )
         throws IOException
     {
+        this.repositories = repositories;
         this.writer.append( getCUDFPreambule() );
         RepositorySession repositorySession = null;
         try
@@ -253,7 +268,7 @@ public class CUDFExtractor
                 metadataResolver.resolveProjectVersions( repositorySession, repositoryId, groupId, artifactId ) );
         }
         Collections.sort( projectVersions, VersionComparator.getInstance() );
-        return projectVersions.indexOf( version );
+        return projectVersions.indexOf( version ) + 1;
     }
 
     private String extractPackaging( ProjectVersionMetadata projectVersionMetadata )
@@ -308,7 +323,22 @@ public class CUDFExtractor
      */
     private String outputArtifactInCUDFInline( String organisation, String name )
     {
-        return new StringBuilder( 30 ).append( organisation ).append( SEPARATOR ).append(
-            name.replaceAll( "_", "-" ) ).toString();
+        String packageLine = new StringBuilder( 20 ).append( organisation ).append( SEPARATOR ).append( name ).toString();
+        return encodingString( packageLine );
+    }
+
+    /**
+     * Returns the input string with all illegal characters replace by their equivalent in hexa
+     *
+     * @param input
+     * @return the input with hexa in place of the illegal characters
+     */
+    String encodingString( String input )
+    {
+        for ( String illegal : illegals.keySet() )
+        {
+            input = input.replaceAll( illegal, '%' + illegals.get( illegal ) );
+        }
+        return input;
     }
 }

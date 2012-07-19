@@ -79,7 +79,8 @@ public class DefaultCUDFService
         try
         {
             output = servletResponse.getWriter();
-            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, output );
+            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId,
+                                        getSelectedRepos( repositoryId ), output );
         }
         catch ( IOException e )
         {
@@ -117,7 +118,8 @@ public class DefaultCUDFService
             try
             {
                 fos = new FileWriter( output );
-                cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, fos );
+                cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId,
+                                            getSelectedRepos( repositoryId ), fos );
             }
             finally
             {

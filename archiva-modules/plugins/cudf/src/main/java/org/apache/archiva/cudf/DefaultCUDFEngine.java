@@ -23,12 +23,14 @@ import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
 /**
- * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
+ * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
+ * @since 1.4-M3
  */
 @Service( "cudfEngine#org.apache.archiva.cudf.cudf" )
 public class DefaultCUDFEngine
@@ -39,10 +41,10 @@ public class DefaultCUDFEngine
     private RepositorySessionFactory repositorySessionFactory;
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                 Writer writer )
+                                 List<String> repositories, Writer writer )
         throws IOException
     {
-        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositoryId,
+        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
                                                      repositorySessionFactory );
     }
 

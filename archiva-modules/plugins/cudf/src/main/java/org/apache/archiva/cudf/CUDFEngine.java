@@ -22,13 +22,14 @@ import java.io.Writer;
 import java.util.List;
 
 /**
- * @author Antoine ROUAZE <antoine.rouaze AT zenika.com>
+ * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
+ * @since 1.4-M3
  */
 public interface CUDFEngine
 {
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                 Writer output )
+                                 List<String> repositories, Writer output )
         throws IOException;
 
     public void computeCUDFUniverse( List<String> repositoryId, Writer writer )

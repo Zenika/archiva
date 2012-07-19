@@ -28,11 +28,5 @@ public class CUDFServiceTest
     extends AbstractArchivaRestTest
 {
 
-    @Test
-    public void charToHexaConverto()
-    {
-        DefaultCUDFService defaultCUDFService = new DefaultCUDFService();
-        assertTrue( "%3a".equalsIgnoreCase( defaultCUDFService.encodingString( ":" ) ) );
-        assertTrue( "%5f".equalsIgnoreCase( defaultCUDFService.encodingString( "_" ) ) );
-    }
+
 }
