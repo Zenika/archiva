@@ -223,7 +223,7 @@ function() {
           var folder = this.params.folder;
           self.activeMenuId(folder);
           var baseItems = self.artifactMenuItems?self.artifactMenuItems:[];
-          ko.utils.arrayFirst(baseItems.concat(self.usersMenuItems, self.administrationMenuItems), function(p) {
+          ko.utils.arrayFirst(baseItems.concat(self.usersMenuItems, self.cudfMenuItems, self.administrationMenuItems), function(p) {
             if ( p.href == "#"+self.activeMenuId()) {
               p.func();
               return;
