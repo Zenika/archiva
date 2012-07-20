@@ -32,6 +32,10 @@ public interface CUDFEngine
                                  List<String> repositories, Writer output )
         throws IOException;
 
+    public void computeCUDFCone( String groupId, String artifactId, String version, String type,
+                                 List<String> repositories, Writer output )
+        throws IOException;
+
     public void computeCUDFUniverse( List<String> repositoryId, Writer writer )
         throws IOException;
 }

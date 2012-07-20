@@ -79,8 +79,7 @@ public class DefaultCUDFService
         try
         {
             output = servletResponse.getWriter();
-            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId,
-                                        getSelectedRepos( repositoryId ), output );
+            computeCUDFCone( groupId, artifactId, version, type, repositoryId, output );
         }
         catch ( IOException e )
         {
@@ -118,8 +117,7 @@ public class DefaultCUDFService
             try
             {
                 fos = new FileWriter( output );
-                cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId,
-                                            getSelectedRepos( repositoryId ), fos );
+                computeCUDFCone( groupId, artifactId, version, type, repositoryId, fos );
             }
             finally
             {
@@ -142,6 +140,17 @@ public class DefaultCUDFService
         catch ( IOException e )
         {
             return null;
+        }
+    }
+
+    private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
+                                  Writer writer )
+        throws IOException
+    {
+        if (repositoryId == null || repositoryId.isEmpty()) {
+            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, getObservableRepos(), writer);
+        } else {
+            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, getObservableRepos(), writer );
         }
     }
 
@@ -263,6 +272,7 @@ public class DefaultCUDFService
         }.start();
         return "Started in background";
     }
+
 
     @Override
     protected String getSelectedRepoExceptionMessage()
