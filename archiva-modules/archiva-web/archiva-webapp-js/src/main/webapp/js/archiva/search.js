@@ -1502,7 +1502,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
 
   getCUDFExtract=function(groupId,artifactId,version){
     $("#artifact-details-cudf #get-cudf-spinner-div").html(smallSpinnerImg());
-    $("<form action='restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version+"' method='POST'>"
+    $("<form action='restServices/archivaServices/cudfService/cone/"+groupId+"/"+artifactId+"/"+version+"' method='GET' accept='application/octet-stream'>"
               + "<input type='text' name='repositoryId' value='"+getSelectedBrowsingRepository()+"'/>"
               + "</form>" ).submit();
     removeSmallSpinnerImg("#artifact-details-cudf #get-cudf-spinner-div");
@@ -1565,7 +1565,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
   }
 
   getCUDFUniverseExtract=function(){
-    $("<form id='extract-CUDF' style='display: none;' action='restServices/archivaServices/cudfService/universe' method='POST'>"
+    $("<form id='extract-CUDF' style='display: none;' action='restServices/archivaServices/cudfService/universe' method='GET' accept='application/octet-stream'>"
               + "<input type='text' name='repositoryId' value='"+getSelectedBrowsingRepository()+"'/>"
               + "<input type='submit'>"
               + "</form>").appendTo('body');

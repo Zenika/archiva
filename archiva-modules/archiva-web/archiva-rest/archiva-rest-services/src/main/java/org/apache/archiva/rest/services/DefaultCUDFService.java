@@ -139,7 +139,7 @@ public class DefaultCUDFService
         }
         catch ( IOException e )
         {
-            return null;
+            throw new ArchivaRestServiceException( "Unable to extract CUDF", e );
         }
     }
 
@@ -220,7 +220,7 @@ public class DefaultCUDFService
         }
         catch ( IOException e )
         {
-            return null;
+            throw new ArchivaRestServiceException( "Unable to extract CUDF", e );
         }
     }
 

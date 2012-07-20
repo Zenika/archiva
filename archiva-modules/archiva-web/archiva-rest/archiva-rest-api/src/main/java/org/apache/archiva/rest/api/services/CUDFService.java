@@ -68,7 +68,7 @@ public interface CUDFService
      * @throws ArchivaRestServiceException
      */
     @Path( "cone/{groupId}/{artifactId}/{version}" )
-    @POST
+    @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
     Response getConeCUDFFile( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
@@ -96,7 +96,7 @@ public interface CUDFService
      * @throws ArchivaRestServiceException
      */
     @Path( "universe" )
-    @POST
+    @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( MediaType.APPLICATION_OCTET_STREAM )
     Response getUniverseCUDFFile( @QueryParam( "repositoryId" ) String repositoryId,
