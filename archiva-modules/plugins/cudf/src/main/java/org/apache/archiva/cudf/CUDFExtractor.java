@@ -115,6 +115,7 @@ public class CUDFExtractor
         for (String repositoryId : repositories) {
             computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositorySessionFactory );
         }
+        this.writer.close();
     }
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
@@ -124,7 +125,7 @@ public class CUDFExtractor
         this.repositories = repositories;
         this.writer.append( getCUDFPreambule() );
         computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositorySessionFactory );
-
+        this.writer.close();
     }
 
     private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
@@ -153,7 +154,6 @@ public class CUDFExtractor
             }
         }
         this.writer.flush();
-        this.writer.close();
     }
 
     private void resolveNamespaces( RepositorySession session, MetadataResolver metadataResolver, String repositoryId,
