@@ -114,5 +114,5 @@ public interface CUDFService
     @Path( "startCudfGeneration" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
-    Response startCudfTaskGeneration() throws ArchivaRestServiceException;
+    Response startCudfTaskGeneration( @QueryParam( "filePath" ) String filePath ) throws ArchivaRestServiceException;
 }

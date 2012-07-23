@@ -285,14 +285,16 @@ public class DefaultCUDFService
         return "Started in background";
     }
 
-    public Response startCudfTaskGeneration()
+    public Response startCudfTaskGeneration(String filePath)
         throws ArchivaRestServiceException
     {
-
+        if (filePath == null || filePath.isEmpty()) {
+            throw new IllegalArgumentException( "The file path for the generation is required" );
+        }
         try
         {
             CUDFTask task = new CUDFTask();
-            task.setResourceDestination( new File( "/tmp" ) );
+            task.setResourceDestination( new File( filePath ) );
             archivaCUDFTaskExecutor.executeTask( task );
             return Response.ok().build();
         }
