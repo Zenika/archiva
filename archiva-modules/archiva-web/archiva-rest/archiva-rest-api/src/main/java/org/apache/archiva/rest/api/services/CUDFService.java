@@ -111,4 +111,8 @@ public interface CUDFService
                                @Context HttpServletResponse servletResponse )
         throws ArchivaRestServiceException;
 
+    @Path( "startCudfGeneration" )
+    @GET
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    Response startCudfTaskGeneration( @QueryParam( "repositoryId" ) String repositoryId ) throws ArchivaRestServiceException;
 }

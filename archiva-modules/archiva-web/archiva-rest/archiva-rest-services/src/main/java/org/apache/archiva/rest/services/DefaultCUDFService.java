@@ -26,6 +26,7 @@ import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.metadata.repository.MetadataResolver;
 import org.apache.archiva.metadata.repository.RepositorySession;
 import org.apache.archiva.metadata.repository.storage.maven2.MavenProjectFacet;
+import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
@@ -33,10 +34,13 @@ import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
+import org.apache.archiva.scheduler.cudf.ArchivaCUDFTaskExecutor;
+import org.apache.archiva.scheduler.cudf.CUDFTask;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -68,6 +72,10 @@ public class DefaultCUDFService
 
     @Inject
     private CUDFEngine cudfEngine;
+
+    @Inject
+    @Named( value = "taskExecutor#cudf" )
+    private ArchivaCUDFTaskExecutor archivaCUDFTaskExecutor;
 
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
@@ -147,10 +155,14 @@ public class DefaultCUDFService
                                   Writer writer )
         throws IOException
     {
-        if (repositoryId == null || repositoryId.isEmpty()) {
-            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, getObservableRepos(), writer);
-        } else {
-            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, getObservableRepos(), writer );
+        if ( repositoryId == null || repositoryId.isEmpty() )
+        {
+            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, getObservableRepos(), writer );
+        }
+        else
+        {
+            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, getObservableRepos(),
+                                        writer );
         }
     }
 
@@ -271,6 +283,24 @@ public class DefaultCUDFService
             }
         }.start();
         return "Started in background";
+    }
+
+    public Response startCudfTaskGeneration( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+
+        try
+        {
+            CUDFTask task = new CUDFTask();
+            task.setRepositoryId( repositoryId );
+            task.setResourceDestination( new File( "/home/erouan/universe.cudf" ) );
+            archivaCUDFTaskExecutor.executeTask( task );
+            return Response.ok().build();
+        }
+        catch ( TaskExecutionException e )
+        {
+            throw new RuntimeException( "Unable to start CUDF generation.", e );
+        }
     }
 
 
