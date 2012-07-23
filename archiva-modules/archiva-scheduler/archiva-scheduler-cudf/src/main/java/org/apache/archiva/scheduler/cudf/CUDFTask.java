@@ -32,6 +32,7 @@ public class CUDFTask
 {
 
     private String repositoryId;
+    private boolean allRepositories;
 
     private File resourceDestination;
 
@@ -53,6 +54,16 @@ public class CUDFTask
     public void setResourceDestination( File resourceDestination )
     {
         this.resourceDestination = resourceDestination;
+    }
+
+    public boolean isAllRepositories()
+    {
+        return allRepositories;
+    }
+
+    public void setAllRepositories( boolean allRepositories )
+    {
+        this.allRepositories = allRepositories;
     }
 
     public long getMaxExecutionTime()

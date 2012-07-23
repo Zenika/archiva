@@ -285,15 +285,14 @@ public class DefaultCUDFService
         return "Started in background";
     }
 
-    public Response startCudfTaskGeneration( String repositoryId )
+    public Response startCudfTaskGeneration()
         throws ArchivaRestServiceException
     {
 
         try
         {
             CUDFTask task = new CUDFTask();
-            task.setRepositoryId( repositoryId );
-            task.setResourceDestination( new File( "/home/erouan/universe.cudf" ) );
+            task.setResourceDestination( new File( "/tmp" ) );
             archivaCUDFTaskExecutor.executeTask( task );
             return Response.ok().build();
         }

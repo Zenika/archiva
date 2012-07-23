@@ -57,10 +57,6 @@ public class ArchivaCUDFTaskExecutor
         throws TaskExecutionException
     {
         CUDFTask cudfTask = (CUDFTask) task;
-        String repositoryId = cudfTask.getRepositoryId();
-        if ( StringUtils.isBlank( repositoryId ) ) {
-            throw new TaskExecutionException( "Unable to execute RepositoryTask with blank repository Id." );
-        }
         try
         {
             List<ManagedRepository> repositories = managedRepositoryAdmin.getManagedRepositories();
