@@ -300,7 +300,7 @@ public class DefaultCUDFService
         }
         catch ( TaskExecutionException e )
         {
-            throw new RuntimeException( "Unable to start CUDF generation.", e );
+            throw new ArchivaRestServiceException( "Unable to start CUDF generation.", e );
         }
     }
 

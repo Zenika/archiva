@@ -23,12 +23,15 @@ import org.apache.archiva.common.ArchivaException;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridge;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridgeException;
 import org.apache.archiva.redback.components.scheduler.DefaultScheduler;
+import org.apache.archiva.scheduler.cudf.CUDFArchivaTaskScheduler;
 import org.apache.archiva.scheduler.repository.RepositoryArchivaTaskScheduler;
 import org.apache.maven.index.NexusIndexer;
 import org.apache.maven.index.context.IndexingContext;
 import org.apache.archiva.redback.components.taskqueue.Task;
 import org.apache.archiva.redback.components.taskqueue.execution.ThreadedTaskQueueExecutor;
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -40,19 +43,24 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * ArchivaStartup - the startup of all archiva features in a deterministic order.
- *
- *
  */
 public class ArchivaStartup
     implements ServletContextListener
 {
+
+    private Logger log = LoggerFactory.getLogger( ArchivaStartup.class );
+
     private ThreadedTaskQueueExecutor tqeDbScanning;
 
     private ThreadedTaskQueueExecutor tqeRepoScanning;
 
     private ThreadedTaskQueueExecutor tqeIndexing;
 
+    private ThreadedTaskQueueExecutor tqCudf;
+
     private RepositoryArchivaTaskScheduler repositoryTaskScheduler;
+
+    private CUDFArchivaTaskScheduler cudfArchivaTaskScheduler;
 
     private PlexusSisuBridge plexusSisuBridge;
 
@@ -68,11 +76,15 @@ public class ArchivaStartup
         repositoryTaskScheduler =
             wac.getBean( "archivaTaskScheduler#repository", RepositoryArchivaTaskScheduler.class );
 
+        cudfArchivaTaskScheduler = wac.getBean( "archivaTaskScheduler#cudf", CUDFArchivaTaskScheduler.class );
+
         Properties archivaRuntimeProperties = wac.getBean( "archivaRuntimeProperties", Properties.class );
 
         tqeRepoScanning = wac.getBean( "taskQueueExecutor#repository-scanning", ThreadedTaskQueueExecutor.class );
 
         tqeIndexing = wac.getBean( "taskQueueExecutor#indexing", ThreadedTaskQueueExecutor.class );
+
+        tqCudf = wac.getBean( "taskQueueExecutor#cudf", ThreadedTaskQueueExecutor.class );
 
         plexusSisuBridge = wac.getBean( PlexusSisuBridge.class );
 
@@ -88,6 +100,7 @@ public class ArchivaStartup
         {
             securitySync.startup();
             repositoryTaskScheduler.startup();
+            cudfArchivaTaskScheduler.startup();
             Banner.display( (String) archivaRuntimeProperties.get( "archiva.version" ) );
         }
         catch ( ArchivaException e )
@@ -115,6 +128,7 @@ public class ArchivaStartup
             stopTaskQueueExecutor( tqeDbScanning );
             stopTaskQueueExecutor( tqeRepoScanning );
             stopTaskQueueExecutor( tqeIndexing );
+            stopTaskQueueExecutor( tqCudf );
 
             // stop the DefaultArchivaTaskScheduler and its scheduler
             if ( repositoryTaskScheduler != null )
@@ -143,6 +157,7 @@ public class ArchivaStartup
                 }
             }
 
+            shutdownCudfScheduler();
             // close the application context
             //applicationContext.close();
             // TODO fix close call
@@ -162,6 +177,22 @@ public class ArchivaStartup
             }
         }
 
+    }
+
+    private void shutdownCudfScheduler()
+    {
+        if ( cudfArchivaTaskScheduler != null )
+        {
+            try
+            {
+                cudfArchivaTaskScheduler.stop();
+                cudfArchivaTaskScheduler.getScheduler().shutdown( false );
+            }
+            catch ( SchedulerException e )
+            {
+                log.error( e.getMessage(), e );
+            }
+        }
     }
 
     private void stopTaskQueueExecutor( ThreadedTaskQueueExecutor taskQueueExecutor )

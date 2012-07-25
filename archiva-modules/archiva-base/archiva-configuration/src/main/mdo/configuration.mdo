@@ -169,6 +169,17 @@
             The NetworkConfiguration .
           </description>
         </field>
+        <field>
+          <name>cudf</name>
+          <version>1.4.0.+</version>
+          <association>
+            <type>CUDFConfiguration</type>
+            <multiplicity>1</multiplicity>
+          </association>
+          <description>
+            The CUDF configuration.
+          </description>
+        </field>
       </fields>
       <codeSegments>
         <codeSegment>
@@ -1338,6 +1349,26 @@
           <version>1.4.0+</version>
           <type>boolean</type>
           <defaultValue>true</defaultValue>
+        </field>
+      </fields>
+    </class>
+    <!-- CUDF -->
+    <class>
+      <name>CUDFConfiguration</name>
+      <version>1.4.0+</version>
+      <description>Configuration about CUDF task and scheduler</description>
+      <fields>
+        <field>
+          <name>location</name>
+          <description>The file system location of generated universe</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>cronExpression</name>
+          <description>The cron expression for CUDF generation job</description>
+          <version>1.4.0+</version>
+          <type>String</type>
         </field>
       </fields>
     </class>

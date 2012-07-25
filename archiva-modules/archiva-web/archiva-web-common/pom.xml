@@ -70,6 +70,10 @@
       <artifactId>archiva-scheduler-repository</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-scheduler-cudf</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.archiva.redback</groupId>
       <artifactId>redback-rbac-model</artifactId>
     </dependency>

@@ -55,8 +55,8 @@
 
   <legacyArtifactPaths>
     <legacyArtifactPath>
-        <path>jaxen/jars/jaxen-1.0-FCS-full.jar</path>
-        <artifact>jaxen:jaxen:1.0-FCS:full:jar</artifact>
+      <path>jaxen/jars/jaxen-1.0-FCS-full.jar</path>
+      <artifact>jaxen:jaxen:1.0-FCS:full:jar</artifact>
     </legacyArtifactPath>
   </legacyArtifactPaths>
 
@@ -140,4 +140,8 @@
     </ui>
   </webapp>
 
+  <cudf>
+    <location>${appserver.base}/data/cudf</location>
+    <cronExpression>0 0\,30 * * * ?</cronExpression>
+  </cudf>
 </configuration>
