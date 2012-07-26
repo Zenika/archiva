@@ -18,25 +18,15 @@ package org.apache.archiva.rest.services;
  * under the License.
  */
 
-import org.apache.archiva.common.utils.VersionComparator;
-import org.apache.archiva.cudf.CUDFEngine;
-import org.apache.archiva.metadata.model.Dependency;
-import org.apache.archiva.metadata.model.ProjectVersionMetadata;
-import org.apache.archiva.metadata.repository.MetadataResolutionException;
-import org.apache.archiva.metadata.repository.MetadataResolver;
-import org.apache.archiva.metadata.repository.RepositorySession;
-import org.apache.archiva.metadata.repository.storage.maven2.MavenProjectFacet;
+import org.apache.archiva.admin.model.RepositoryAdminException;
+import org.apache.archiva.cudf.admin.api.CUDFSchedulerAdmin;
+import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
+import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
-import org.apache.archiva.rest.api.model.Artifact;
-import org.apache.archiva.rest.api.model.BrowseResult;
-import org.apache.archiva.rest.api.model.BrowseResultEntry;
-import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
-import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.scheduler.cudf.ArchivaCUDFTaskExecutor;
 import org.apache.archiva.scheduler.cudf.CUDFTask;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -48,17 +38,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -74,9 +53,11 @@ public class DefaultCUDFService
     private CUDFEngine cudfEngine;
 
     @Inject
+    private CUDFSchedulerAdmin cudfSchedulerAdmin;
+
+    @Inject
     @Named( value = "taskExecutor#cudf" )
     private ArchivaCUDFTaskExecutor archivaCUDFTaskExecutor;
-
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
                              HttpServletResponse servletResponse )
@@ -301,6 +282,25 @@ public class DefaultCUDFService
         catch ( TaskExecutionException e )
         {
             throw new ArchivaRestServiceException( "Unable to start CUDF generation.", e );
+        }
+    }
+
+    public CUDFScheduler getCUDFScheduler()
+        throws ArchivaRestServiceException
+    {
+        return cudfSchedulerAdmin.getCUDFScheduler();
+    }
+
+    public void updateCUDFScheduler( CUDFScheduler cudfScheduler )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            cudfSchedulerAdmin.updateCUDFScheduler( cudfScheduler );
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
         }
     }
 
