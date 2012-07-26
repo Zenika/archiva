@@ -147,7 +147,7 @@ function() {
 
 
   MainMenuViewModel=function() {
-      
+
       var self = this;
       this.artifactMenuItems = [
               {  text : $.i18n.prop('menu.artifacts') , id: null},
@@ -157,7 +157,8 @@ function() {
       ];
       this.cudfMenuItems = [
               {  text : $.i18n.prop('cudf.title') , id: null },
-              {  text : $.i18n.prop('menu.cudf.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFUniverse()}}
+              {  text : $.i18n.prop('menu.cudf.universe.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFUniverse()}},
+              {  text : $.i18n.prop('menu.cudf.scheduler.text') , id: "menu-cudf-scheduler" , href: "#cudfScheduler" , func: function(){displayCUDFScheduler()}}
       ];
       this.administrationMenuItems = [
               {  text : $.i18n.prop('menu.administration') , id: null},
@@ -173,14 +174,14 @@ function() {
               {  text : $.i18n.prop('menu.ui-configuration')         , id: "menu-ui-configuration-list-a"       , href: "#uiconfig"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayUiConfiguration()}},
               {  text : $.i18n.prop('menu.reports')                  , id: "menu-report-list-a"                 , href: "#reports"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayReportsPage()}}
       ];
-      
+
       this.usersMenuItems = [
               {  text : $.i18n.prop('menu.users') , id: null},
               {  text : $.i18n.prop('menu.users.manage')    , id: "menu-users-list-a", href: "#users" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayUsersGrid()}},
               {  text : $.i18n.prop('menu.users.roles')     , id: "menu-roles-list-a", href: "#roles" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayRolesGrid()}}
       ];
       this.activeMenuId = ko.observable();
-          
+
       window.sammyArchivaApplication = Sammy(function () {
         this.get('#open-admin-create-box',function(){
           $.log("#open-admin-create-box");

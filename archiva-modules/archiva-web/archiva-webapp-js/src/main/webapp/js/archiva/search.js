@@ -1572,4 +1572,106 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
       $('#extract-CUDF').submit();
       $('#extract-CUDF').remove();
   }
+
+  CUDFScheduler=function(location,cronExpression){
+    var self = this;
+
+    this.location=ko.observable(location);
+
+    this.cronExpression=ko.observable(cronExpression);
+  }
+
+  mapCUDFScheduler=function(data){
+    if (data==null){
+      return null;
+    }
+    return new CUDFScheduler(data.location, data.cronExpression);
+  }
+
+  CUDFSchedulerViewModel=function(cudfScheduler,cudfSchedulerViewModel){
+    this.cudfScheduler=cudfScheduler;
+    this.cudfSchedulerViewModel=cudfSchedulerViewModel;
+
+    var self = this;
+
+    save=function(){
+      var valid = $("#main-content #cudf-scheduler-form" ).valid();
+      if (valid==false){
+        return;
+      }
+      $.log("save: CUDF scheduler");
+      clearUserMessages();
+      $.ajax("restServices/archivaServices/cudfService/scheduler",
+        {
+          type: "PUT",
+          data: ko.toJSON(this.cudfScheduler),
+          contentType: 'application/json',
+          dataType: 'json',
+          success: function(data){
+            displaySuccessMessage($.i18n.prop('cudf.scheduler.message.success'));
+            self.cudfScheduler.modified(false);
+          },
+          error: function(data){
+            var res = $.parseJSON(data.responseText);
+            displayRestError(res);
+          }
+        }
+      )
+    };
+
+    reset=function(){
+      loadCUDFScheduler(function(data){
+        self.cudfScheduler = mapCUDFScheduler(data);
+        var mainContent = $("#main-content");
+        ko.applyBindings(self,mainContent.find("#cudf-scheduler-view").get(0));
+        activateCUDFSchedulerFormValidation();
+      })
+    };
+
+  }
+
+  activateCUDFSchedulerFormValidation=function(){
+    var validator = $("#main-content #cudf-scheduler-form").validate({
+      rules: {
+        location: {
+          required: true
+        },
+        cronExpression: {
+          required: true,
+          remote: {
+            url: "restServices/archivaServices/commonServices/validateCronExpression",
+            type: "get"
+          }
+        }
+      },
+      showErrors: function(validator, errorMap, errorList){
+        customShowError("#main-content #cudf-scheduler-form",validator,errorMap,errorMap);
+      }
+    });
+    validator.settings.messages["cronExpression"]= $.i18n.prop("cudf.scheduler.message.validation.cronExpression");
+    validator.settings.messages["location"]= $.i18n.prop("cudf.scheduler.message.validation.location");
+  }
+
+  displayCUDFScheduler=function(){
+    clearUserMessages();
+    var mainContent = $("#main-content");
+    mainContent.html(mediumSpinnerImg());
+    var cudfSchedulerViewModel = new CUDFSchedulerViewModel();
+
+    loadCUDFScheduler(function(data){
+      cudfSchedulerViewModel.cudfScheduler = mapCUDFScheduler(data);
+      mainContent.html($("#cudf_scheduler_tmpl").tmpl());
+      ko.applyBindings(cudfSchedulerViewModel,mainContent.find("#cudf-scheduler-view").get(0));
+      activateCUDFSchedulerFormValidation();
+    });
+  }
+
+  loadCUDFScheduler = function ( successCallBackFn, errorCallBackFn ){
+    $.ajax("restServices/archivaServices/cudfService/scheduler", {
+        type: "GET",
+        dataType: "json",
+        success: successCallBackFn,
+        error: errorCallBackFn
+    });
+  };
 });

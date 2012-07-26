@@ -55,7 +55,7 @@
         {{else}}
           <li class="browse-list" data-bind="click:function(){displayGroupId(browseResultEntry.name)}">
             <a href="#" title="folder ${displayEntry(browseResultEntry.name)}">${displayEntry(browseResultEntry.name)}</a>
-        {{/if}}          
+        {{/if}}
           </li>
       {{/each}}
     </ul>
@@ -748,6 +748,32 @@
       <div id="get-cudf-universe-spinner-div"></div>
     </div>
     <pre class="prettyprint hide" id="show-cudf-universe-content"></pre>
+</script>
+
+<script id="cudf_scheduler_tmpl" type="text/html">
+    <div id="cudf-scheduler-view">
+      <form id="cudf-scheduler-form" class="form-horizontal">
+        <fieldset>
+          <legend>${$.i18n.prop('cudf.scheduler.form.legend')}</legend>
+          <div class="control-group">
+            <label class="control-label" for="location">${$.i18n.prop('cudf.scheduler.form.location')}</label>
+            <div class="controls">
+              <input id="location" type="text" class="input-xxlarge required" name="location" data-bind="value: cudfScheduler.location"/>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="cronExpression">${$.i18n.prop('cudf.scheduler.form.cronExpression')}</label>
+            <div class="controls">
+              <input id="cronExpression" type="text" class="input-large required" name="cronExpression" data-bind="value: cudfScheduler.cronExpression"/>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-bind="click: save">${$.i18n.prop('cudf.scheduler.form.submit')}</button>
+            <button type="submit" class="btn" data-bind="click: reset">${$.i18n.prop('cudf.scheduler.form.reset')}</button>
+          </div>
+        </fieldset>
+      </form>
+    </div>
 </script>
 
 <script id="dependency_tree_tmpl" type="text/html">
