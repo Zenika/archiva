@@ -143,5 +143,7 @@
   <cudf>
     <location>${appserver.base}/data/cudf</location>
     <cronExpression>0 0\,30 * * * ?</cronExpression>
+    <allRepositories>true</allRepositories>
+    <repositoryGroup></repositoryGroup>
   </cudf>
 </configuration>

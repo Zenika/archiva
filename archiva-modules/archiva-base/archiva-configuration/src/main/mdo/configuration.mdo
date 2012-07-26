@@ -1370,6 +1370,20 @@
           <version>1.4.0+</version>
           <type>String</type>
         </field>
+        <field>
+          <name>allRepositories</name>
+          <description>Generate universe for all repositories if is true</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+        </field>
+        <field>
+          <name>repositoryGroup</name>
+          <description>Repository group selected for the universe generation</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>RepositoryGroupConfiguration</type>
+          </association>
+        </field>
       </fields>
     </class>
   </classes>
