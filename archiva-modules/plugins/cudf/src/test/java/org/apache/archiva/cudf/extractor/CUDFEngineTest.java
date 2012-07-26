@@ -1,4 +1,4 @@
-package org.apache.archiva.cudf;
+package org.apache.archiva.cudf.extractor;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +21,7 @@ package org.apache.archiva.cudf;
 
 import org.apache.archiva.configuration.ArchivaConfiguration;
 import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
+import org.apache.archiva.cudf.extractor.CUDFExtractor;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 import org.junit.Before;

@@ -1,4 +1,6 @@
-package org.apache.archiva.cudf;/*
+package org.apache.archiva.cudf.admin.api;
+
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +19,19 @@ package org.apache.archiva.cudf;/*
  * under the License.
  */
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.List;
+import org.apache.archiva.admin.model.RepositoryAdminException;
+import org.apache.archiva.configuration.CUDFConfiguration;
+import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  * @since 1.4-M3
  */
-public interface CUDFEngine
+public interface CUDFSchedulerAdmin
 {
 
-    public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                 List<String> repositories, Writer output )
-        throws IOException;
+    CUDFScheduler getCUDFScheduler();
 
-    public void computeCUDFCone( String groupId, String artifactId, String version, String type,
-                                 List<String> repositories, Writer output )
-        throws IOException;
-
-    public void computeCUDFUniverse( List<String> repositoryId, Writer writer )
-        throws IOException;
+    void updateCUDFScheduler(CUDFScheduler cudfScheduler)
+        throws RepositoryAdminException;
 }

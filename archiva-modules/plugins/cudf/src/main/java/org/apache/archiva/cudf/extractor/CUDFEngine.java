@@ -1,6 +1,4 @@
-package org.apache.archiva.cudf;
-
-/*
+package org.apache.archiva.cudf.extractor;/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,11 +17,6 @@ package org.apache.archiva.cudf;
  * under the License.
  */
 
-import org.apache.archiva.metadata.repository.RepositorySessionFactory;
-import org.springframework.stereotype.Service;
-
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
@@ -32,32 +25,17 @@ import java.util.List;
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  * @since 1.4-M3
  */
-@Service( "cudfEngine#org.apache.archiva.cudf.cudf" )
-public class DefaultCUDFEngine
-    implements CUDFEngine
+public interface CUDFEngine
 {
 
-    @Inject
-    private RepositorySessionFactory repositorySessionFactory;
-
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
-                                 List<String> repositories, Writer writer )
-        throws IOException
-    {
-        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
-                                                     repositorySessionFactory );
-    }
+                                 List<String> repositories, Writer output )
+        throws IOException;
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type,
-                                 List<String> repositories, Writer writer )
-        throws IOException
-    {
-        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositories, repositorySessionFactory );
-    }
+                                 List<String> repositories, Writer output )
+        throws IOException;
 
-    public void computeCUDFUniverse( List<String> repositoryIds, Writer writer )
-        throws IOException
-    {
-        new CUDFExtractor( writer ).computeCUDFUniverse( repositoryIds, repositorySessionFactory );
-    }
+    public void computeCUDFUniverse( List<String> repositoryId, Writer writer )
+        throws IOException;
 }

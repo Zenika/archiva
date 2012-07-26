@@ -22,11 +22,10 @@ package org.apache.archiva.scheduler.cudf;
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.admin.model.managed.ManagedRepositoryAdmin;
-import org.apache.archiva.cudf.CUDFEngine;
+import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.redback.components.taskqueue.Task;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutor;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -78,5 +77,6 @@ public class ArchivaCUDFTaskExecutor
             log.error( e.getMessage(), e );
             throw new TaskExecutionException( e.getMessage(), e );
         }
+        log.info( "Finished CUDF Task" );
     }
 }

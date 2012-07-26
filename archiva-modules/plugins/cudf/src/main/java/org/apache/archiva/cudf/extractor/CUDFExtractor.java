@@ -1,4 +1,4 @@
-package org.apache.archiva.cudf;
+package org.apache.archiva.cudf.extractor;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
