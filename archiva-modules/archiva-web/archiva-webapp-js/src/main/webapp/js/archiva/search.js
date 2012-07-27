@@ -1573,24 +1573,39 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
       $('#extract-CUDF').remove();
   }
 
-  CUDFScheduler=function(location,cronExpression){
+  CUDFScheduler=function(location,cronExpression,allRepositories,repositoryGroup){
     var self = this;
 
     this.location=ko.observable(location);
 
     this.cronExpression=ko.observable(cronExpression);
+
+    this.allRepositories=ko.observable(allRepositories);
+
+    this.repositoryGroup=ko.observable(repositoryGroup);
   }
 
   mapCUDFScheduler=function(data){
     if (data==null){
       return null;
     }
-    return new CUDFScheduler(data.location, data.cronExpression);
+    return new CUDFScheduler(data.location, data.cronExpression, data.allRepositories, data.repositoryGroup === null ? "" : data.repositoryGroup);
   }
 
-  CUDFSchedulerViewModel=function(cudfScheduler,cudfSchedulerViewModel){
+  mapAvailableRepositoryManager=function(data){
+    if (data==null){
+      return null;
+    }
+    var availableRepositoryGroups = [];
+    $.each(data, function(index,value){
+      availableRepositoryGroups.push(value.id);
+    });
+    return availableRepositoryGroups;
+  }
+
+  CUDFSchedulerViewModel=function(cudfScheduler){
     this.cudfScheduler=cudfScheduler;
-    this.cudfSchedulerViewModel=cudfSchedulerViewModel;
+    this.availableRepositoryGroups=ko.observableArray([]);
 
     var self = this;
 
@@ -1620,14 +1635,14 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     };
 
     reset=function(){
-      loadCUDFScheduler(function(data){
-        self.cudfScheduler = mapCUDFScheduler(data);
-        var mainContent = $("#main-content");
-        ko.applyBindings(self,mainContent.find("#cudf-scheduler-view").get(0));
-        activateCUDFSchedulerFormValidation();
-      })
+      displayCUDFScheduler();
+//      loadCUDFScheduler(function(data){
+//        self.cudfScheduler = mapCUDFScheduler(data);
+//        var mainContent = $("#main-content");
+//        ko.applyBindings(self,mainContent.find("#cudf-scheduler-view").get(0));
+//        activateCUDFSchedulerFormValidation();
+//      })
     };
-
   }
 
   activateCUDFSchedulerFormValidation=function(){
@@ -1657,16 +1672,23 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     var mainContent = $("#main-content");
     mainContent.html(mediumSpinnerImg());
     var cudfSchedulerViewModel = new CUDFSchedulerViewModel();
-
+    addUnSlideVisibleBinding();
     loadCUDFScheduler(function(data){
       cudfSchedulerViewModel.cudfScheduler = mapCUDFScheduler(data);
-      mainContent.html($("#cudf_scheduler_tmpl").tmpl());
-      ko.applyBindings(cudfSchedulerViewModel,mainContent.find("#cudf-scheduler-view").get(0));
-      activateCUDFSchedulerFormValidation();
+      $.ajax("restServices/archivaServices/repositoryGroupService/getRepositoriesGroups",{
+        type: "GET",
+        dataType: "json",
+        success: function(data){
+          cudfSchedulerViewModel.availableRepositoryGroups(mapAvailableRepositoryManager(data));
+          mainContent.html($("#cudf_scheduler_tmpl").tmpl(cudfSchedulerViewModel));
+          ko.applyBindings(cudfSchedulerViewModel,mainContent.find("#cudf-scheduler-view").get(0));
+          activateCUDFSchedulerFormValidation();
+        }
+      });
     });
   }
 
-  loadCUDFScheduler = function ( successCallBackFn, errorCallBackFn ){
+  loadCUDFScheduler=function(successCallBackFn,errorCallBackFn){
     $.ajax("restServices/archivaServices/cudfService/scheduler", {
         type: "GET",
         dataType: "json",
@@ -1674,4 +1696,25 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
         error: errorCallBackFn
     });
   };
+
+  addUnSlideVisibleBinding=function(){
+    ko.bindingHandlers.unSlideVisible = {
+      update: function(element, valueAccessor, allBindingsAccessor) {
+        // First get the latest data that we're bound to
+        var value = valueAccessor(), allBindings = allBindingsAccessor();
+
+        // Next, whether or not the supplied model property is observable, get its current value
+        var valueUnwrapped = ko.utils.unwrapObservable(value);
+
+        // Grab some more data from another binding property
+        var duration = allBindings.slideDuration || 400; // 400ms is default duration unless otherwise specified
+
+        // Now manipulate the DOM element
+        if (valueUnwrapped == true)
+          $(element).slideUp(duration); // Make the element visible
+        else
+          $(element).slideDown(duration);   // Make the element invisible
+      }
+    };
+  }
 });

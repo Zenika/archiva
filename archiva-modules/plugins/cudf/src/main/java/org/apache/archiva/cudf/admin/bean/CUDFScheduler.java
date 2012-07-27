@@ -39,10 +39,12 @@ public class CUDFScheduler
     {
     }
 
-    public CUDFScheduler( String location, String cronExpression )
+    public CUDFScheduler( String location, String cronExpression, boolean allRepositories, String repositoryGroup )
     {
         this.location = location;
         this.cronExpression = cronExpression;
+        this.allRepositories = allRepositories;
+        this.repositoryGroup = repositoryGroup;
     }
 
     public String getLocation()

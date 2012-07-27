@@ -752,9 +752,11 @@
 
 <script id="cudf_scheduler_tmpl" type="text/html">
     <div id="cudf-scheduler-view">
+      <div class="page-header">
+        <h2>${$.i18n.prop('cudf.scheduler.page.header')}</h2>
+      </div>
       <form id="cudf-scheduler-form" class="form-horizontal">
         <fieldset>
-          <legend>${$.i18n.prop('cudf.scheduler.form.legend')}</legend>
           <div class="control-group">
             <label class="control-label" for="location">${$.i18n.prop('cudf.scheduler.form.location')}</label>
             <div class="controls">
@@ -767,6 +769,25 @@
               <input id="cronExpression" type="text" class="input-large required" name="cronExpression" data-bind="value: cudfScheduler.cronExpression"/>
             </div>
           </div>
+          <div class="control-group">
+            <label class="control-label" for="allRepositories">${$.i18n.prop('cudf.scheduler.form.allRepositories')}</label>
+            <div class="controls">
+              <input id="allRepositories" type="checkbox" name="allRepositories" data-bind="checked: cudfScheduler.allRepositories"/>
+            </div>
+          </div>
+          <hr/>
+            <div data-bind="unSlideVisible: cudfScheduler.allRepositories">
+              <h4>${$.i18n.prop('cudf.scheduler.form.repositoryGroup')}</h4>
+              <div id="repository-group-view2" class="control-group">
+                <label class="control-label">${$.i18n.prop('cudf.scheduler.form.repositoryGroup')}</label>
+                <div class="controls" data-bind="foreach: availableRepositoryGroups">
+                  <label class="radio">
+                    <input type="radio" name="group" data-bind="attr: {value: $data}, checked: $parent.cudfScheduler.repositoryGroup"/>
+                    <span data-bind="text: $data"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" data-bind="click: save">${$.i18n.prop('cudf.scheduler.form.submit')}</button>
             <button type="submit" class="btn" data-bind="click: reset">${$.i18n.prop('cudf.scheduler.form.reset')}</button>

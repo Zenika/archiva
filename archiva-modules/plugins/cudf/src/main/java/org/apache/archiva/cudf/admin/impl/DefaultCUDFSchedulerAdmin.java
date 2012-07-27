@@ -43,7 +43,8 @@ public class DefaultCUDFSchedulerAdmin
     public CUDFScheduler getCUDFScheduler()
     {
         CUDFConfiguration cudfConfiguration = getArchivaConfiguration().getConfiguration().getCudf();
-        return new CUDFScheduler( cudfConfiguration.getLocation(), cudfConfiguration.getCronExpression() );
+        return new CUDFScheduler( cudfConfiguration.getLocation(), cudfConfiguration.getCronExpression(),
+                                  cudfConfiguration.isAllRepositories(), cudfConfiguration.getRepositoryGroup() );
     }
 
     public void updateCUDFScheduler( CUDFScheduler cudfScheduler )
