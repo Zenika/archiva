@@ -32,6 +32,8 @@ public class CUDFScheduler
 {
     private String location;
     private String cronExpression;
+    private boolean allRepositories;
+    private String repositoryGroup;
 
     public CUDFScheduler()
     {
@@ -63,6 +65,26 @@ public class CUDFScheduler
         this.cronExpression = cronExpression;
     }
 
+    public boolean isAllRepositories()
+    {
+        return allRepositories;
+    }
+
+    public void setAllRepositories( boolean allRepositories )
+    {
+        this.allRepositories = allRepositories;
+    }
+
+    public String getRepositoryGroup()
+    {
+        return repositoryGroup;
+    }
+
+    public void setRepositoryGroup( String repositoryGroup )
+    {
+        this.repositoryGroup = repositoryGroup;
+    }
+
     @Override
     public String toString()
     {
@@ -70,6 +92,8 @@ public class CUDFScheduler
         sb.append( "CUDFScheduler" );
         sb.append( "{location='" ).append( location ).append( '\'' );
         sb.append( ", cronExpression='" ).append( cronExpression ).append( '\'' );
+        sb.append( ", allRepositories=" ).append( allRepositories );
+        sb.append( ", repositoryGroup='" ).append( repositoryGroup ).append( '\'' );
         sb.append( '}' );
         return sb.toString();
     }

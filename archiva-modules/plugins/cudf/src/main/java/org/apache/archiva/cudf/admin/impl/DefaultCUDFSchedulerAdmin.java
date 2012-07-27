@@ -52,6 +52,8 @@ public class DefaultCUDFSchedulerAdmin
         CUDFConfiguration cudfConfiguration = new CUDFConfiguration();
         cudfConfiguration.setLocation( cudfScheduler.getLocation() );
         cudfConfiguration.setCronExpression( cudfScheduler.getCronExpression() );
+        cudfConfiguration.setAllRepositories( cudfScheduler.isAllRepositories() );
+        cudfConfiguration.setRepositoryGroup( cudfScheduler.getRepositoryGroup() );
         getArchivaConfiguration().getConfiguration().setCudf( cudfConfiguration );
         saveConfiguration( getArchivaConfiguration().getConfiguration() );
     }
