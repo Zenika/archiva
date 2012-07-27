@@ -138,7 +138,11 @@
               org.apache.archiva.common.utils,
               org.apache.archiva.metadata.model,
               org.apache.archiva.metadata.repository,
-              org.apache.archiva.metadata.repository.storage.maven2
+              org.apache.archiva.metadata.repository.storage.maven2,
+              javax.xml.bind.annotation,
+              org.apache.archiva.admin.model,
+              org.apache.archiva.admin.repository,
+              org.apache.archiva.configuration
             </Import-Package>
           </instructions>
         </configuration>

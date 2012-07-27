@@ -124,7 +124,8 @@
               org.apache.archiva.repository.scanner,
               org.codehaus.jackson.annotate,
               org.apache.archiva.metadata.repository.stats,
-              org.apache.archiva.reports
+              org.apache.archiva.reports,
+              org.apache.archiva.cudf.admin.bean
             </Import-Package>
           </instructions>
         </configuration>
