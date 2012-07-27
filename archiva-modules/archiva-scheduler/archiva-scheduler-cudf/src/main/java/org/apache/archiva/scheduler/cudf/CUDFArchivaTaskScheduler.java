@@ -31,17 +31,12 @@ import org.apache.archiva.redback.components.taskqueue.TaskQueue;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
 import org.apache.archiva.scheduler.ArchivaTaskScheduler;
 import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
-import org.quartz.ScheduleBuilder;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
-import org.quartz.impl.JobDetailImpl;
-import org.quartz.impl.triggers.CronTriggerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -51,11 +46,9 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -69,7 +62,7 @@ public class CUDFArchivaTaskScheduler
 
     static final String TASK_QUEUE = "TASK_QUEUE";
 
-    static final String TASK_DESTINATION = "TASK_DESTINATION";
+    static final String CUDF_TASK = "CUDF_TASK";
 
     private static final String CUDF_JOB = "cj";
 
@@ -100,7 +93,7 @@ public class CUDFArchivaTaskScheduler
         configuration.addListener( this );
         try
         {
-            scheduleCUDFJobs( configuration.getConfiguration().getCudf() );
+            scheduleCUDFJob( configuration.getConfiguration().getCudf() );
         }
         catch ( SchedulerException e )
         {
@@ -117,7 +110,9 @@ public class CUDFArchivaTaskScheduler
         }
         else
         {
-            taskQueue.put( task );
+            synchronized ( taskQueue ) {
+                taskQueue.put( task );
+            }
         }
     }
 
@@ -131,7 +126,9 @@ public class CUDFArchivaTaskScheduler
         }
         else
         {
-            return taskQueue.remove( task );
+            synchronized ( taskQueue ) {
+                return taskQueue.remove( task );
+            }
         }
     }
 
@@ -151,7 +148,7 @@ public class CUDFArchivaTaskScheduler
         try
         {
             scheduler.unscheduleJob( CUDF_JOB, CUDF_GROUP );
-            scheduleCUDFJobs( configuration.getConfiguration().getCudf() );
+            scheduleCUDFJob( configuration.getConfiguration().getCudf() );
         }
         catch ( SchedulerException e )
         {
@@ -159,7 +156,7 @@ public class CUDFArchivaTaskScheduler
         }
     }
 
-    private synchronized void scheduleCUDFJobs( CUDFConfiguration cudfConfiguration )
+    private void scheduleCUDFJob( CUDFConfiguration cudfConfiguration )
         throws SchedulerException
     {
         if ( cudfConfiguration.getCronExpression() == null )
@@ -175,9 +172,29 @@ public class CUDFArchivaTaskScheduler
             cronExpression = CRON_HOURLY;
         }
 
+        scheduleCUDFJob( cudfConfiguration, cronExpression );
+    }
+
+    private void scheduleCUDFJob( CUDFConfiguration cudfConfiguration, String cronExpression )
+        throws SchedulerException
+    {
+        CUDFTask cudfTask = new CUDFTask();
+        cudfTask.setResourceDestination( new File( cudfConfiguration.getLocation() ) );
+        if ( cudfConfiguration.isAllRepositories() )
+        {
+            cudfTask.setAllRepositories( true );
+        }
+        else
+        {
+            String repositoryGroupId = cudfConfiguration.getRepositoryGroup();
+            List<String> repositories =
+                configuration.getConfiguration().getGroupToRepositoryMap().get( repositoryGroupId );
+            cudfTask.setRepositoriesId( repositories );
+        }
+
         JobDataMap dataMap = new JobDataMap();
         dataMap.put( TASK_QUEUE, taskQueue );
-        dataMap.put( TASK_DESTINATION, new File( cudfConfiguration.getLocation() ) );
+        dataMap.put( CUDF_TASK, cudfTask );
         JobDetail cudfJob =
             JobBuilder.newJob( CUDFTaskJob.class ).withIdentity( CUDF_JOB, CUDF_GROUP ).usingJobData( dataMap ).build();
         Trigger trigger = TriggerBuilder.newTrigger().withIdentity( CUDF_JOB_TRIGGER, CUDF_GROUP ).withSchedule(

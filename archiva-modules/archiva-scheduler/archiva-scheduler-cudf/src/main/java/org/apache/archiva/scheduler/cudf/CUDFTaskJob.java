@@ -40,15 +40,10 @@ public class CUDFTaskJob
     {
         JobDataMap dataMap = context.getJobDetail().getJobDataMap();
         setJobDataMap( dataMap );
-
         TaskQueue queue = (TaskQueue) dataMap.get( CUDFArchivaTaskScheduler.TASK_QUEUE );
-        File destination = (File) dataMap.get( CUDFArchivaTaskScheduler.TASK_DESTINATION );
-        CUDFTask task = new CUDFTask();
-        task.setResourceDestination( destination );
-
         try
         {
-            queue.put( task );
+            queue.put( (CUDFTask) dataMap.get( CUDFArchivaTaskScheduler.CUDF_TASK ) );
         }
         catch ( TaskQueueException e )
         {

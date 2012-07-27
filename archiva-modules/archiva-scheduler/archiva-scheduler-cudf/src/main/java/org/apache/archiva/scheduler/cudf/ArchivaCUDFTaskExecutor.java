@@ -40,7 +40,7 @@ import java.util.List;
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  * @since 1.4-M3
  */
-@Service("taskExecutor#cudf")
+@Service( "taskExecutor#cudf" )
 public class ArchivaCUDFTaskExecutor
     implements TaskExecutor
 {
@@ -58,13 +58,13 @@ public class ArchivaCUDFTaskExecutor
         CUDFTask cudfTask = (CUDFTask) task;
         try
         {
-            List<ManagedRepository> repositories = managedRepositoryAdmin.getManagedRepositories();
-
-            List<String> repositoriesId = new ArrayList<String>(  );
-            for (ManagedRepository managedRepository : repositories) {
-                repositoriesId.add( managedRepository.getId() );
+            List<String> repositoriesId = null;
+            if ( cudfTask.isAllRepositories() )
+            {
+                repositoriesId = getAllRepositories();
+            } else {
+                repositoriesId = cudfTask.getRepositoriesId();
             }
-
             cudfEngine.computeCUDFUniverse( repositoriesId, new FileWriter( cudfTask.getResourceDestination() ) );
         }
         catch ( RepositoryAdminException e )
@@ -78,5 +78,19 @@ public class ArchivaCUDFTaskExecutor
             throw new TaskExecutionException( e.getMessage(), e );
         }
         log.info( "Finished CUDF Task" );
+    }
+
+    private List<String> getAllRepositories()
+        throws RepositoryAdminException
+    {
+        List<String> repositoriesId;
+        List<ManagedRepository> repositories = managedRepositoryAdmin.getManagedRepositories();
+
+        repositoriesId = new ArrayList<String>();
+        for ( ManagedRepository managedRepository : repositories )
+        {
+            repositoriesId.add( managedRepository.getId() );
+        }
+        return repositoriesId;
     }
 }

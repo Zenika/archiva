@@ -22,6 +22,7 @@ package org.apache.archiva.scheduler.cudf;
 import org.apache.archiva.redback.components.taskqueue.Task;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -31,19 +32,15 @@ public class CUDFTask
     implements Task
 {
 
-    private String repositoryId;
     private boolean allRepositories;
+
+    private List<String> repositoriesId;
 
     private File resourceDestination;
 
-    public String getRepositoryId()
+    public CUDFTask()
     {
-        return repositoryId;
-    }
-
-    public void setRepositoryId( String repositoryId )
-    {
-        this.repositoryId = repositoryId;
+        this.allRepositories = false;
     }
 
     public File getResourceDestination()
@@ -66,6 +63,16 @@ public class CUDFTask
         this.allRepositories = allRepositories;
     }
 
+    public List<String> getRepositoriesId()
+    {
+        return repositoriesId;
+    }
+
+    public void setRepositoriesId( List<String> repositoriesId )
+    {
+        this.repositoriesId = repositoriesId;
+    }
+
     public long getMaxExecutionTime()
     {
         return 0;
@@ -83,15 +90,19 @@ public class CUDFTask
             return false;
         }
 
-        CUDFTask cudfTask = (CUDFTask) o;
+        CUDFTask task = (CUDFTask) o;
 
-        if ( repositoryId != null ? !repositoryId.equals( cudfTask.repositoryId ) : cudfTask.repositoryId != null )
+        if ( allRepositories != task.allRepositories )
+        {
+            return false;
+        }
+        if ( repositoriesId != null ? !repositoriesId.equals( task.repositoriesId ) : task.repositoriesId != null )
         {
             return false;
         }
         if ( resourceDestination != null
-            ? !resourceDestination.equals( cudfTask.resourceDestination )
-            : cudfTask.resourceDestination != null )
+            ? !resourceDestination.equals( task.resourceDestination )
+            : task.resourceDestination != null )
         {
             return false;
         }
@@ -102,7 +113,8 @@ public class CUDFTask
     @Override
     public int hashCode()
     {
-        int result = repositoryId != null ? repositoryId.hashCode() : 0;
+        int result = ( allRepositories ? 1 : 0 );
+        result = 31 * result + ( repositoriesId != null ? repositoriesId.hashCode() : 0 );
         result = 31 * result + ( resourceDestination != null ? resourceDestination.hashCode() : 0 );
         return result;
     }
@@ -111,7 +123,8 @@ public class CUDFTask
     public String toString()
     {
         return "CUDFTask{" +
-            "repositoryId='" + repositoryId + '\'' +
+            "allRepositories=" + allRepositories +
+            ", repositoriesId=" + repositoriesId +
             ", resourceDestination=" + resourceDestination +
             '}';
     }
