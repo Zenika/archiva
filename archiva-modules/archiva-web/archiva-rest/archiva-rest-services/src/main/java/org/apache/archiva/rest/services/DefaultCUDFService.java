@@ -20,6 +20,7 @@ package org.apache.archiva.rest.services;
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.cudf.admin.api.CUDFSchedulerAdmin;
+import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
 import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -285,18 +287,18 @@ public class DefaultCUDFService
         }
     }
 
-    public CUDFScheduler getCUDFScheduler()
+    public List<CUDFJob> getCUDFJobs()
         throws ArchivaRestServiceException
     {
-        return cudfSchedulerAdmin.getCUDFScheduler();
+        return cudfSchedulerAdmin.getCUDFJobs();
     }
 
-    public void updateCUDFScheduler( CUDFScheduler cudfScheduler )
+    public void updateCUDFScheduler( CUDFJob cudfJob )
         throws ArchivaRestServiceException
     {
         try
         {
-            cudfSchedulerAdmin.updateCUDFScheduler( cudfScheduler );
+            cudfSchedulerAdmin.updateCUDFJobs( cudfJob );
         }
         catch ( RepositoryAdminException e )
         {

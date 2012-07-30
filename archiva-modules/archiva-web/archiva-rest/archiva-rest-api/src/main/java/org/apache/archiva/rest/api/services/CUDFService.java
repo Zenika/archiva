@@ -18,13 +18,12 @@ package org.apache.archiva.rest.api.services;
  * under the License.
  */
 
-import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
+import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.redback.authorization.RedbackAuthorization;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -33,6 +32,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -120,17 +120,17 @@ public interface CUDFService
     Response startCudfTaskGeneration( @QueryParam( "filePath" ) String filePath )
         throws ArchivaRestServiceException;
 
-    @Path( "scheduler" )
+    @Path( "jobs" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
-    CUDFScheduler getCUDFScheduler()
+    List<CUDFJob> getCUDFJobs()
         throws ArchivaRestServiceException;
 
-    @Path( "scheduler" )
+    @Path( "job" )
     @PUT
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
-    void updateCUDFScheduler( CUDFScheduler cudfScheduler )
+    void updateCUDFScheduler( CUDFJob cudfJob )
         throws ArchivaRestServiceException;
 }
