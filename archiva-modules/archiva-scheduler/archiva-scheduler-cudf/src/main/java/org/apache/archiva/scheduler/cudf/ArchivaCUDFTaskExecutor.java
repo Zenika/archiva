@@ -31,9 +31,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -58,14 +61,35 @@ public class ArchivaCUDFTaskExecutor
         CUDFTask cudfTask = (CUDFTask) task;
         try
         {
+            if ( !cudfTask.getResourceDestination().exists() )
+            {
+                cudfTask.getResourceDestination().mkdir();
+            }
+            else
+            {
+                if ( !cudfTask.getResourceDestination().isDirectory() )
+                {
+                    log.warn( "cudf output configuration is not a folder" );
+                    cudfTask.getResourceDestination().renameTo(
+                        new File( cudfTask.getResourceDestination().getAbsolutePath() + "-old" ) );
+                    cudfTask.getResourceDestination().mkdir();
+                }
+            }
+
+            String fileName = null;
             List<String> repositoriesId = null;
             if ( cudfTask.isAllRepositories() )
             {
                 repositoriesId = getAllRepositories();
-            } else {
-                repositoriesId = cudfTask.getRepositoriesId();
+                fileName = "universe-" + generateDateForFilename() + ".cudf";
             }
-            cudfEngine.computeCUDFUniverse( repositoriesId, new FileWriter( cudfTask.getResourceDestination() ) );
+            else
+            {
+                repositoriesId = cudfTask.getRepositoriesId();
+                fileName = generateFileName( cudfTask.getRepositoriesId() );
+            }
+            cudfEngine.computeCUDFUniverse( repositoriesId,
+                                            new FileWriter( new File( cudfTask.getResourceDestination(), fileName ) ) );
         }
         catch ( RepositoryAdminException e )
         {
@@ -80,6 +104,25 @@ public class ArchivaCUDFTaskExecutor
         log.info( "Finished CUDF Task" );
     }
 
+    private String generateFileName( List<String> repositoriesId )
+    {
+        StringBuilder sb = new StringBuilder( 10 );
+        Iterator it = repositoriesId.iterator();
+        while ( it.hasNext() )
+        {
+            sb.append( it.next() );
+            if ( it.hasNext() )
+            {
+                sb.append( "-" );
+            }
+            else
+            {
+                sb.append("-").append( generateDateForFilename() ).append( ".cudf" );
+            }
+        }
+        return sb.toString();
+    }
+
     private List<String> getAllRepositories()
         throws RepositoryAdminException
     {
@@ -92,5 +135,10 @@ public class ArchivaCUDFTaskExecutor
             repositoriesId.add( managedRepository.getId() );
         }
         return repositoriesId;
+    }
+
+    public Long generateDateForFilename()
+    {
+        return Calendar.getInstance().getTimeInMillis();
     }
 }
