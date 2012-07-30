@@ -27,24 +27,36 @@ import java.io.Serializable;
  * @since 1.4-M3
  */
 @XmlRootElement
-public class CUDFScheduler
+public class CUDFJob
     implements Serializable
 {
+    private String id;
     private String location;
     private String cronExpression;
     private boolean allRepositories;
     private String repositoryGroup;
 
-    public CUDFScheduler()
+    public CUDFJob()
     {
     }
 
-    public CUDFScheduler( String location, String cronExpression, boolean allRepositories, String repositoryGroup )
+    public CUDFJob( String id, String location, String cronExpression, boolean allRepositories, String repositoryGroup )
     {
+        this.id = id;
         this.location = location;
         this.cronExpression = cronExpression;
         this.allRepositories = allRepositories;
         this.repositoryGroup = repositoryGroup;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId( String id )
+    {
+        this.id = id;
     }
 
     public String getLocation()
@@ -91,8 +103,9 @@ public class CUDFScheduler
     public String toString()
     {
         final StringBuilder sb = new StringBuilder();
-        sb.append( "CUDFScheduler" );
-        sb.append( "{location='" ).append( location ).append( '\'' );
+        sb.append( "CUDFJob" );
+        sb.append( "{id='" ).append( id ).append( '\'' );
+        sb.append( ", location='" ).append( location ).append( '\'' );
         sb.append( ", cronExpression='" ).append( cronExpression ).append( '\'' );
         sb.append( ", allRepositories=" ).append( allRepositories );
         sb.append( ", repositoryGroup='" ).append( repositoryGroup ).append( '\'' );

@@ -21,15 +21,16 @@ package org.apache.archiva.cudf.admin.impl;
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.admin.repository.AbstractRepositoryAdmin;
-import org.apache.archiva.configuration.ArchivaConfiguration;
 import org.apache.archiva.configuration.CUDFConfiguration;
-import org.apache.archiva.configuration.IndeterminateConfigurationException;
+import org.apache.archiva.configuration.CUDFJobConfiguration;
 import org.apache.archiva.cudf.admin.api.CUDFSchedulerAdmin;
-import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
-import org.apache.archiva.redback.components.registry.RegistryException;
+import org.apache.archiva.cudf.admin.bean.CUDFJob;
+import org.apache.archiva.redback.components.scheduler.CronExpressionValidator;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -40,22 +41,78 @@ public class DefaultCUDFSchedulerAdmin
     extends AbstractRepositoryAdmin
     implements CUDFSchedulerAdmin
 {
-    public CUDFScheduler getCUDFScheduler()
+
+    @Inject
+    private CronExpressionValidator cronExpressionValidator;
+
+    public List<CUDFJob> getCUDFJobs()
     {
-        CUDFConfiguration cudfConfiguration = getArchivaConfiguration().getConfiguration().getCudf();
-        return new CUDFScheduler( cudfConfiguration.getLocation(), cudfConfiguration.getCronExpression(),
-                                  cudfConfiguration.isAllRepositories(), cudfConfiguration.getRepositoryGroup() );
+        List<CUDFJob> cudfJobs = new ArrayList<CUDFJob>();
+        List<CUDFJobConfiguration> cudfJobConfigurations =
+            getArchivaConfiguration().getConfiguration().getCudf().getCudfJobs();
+        for ( CUDFJobConfiguration cudfJobConfiguration : cudfJobConfigurations )
+        {
+            cudfJobs.add( new CUDFJob( cudfJobConfiguration.getId(), cudfJobConfiguration.getLocation(),
+                                       cudfJobConfiguration.getCronExpression(),
+                                       cudfJobConfiguration.isAllRepositories(),
+                                       cudfJobConfiguration.getRepositoryGroup() ) );
+        }
+        return cudfJobs;
     }
 
-    public void updateCUDFScheduler( CUDFScheduler cudfScheduler )
+    public void addCUDFJob( CUDFJob cudfJob )
         throws RepositoryAdminException
     {
-        CUDFConfiguration cudfConfiguration = new CUDFConfiguration();
-        cudfConfiguration.setLocation( cudfScheduler.getLocation() );
-        cudfConfiguration.setCronExpression( cudfScheduler.getCronExpression() );
-        cudfConfiguration.setAllRepositories( cudfScheduler.isAllRepositories() );
-        cudfConfiguration.setRepositoryGroup( cudfScheduler.getRepositoryGroup() );
-        getArchivaConfiguration().getConfiguration().setCudf( cudfConfiguration );
+        CUDFConfiguration cudfConfiguration = getArchivaConfiguration().getConfiguration().getCudf();
+
+        checkIsNotExist( cudfJob, cudfConfiguration );
+        validateCUDFJob( cudfJob );
+
+        cudfConfiguration.addCudfJob( createCUDFJobConfiguration( cudfJob ) );
         saveConfiguration( getArchivaConfiguration().getConfiguration() );
+    }
+
+
+    public void updateCUDFJobs( CUDFJob cudfJob )
+        throws RepositoryAdminException
+    {
+        CUDFConfiguration cudfConfiguration = getArchivaConfiguration().getConfiguration().getCudf();
+        CUDFJobConfiguration cudfJobConfiguration = cudfConfiguration.findCUDFJobById( cudfJob.getId() );
+
+        if ( cudfConfiguration != null )
+        {
+            cudfConfiguration.removeCudfJob( cudfJobConfiguration );
+        }
+
+        cudfConfiguration.addCudfJob( createCUDFJobConfiguration( cudfJob ) );
+        saveConfiguration( getArchivaConfiguration().getConfiguration() );
+    }
+
+    private CUDFJobConfiguration createCUDFJobConfiguration( CUDFJob cudfJob )
+    {
+        CUDFJobConfiguration cudfJobConfiguration = new CUDFJobConfiguration();
+        cudfJobConfiguration.setId( cudfJob.getId() );
+        cudfJobConfiguration.setLocation( cudfJob.getLocation() );
+        cudfJobConfiguration.setAllRepositories( cudfJob.isAllRepositories() );
+        cudfJobConfiguration.setRepositoryGroup( cudfJob.getRepositoryGroup() );
+        return cudfJobConfiguration;
+    }
+
+    private void validateCUDFJob( CUDFJob cudfJob)
+        throws RepositoryAdminException
+    {
+        if ( !cronExpressionValidator.validate( cudfJob.getCronExpression() ) )
+        {
+            throw new RepositoryAdminException( "The cron expression of " + cudfJob.getId() + " is invalid" );
+        }
+    }
+
+    private void checkIsNotExist( CUDFJob cudfJob, CUDFConfiguration cudfConfiguration )
+        throws RepositoryAdminException
+    {
+        if ( cudfConfiguration.findCUDFJobById( cudfJob.getId() ) != null )
+        {
+            throw new RepositoryAdminException( "The CUDF job with " + cudfJob.getId() + "id is already" );
+        }
     }
 }

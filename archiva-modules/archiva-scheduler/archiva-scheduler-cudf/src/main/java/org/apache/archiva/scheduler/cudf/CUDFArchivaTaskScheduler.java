@@ -217,11 +217,15 @@ public class CUDFArchivaTaskScheduler
         JobDetail cudfJob =
             JobBuilder.newJob( CUDFTaskJob.class ).withIdentity( CUDF_JOB + ":" + cudfJobConfiguration.getId(),
                                                                  CUDF_GROUP ).usingJobData( dataMap ).build();
-        Trigger trigger = TriggerBuilder.newTrigger().withIdentity( CUDF_JOB_TRIGGER + ":" + cudfJobConfiguration, CUDF_GROUP ).withSchedule(
+        Trigger trigger = TriggerBuilder.newTrigger().withIdentity( CUDF_JOB_TRIGGER + ":" + cudfJobConfiguration,
+                                                                    CUDF_GROUP ).withSchedule(
             CronScheduleBuilder.cronSchedule( cronExpression ) ).build();
         jobIdsLock.lock();
-        jobIds.add( cudfJobConfiguration.getId() );
-        jobIdsLock.unlock();
+        try {
+            jobIds.add( cudfJobConfiguration.getId() );
+        } finally {
+            jobIdsLock.unlock();
+        }
         scheduler.scheduleJob( cudfJob, trigger );
     }
 
@@ -235,12 +239,19 @@ public class CUDFArchivaTaskScheduler
     private void unScheduleJobs()
         throws SchedulerException
     {
+
         jobIdsLock.lock();
-        for ( String jobId : jobIds )
+        try
         {
-            scheduler.unscheduleJob( jobId, CUDF_GROUP );
+            for ( String jobId : jobIds )
+            {
+                scheduler.unscheduleJob( jobId, CUDF_GROUP );
+            }
         }
-        jobIdsLock.unlock();
+        finally
+        {
+            jobIdsLock.unlock();
+        }
     }
 
 }

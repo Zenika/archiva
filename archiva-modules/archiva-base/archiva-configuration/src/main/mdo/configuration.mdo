@@ -1368,6 +1368,28 @@
           </association>
         </field>
       </fields>
+      <codeSegments>
+        <codeSegment>
+          <version>1.4.0+</version>
+          <code><![CDATA[
+              public CUDFJobConfiguration findCUDFJobById( String id )
+              {
+                  if ( cudfJobs != null )
+                  {
+                      for ( java.util.Iterator<CUDFJobConfiguration> i = cudfJobs.iterator(); i.hasNext(); )
+                      {
+                          CUDFJobConfiguration cudfJobConfiguration = i.next();
+                          if ( cudfJobConfiguration.getId().equals( id ) )
+                          {
+                              return cudfJobConfiguration;
+                          }
+                      }
+                  }
+                  return null;
+              }
+          ]]></code>
+        </codeSegment>
+      </codeSegments>
     </class>
     <class>
       <name>CUDFJobConfiguration</name>

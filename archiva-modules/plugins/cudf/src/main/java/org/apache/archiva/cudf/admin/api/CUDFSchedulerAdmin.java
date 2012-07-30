@@ -21,7 +21,9 @@ package org.apache.archiva.cudf.admin.api;
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.configuration.CUDFConfiguration;
-import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
+import org.apache.archiva.cudf.admin.bean.CUDFJob;
+
+import java.util.List;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -30,8 +32,11 @@ import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
 public interface CUDFSchedulerAdmin
 {
 
-    CUDFScheduler getCUDFScheduler();
+    List<CUDFJob> getCUDFJobs();
 
-    void updateCUDFScheduler(CUDFScheduler cudfScheduler)
+    void updateCUDFJobs(CUDFJob cudfJob)
+        throws RepositoryAdminException;
+
+    void addCUDFJob(CUDFJob cudfJob)
         throws RepositoryAdminException;
 }
