@@ -1359,6 +1359,22 @@
       <description>Configuration about CUDF task and scheduler</description>
       <fields>
         <field>
+          <name>cudfJobs</name>
+          <description>List of CUDF generation jobs</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>CUDFJobConfiguration</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+      </fields>
+    </class>
+    <class>
+      <name>CUDFJobConfiguration</name>
+      <version>1.4.0+</version>
+      <description>CUDF configuration about universe generation job</description>
+      <fields>
+        <field>
           <name>location</name>
           <description>The file system location of generated universe</description>
           <version>1.4.0+</version>
