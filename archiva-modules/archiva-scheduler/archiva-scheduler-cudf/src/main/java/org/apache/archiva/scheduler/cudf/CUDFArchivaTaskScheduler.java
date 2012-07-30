@@ -47,8 +47,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -75,6 +73,8 @@ public class CUDFArchivaTaskScheduler
     @Inject
     @Named( "taskQueue#cudf" )
     private TaskQueue taskQueue;
+
+    private final Object taskQueueMonitor = new Object();
 
     @Inject
     private ArchivaConfiguration configuration;
@@ -110,7 +110,8 @@ public class CUDFArchivaTaskScheduler
         }
         else
         {
-            synchronized ( taskQueue ) {
+            synchronized ( taskQueueMonitor )
+            {
                 taskQueue.put( task );
             }
         }
@@ -126,7 +127,8 @@ public class CUDFArchivaTaskScheduler
         }
         else
         {
-            synchronized ( taskQueue ) {
+            synchronized ( taskQueueMonitor )
+            {
                 return taskQueue.remove( task );
             }
         }
@@ -136,7 +138,7 @@ public class CUDFArchivaTaskScheduler
     private boolean isProcessingCUDFGeneration( Task task )
         throws TaskQueueException
     {
-        synchronized ( taskQueue )
+        synchronized ( taskQueueMonitor )
         {
             return taskQueue.getQueueSnapshot().contains( task );
         }

@@ -26,8 +26,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.io.File;
-
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  */
