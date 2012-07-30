@@ -32,6 +32,8 @@ public class CUDFTask
     implements Task
 {
 
+    private String id;
+
     private boolean allRepositories;
 
     private List<String> repositoriesId;
@@ -41,6 +43,16 @@ public class CUDFTask
     public CUDFTask()
     {
         this.allRepositories = false;
+    }
+
+    public String getId()
+    {
+        return id;
+    }
+
+    public void setId( String id )
+    {
+        this.id = id;
     }
 
     public File getResourceDestination()
@@ -96,6 +108,10 @@ public class CUDFTask
         {
             return false;
         }
+        if ( id != null ? !id.equals( task.id ) : task.id != null )
+        {
+            return false;
+        }
         if ( repositoriesId != null ? !repositoriesId.equals( task.repositoriesId ) : task.repositoriesId != null )
         {
             return false;
@@ -113,7 +129,8 @@ public class CUDFTask
     @Override
     public int hashCode()
     {
-        int result = ( allRepositories ? 1 : 0 );
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + ( allRepositories ? 1 : 0 );
         result = 31 * result + ( repositoriesId != null ? repositoriesId.hashCode() : 0 );
         result = 31 * result + ( resourceDestination != null ? resourceDestination.hashCode() : 0 );
         return result;
@@ -122,10 +139,13 @@ public class CUDFTask
     @Override
     public String toString()
     {
-        return "CUDFTask{" +
-            "allRepositories=" + allRepositories +
-            ", repositoriesId=" + repositoriesId +
-            ", resourceDestination=" + resourceDestination +
-            '}';
+        final StringBuilder sb = new StringBuilder();
+        sb.append( "CUDFTask" );
+        sb.append( "{id='" ).append( id ).append( '\'' );
+        sb.append( ", allRepositories=" ).append( allRepositories );
+        sb.append( ", repositoriesId=" ).append( repositoriesId );
+        sb.append( ", resourceDestination=" ).append( resourceDestination );
+        sb.append( '}' );
+        return sb.toString();
     }
 }

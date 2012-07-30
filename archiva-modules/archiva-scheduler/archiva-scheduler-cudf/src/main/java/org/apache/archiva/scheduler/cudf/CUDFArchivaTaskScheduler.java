@@ -22,6 +22,7 @@ package org.apache.archiva.scheduler.cudf;
 import org.apache.archiva.common.ArchivaException;
 import org.apache.archiva.configuration.ArchivaConfiguration;
 import org.apache.archiva.configuration.CUDFConfiguration;
+import org.apache.archiva.configuration.CUDFJobConfiguration;
 import org.apache.archiva.configuration.ConfigurationEvent;
 import org.apache.archiva.configuration.ConfigurationListener;
 import org.apache.archiva.redback.components.scheduler.CronExpressionValidator;
@@ -46,7 +47,11 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -74,8 +79,6 @@ public class CUDFArchivaTaskScheduler
     @Named( "taskQueue#cudf" )
     private TaskQueue taskQueue;
 
-    private final Object taskQueueMonitor = new Object();
-
     @Inject
     private ArchivaConfiguration configuration;
 
@@ -84,6 +87,10 @@ public class CUDFArchivaTaskScheduler
 
     @Inject
     private Scheduler scheduler;
+
+    private Set<String> jobIds = new HashSet<String>();
+
+    private Lock jobIdsLock = new ReentrantLock();
 
     @PostConstruct
     public void startup()
@@ -110,7 +117,7 @@ public class CUDFArchivaTaskScheduler
         }
         else
         {
-            synchronized ( taskQueueMonitor )
+            synchronized ( taskQueue )
             {
                 taskQueue.put( task );
             }
@@ -127,7 +134,7 @@ public class CUDFArchivaTaskScheduler
         }
         else
         {
-            synchronized ( taskQueueMonitor )
+            synchronized ( taskQueue )
             {
                 return taskQueue.remove( task );
             }
@@ -138,7 +145,7 @@ public class CUDFArchivaTaskScheduler
     private boolean isProcessingCUDFGeneration( Task task )
         throws TaskQueueException
     {
-        synchronized ( taskQueueMonitor )
+        synchronized ( taskQueue )
         {
             return taskQueue.getQueueSnapshot().contains( task );
         }
@@ -149,7 +156,7 @@ public class CUDFArchivaTaskScheduler
         configuration.addListener( this );
         try
         {
-            scheduler.unscheduleJob( CUDF_JOB, CUDF_GROUP );
+            unScheduleJobs();
             scheduleCUDFJob( configuration.getConfiguration().getCudf() );
         }
         catch ( SchedulerException e )
@@ -161,46 +168,60 @@ public class CUDFArchivaTaskScheduler
     private void scheduleCUDFJob( CUDFConfiguration cudfConfiguration )
         throws SchedulerException
     {
-        if ( cudfConfiguration.getCronExpression() == null )
+        for ( CUDFJobConfiguration cudfJobConfiguration : cudfConfiguration.getCudfJobs() )
         {
-            log.warn( "Skipping job, no cron expression for " + cudfConfiguration.getCronExpression() );
+            scheduleCUDFJob( cudfJobConfiguration );
+        }
+    }
+
+    private void scheduleCUDFJob( CUDFJobConfiguration cudfJobConfiguration )
+        throws SchedulerException
+    {
+        if ( cudfJobConfiguration.getCronExpression() == null )
+        {
+            log.warn( "Skipping job, no cron expression for " + cudfJobConfiguration.getId() );
             return;
         }
 
-        String cronExpression = cudfConfiguration.getCronExpression();
+        String cronExpression = cudfJobConfiguration.getCronExpression();
         if ( !validator.validate( cronExpression ) )
         {
-            log.warn( "Cron expression [" + cronExpression + "] is invalid.  Defaulting to hourly." );
+            log.warn( "Cron expression [" + cronExpression + "] of " + cudfJobConfiguration.getId()
+                          + " is invalid.  Defaulting to hourly." );
             cronExpression = CRON_HOURLY;
         }
 
-        scheduleCUDFJob( cudfConfiguration, cronExpression );
+        scheduleCUDFJob( cudfJobConfiguration, cronExpression );
     }
 
-    private void scheduleCUDFJob( CUDFConfiguration cudfConfiguration, String cronExpression )
+    private void scheduleCUDFJob( CUDFJobConfiguration cudfJobConfiguration, String cronExpression )
         throws SchedulerException
     {
         CUDFTask cudfTask = new CUDFTask();
-        cudfTask.setResourceDestination( new File( cudfConfiguration.getLocation() ) );
-        if ( cudfConfiguration.isAllRepositories() )
+        cudfTask.setId( cudfJobConfiguration.getId() );
+        cudfTask.setResourceDestination( new File( cudfJobConfiguration.getLocation() ) );
+        if ( cudfJobConfiguration.isAllRepositories() )
         {
             cudfTask.setAllRepositories( true );
         }
         else
         {
-            String repositoryGroupId = cudfConfiguration.getRepositoryGroup();
+            String repositoryGroupId = cudfJobConfiguration.getRepositoryGroup();
             List<String> repositories =
                 configuration.getConfiguration().getGroupToRepositoryMap().get( repositoryGroupId );
             cudfTask.setRepositoriesId( repositories );
         }
-
         JobDataMap dataMap = new JobDataMap();
         dataMap.put( TASK_QUEUE, taskQueue );
         dataMap.put( CUDF_TASK, cudfTask );
         JobDetail cudfJob =
-            JobBuilder.newJob( CUDFTaskJob.class ).withIdentity( CUDF_JOB, CUDF_GROUP ).usingJobData( dataMap ).build();
-        Trigger trigger = TriggerBuilder.newTrigger().withIdentity( CUDF_JOB_TRIGGER, CUDF_GROUP ).withSchedule(
+            JobBuilder.newJob( CUDFTaskJob.class ).withIdentity( CUDF_JOB + ":" + cudfJobConfiguration.getId(),
+                                                                 CUDF_GROUP ).usingJobData( dataMap ).build();
+        Trigger trigger = TriggerBuilder.newTrigger().withIdentity( CUDF_JOB_TRIGGER + ":" + cudfJobConfiguration, CUDF_GROUP ).withSchedule(
             CronScheduleBuilder.cronSchedule( cronExpression ) ).build();
+        jobIdsLock.lock();
+        jobIds.add( cudfJobConfiguration.getId() );
+        jobIdsLock.unlock();
         scheduler.scheduleJob( cudfJob, trigger );
     }
 
@@ -208,11 +229,18 @@ public class CUDFArchivaTaskScheduler
     public void stop()
         throws SchedulerException
     {
-        scheduler.unscheduleJob( CUDF_JOB, CUDF_GROUP );
+        unScheduleJobs();
     }
 
-    public Scheduler getScheduler()
+    private void unScheduleJobs()
+        throws SchedulerException
     {
-        return scheduler;
+        jobIdsLock.lock();
+        for ( String jobId : jobIds )
+        {
+            scheduler.unscheduleJob( jobId, CUDF_GROUP );
+        }
+        jobIdsLock.unlock();
     }
+
 }
