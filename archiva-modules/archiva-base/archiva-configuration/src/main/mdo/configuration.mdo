@@ -1375,6 +1375,12 @@
       <description>CUDF configuration about universe generation job</description>
       <fields>
         <field>
+          <name>id</name>
+          <description>Id of job</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
           <name>location</name>
           <description>The file system location of generated universe</description>
           <version>1.4.0+</version>

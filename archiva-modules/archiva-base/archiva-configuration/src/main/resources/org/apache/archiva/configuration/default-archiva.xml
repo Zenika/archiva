@@ -141,9 +141,14 @@
   </webapp>
 
   <cudf>
-    <location>${appserver.base}/data/cudf</location>
-    <cronExpression>0 0\,30 * * * ?</cronExpression>
-    <allRepositories>true</allRepositories>
-    <repositoryGroup></repositoryGroup>
+    <cudfJobs>
+      <cudfJob>
+        <id>default</id>
+        <location>${appserver.base}/data/cudf</location>
+        <cronExpression>0 0\,30 * * * ?</cronExpression>
+        <allRepositories>true</allRepositories>
+        <repositoryGroup></repositoryGroup>
+      </cudfJob>
+    </cudfJobs>
   </cudf>
 </configuration>
