@@ -254,4 +254,8 @@ public class CUDFArchivaTaskScheduler
         }
     }
 
+    public Scheduler getScheduler()
+    {
+        return scheduler;
+    }
 }
