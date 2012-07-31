@@ -26,7 +26,7 @@ import java.io.Serializable;
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  * @since 1.4-M3
  */
-@XmlRootElement
+@XmlRootElement(name = "cudfJob")
 public class CUDFJob
     implements Serializable
 {
