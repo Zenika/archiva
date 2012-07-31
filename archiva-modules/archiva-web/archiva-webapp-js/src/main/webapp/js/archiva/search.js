@@ -1658,12 +1658,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
 
     reset=function(){
       displayCUDFScheduler();
-//      loadCUDFScheduler(function(data){
-//        self.cudfScheduler = mapCUDFScheduler(data);
-//        var mainContent = $("#main-content");
-//        ko.applyBindings(self,mainContent.find("#cudf-scheduler-view").get(0));
-//        activateCUDFSchedulerFormValidation();
-//      })
     };
   }
 
@@ -1673,8 +1667,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
 
     editCUDFJob=function(cudfJob){
       var cudfJobViewModel=new CUDFJobViewModel(cudfJob,self);
-
-//      ko.applyBindings(cudfJobViewModel,$("#main-content #cu"))
     }
 
     notImplementedYetMessage=function(){
@@ -1746,27 +1738,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     validator.settings.messages["cronExpression"]= $.i18n.prop("cudf.job.message.validation.cronExpression");
     validator.settings.messages["location"]= $.i18n.prop("cudf.job.message.validation.location");
   }
-
-//  displayCUDFJob=function(){
-//    clearUserMessages();
-//    var mainContent = $("#main-content");
-//    mainContent.html(mediumSpinnerImg());
-//    var cudfJobViewModel = new CUDFJobViewModel();
-//    addUnSlideVisibleBinding();
-//    loadCUDFJob(function(data){
-//      cudfJobViewModel.cudfScheduler = mapCUDFJob(data);
-//      $.ajax("restServices/archivaServices/repositoryGroupService/getRepositoriesGroups",{
-//        type: "GET",
-//        dataType: "json",
-//        success: function(data){
-//          cudfJobViewModel.availableRepositoryGroups(mapAvailableRepositoryManager(data));
-//          mainContent.html($("#cudf_job_tmpl").tmpl());
-//          ko.applyBindings(cudfJobViewModel,mainContent.find("#cudf-job-view").get(0));
-//          activateCUDFJobFormValidation();
-//        }
-//      });
-//    });
-//  }
 
   loadCUDFJob=function(successCallBackFn,errorCallBackFn){
     $.ajax("restServices/archivaServices/cudfService/job", {
