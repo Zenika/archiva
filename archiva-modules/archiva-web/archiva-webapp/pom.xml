@@ -881,6 +881,12 @@
       <artifactId>archiva-test-utils</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency> 
   </dependencies>
   <build>
@@ -1221,6 +1227,7 @@
               <exclude>src/sql/**</exclude>
               <exclude>src/test/repositories/test-repo/**</exclude>
               <exclude>src/main/webapp/META-INF/MANIFEST.MF</exclude>
+              <exclude>src/main/webapp/WEB-INF/classes/struts-security.xml</exclude>
             </excludes>
           </configuration>
         </plugin>

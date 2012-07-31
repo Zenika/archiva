@@ -1780,6 +1780,7 @@
               <exclude>**/*.iml</exclude>
               <exclude>build-number.txt</exclude>
               <exclude>.idea/**</exclude>
+              <exclude>.repository/**</exclude>
             </excludes>
           </configuration>
         </plugin>

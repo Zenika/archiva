@@ -241,6 +241,9 @@ public class ArchivaDavResourceFactoryTest
                           "target/test-classes/internal/org/apache/archiva/archiva/1.2-SNAPSHOT/archiva-1.2-SNAPSHOT.jar" ).getPath() );
             repoContentFactoryControl.expectAndReturn( repoFactory.getManagedRepositoryContent( INTERNAL_REPO ),
                                                        internalRepo );
+            repoRequestControl.expectAndReturn(
+                    repoRequest.isArchetypeCatalog( "org/apache/archiva/archiva/1.2-SNAPSHOT/archiva-1.2-SNAPSHOT.jar" ),
+                    false );
 
             archivaConfigurationControl.replay();
             requestControl.replay();
@@ -309,6 +312,9 @@ public class ArchivaDavResourceFactoryTest
                                           internalRepo ),
                 new File( config.findManagedRepositoryById( INTERNAL_REPO ).getLocation(),
                           "target/test-classes/internal/org/apache/archiva/archiva/1.2-SNAPSHOT/archiva-1.2-SNAPSHOT.jar" ).getPath() );
+            repoRequestControl.expectAndReturn(
+                    repoRequest.isArchetypeCatalog( "org/apache/archiva/archiva/1.2-SNAPSHOT/archiva-1.2-SNAPSHOT.jar" ),
+                    false );
 
             archivaConfigurationControl.replay();
             requestControl.replay();
@@ -387,6 +393,10 @@ public class ArchivaDavResourceFactoryTest
                 new File( config.findManagedRepositoryById( LOCAL_MIRROR_REPO ).getLocation(),
                           "target/test-classes/internal/org/apache/archiva/archiva/1.2-SNAPSHOT/archiva-1.2-SNAPSHOT.jar" ).getPath() );
 
+            repoRequestControl.expectAndReturn(
+                    repoRequest.isArchetypeCatalog( "org/apache/archiva/archiva/1.2-SNAPSHOT/archiva-1.2-SNAPSHOT.jar" ),
+                    false , 2);
+
             archivaConfigurationControl.replay();
             requestControl.replay();
             repoContentFactoryControl.replay();
@@ -435,14 +445,14 @@ public class ArchivaDavResourceFactoryTest
             requestControl.expectAndReturn( request.getRequestURI(),
                                             "http://localhost:8080/archiva/repository/" + INTERNAL_REPO
                                                 + "/eclipse/jdtcore/maven-metadata.xml" );
-            response.addHeader( "Pragma", "no-cache" );
+            response.setHeader( "Pragma", "no-cache" );
             responseControl.setVoidCallable();
 
-            response.addHeader( "Cache-Control", "no-cache" );
+            response.setHeader( "Cache-Control", "no-cache" );
             responseControl.setVoidCallable();
 
             long date = 2039842134;
-            response.addDateHeader( "last-modified", date );
+            response.setDateHeader( "last-modified", date );
             responseControl.setVoidCallable();
 
             archivaConfigurationControl.replay();

@@ -192,8 +192,8 @@ function() {
         // format groupId:artifactId org.apache.maven.plugins:maven-jar-plugin
         // or  groupId:artifactId:version org.apache.maven.plugins:maven-jar-plugin:2.3.1
         this.get('#artifact/:groupId/:artifactId',function(context){
-          var groupId= this.params['groupId'];
-          var artifactId= this.params['artifactId'];
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
           $.log("get #artifact:"+groupId+":"+artifactId);
           goToBrowseArtifactDetail(groupId,artifactId);//,null,null);
           return;
@@ -201,10 +201,10 @@ function() {
         });
         this.get('#artifact:repositoryId/:groupId/:artifactId/:version',function(context){
 
-          var repositoryId = this.params['repositoryId'];
-          var groupId= this.params['groupId'];
-          var artifactId= this.params['artifactId'];
-          var version= this.params['version'];
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
 
           if(!version){
             displayBrowseArtifactDetail(splitted[0],splitted[1]);//,null,null);
@@ -213,12 +213,27 @@ function() {
           }
         });
         this.get('#browse/:groupId',function(context){
-          var groupId = this.params['groupId'];
+          var groupId = this.params.groupId;
           if (groupId){
             displayBrowseGroupId(groupId);
           } else {
             displayBrowse(true);
           }
+        });
+        this.get('#browse~:repositoryId/:groupId',function(context){
+          var groupId = this.params.groupId;
+          var repositoryId = this.params.repositoryId;
+          $.log("repositoryId:"+repositoryId);
+          if (groupId){
+            displayBrowseGroupId(groupId,repositoryId);
+          } else {
+            displayBrowse(true,repositoryId);
+          }
+        });
+        this.get('#browse~:repositoryId',function(context){
+          var repositoryId = this.params.repositoryId;
+          $.log("repositoryId:"+repositoryId);
+          displayBrowse(true,repositoryId);
         });
         this.get('#:folder', function () {
           var folder = this.params.folder;
