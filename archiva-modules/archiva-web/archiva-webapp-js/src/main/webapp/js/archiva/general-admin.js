@@ -969,7 +969,6 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
   }
   ReportStatisticsResultViewModel=function(report){
     this.reports = ko.observableArray( report );
-    var self = this;
 
     this.tableReportViewModel = new ko.simpleGrid.viewModel({
       data: this.reports,
@@ -982,13 +981,13 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
         { headerText: "Group Count", rowText: "totalGroupCount" },
         { headerText: "Project Count", rowText: "totalProjectCount" },
-        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom === "" ? item.totalCountForType.pom : "0"} },
-        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar === "" ? item.totalCountForType.jar : "0" } },
-        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war === "" ? item.totalCountForType.war : "0" } },
-        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear === "" ? item.totalCountForType.ear : "0" } },
-        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe === "" ? item.totalCountForType.exe : "0" } },
-        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll === "" ? item.totalCountForType.dll : "0" } },
-        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip === "" ? item.totalCountForType.zip : "0" } }
+        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom != null ? item.totalCountForType.pom : "0"} },
+        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar != null ? item.totalCountForType.jar : "0" } },
+        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war != null ? item.totalCountForType.war : "0" } },
+        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear != null ? item.totalCountForType.ear : "0" } },
+        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe != null ? item.totalCountForType.exe : "0" } },
+        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll != null ? item.totalCountForType.dll : "0" } },
+        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip != null ? item.totalCountForType.zip : "0" } }
       ],
       pageSize: 10
     });
