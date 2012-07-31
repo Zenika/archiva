@@ -21,7 +21,6 @@ package org.apache.archiva.cudf.extractor;
 
 import org.apache.archiva.configuration.ArchivaConfiguration;
 import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
-import org.apache.archiva.cudf.extractor.CUDFExtractor;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 import org.junit.Before;
@@ -36,7 +35,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -89,8 +88,7 @@ public class CUDFEngineTest
     {
         StringWriter writer = new StringWriter();
         CUDFExtractor extractor = new CUDFExtractor( writer );
-        extractor.computeCUDFCone( "com.zenika", "cudf", "1.0", "jar", TEST_REPO, getRepositoriesList(),
-                                   factory );
+        extractor.computeCUDFCone( "com.zenika", "cudf", "1.0", "jar", TEST_REPO, getRepositoriesList(), factory );
         String result = writer.toString();
         assertTrue( result.contains( "package: com.zenika%3acudf" ) );
         assertTrue( result.contains( "number: 1.0" ) );

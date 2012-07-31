@@ -20,7 +20,6 @@ package org.apache.archiva.cudf.admin.api;
  */
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
-import org.apache.archiva.configuration.CUDFConfiguration;
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
 
 import java.util.List;
@@ -34,11 +33,11 @@ public interface CUDFJobsAdmin
 
     List<CUDFJob> getCUDFJobs();
 
-    CUDFJob getCUDFJob(String id);
+    CUDFJob getCUDFJob( String id );
 
-    void updateCUDFJobs(CUDFJob cudfJob)
+    void updateCUDFJobs( CUDFJob cudfJob )
         throws RepositoryAdminException;
 
-    void addCUDFJob(CUDFJob cudfJob)
+    void addCUDFJob( CUDFJob cudfJob )
         throws RepositoryAdminException;
 }

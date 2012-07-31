@@ -31,9 +31,13 @@ public class CUDFJob
     implements Serializable
 {
     private String id;
+
     private String location;
+
     private String cronExpression;
+
     private boolean allRepositories;
+
     private String repositoryGroup;
 
     public CUDFJob()

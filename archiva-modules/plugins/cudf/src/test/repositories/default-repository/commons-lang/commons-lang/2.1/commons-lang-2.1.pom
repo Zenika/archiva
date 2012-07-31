@@ -25,7 +25,8 @@
   <version>2.1</version>
   <description>Commons.Lang, a package of Java utility classes for the
     classes that are in java.lang's hierarchy, or are considered to be so
-    standard as to justify existence in java.lang.</description>
+    standard as to justify existence in java.lang.
+  </description>
   <url>http://jakarta.apache.org/commons/${pom.artifactId.substring(8)}/</url>
   <issueManagement>
     <url>http://issues.apache.org/bugzilla/</url>
@@ -49,7 +50,8 @@
       <name>Commons User List</name>
       <subscribe>commons-user-subscribe@jakarta.apache.org</subscribe>
       <unsubscribe>commons-user-unsubscribe@jakarta.apache.org</unsubscribe>
-      <archive>http://mail-archives.apache.org/eyebrowse/SummarizeList?listName=commons-user@jakarta.apache.org</archive>
+      <archive>http://mail-archives.apache.org/eyebrowse/SummarizeList?listName=commons-user@jakarta.apache.org
+      </archive>
     </mailingList>
   </mailingLists>
   <developers>
@@ -327,7 +329,8 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jakarta/commons/proper/${pom.artifactId.substring(8)}/trunk</connection>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jakarta/commons/proper/${pom.artifactId.substring(8)}/trunk
+    </connection>
     <url>http://svn.apache.org/viewcvs/jakarta/commons/proper/${pom.artifactId.substring(8)}/trunk</url>
   </scm>
   <organization>

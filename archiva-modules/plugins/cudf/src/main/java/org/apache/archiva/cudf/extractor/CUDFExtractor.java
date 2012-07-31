@@ -47,8 +47,6 @@ import java.util.Map;
 public class CUDFExtractor
 {
 
-    private static final String SEPARATOR = "%3a";
-
     private final Map<String, String> illegals = new HashMap<String, String>();
 
     private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
@@ -112,7 +110,8 @@ public class CUDFExtractor
     {
         this.repositories = repositories;
         this.writer.append( getCUDFPreambule() );
-        for (String repositoryId : repositories) {
+        for ( String repositoryId : repositories )
+        {
             computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositorySessionFactory );
         }
         this.writer.close();
@@ -343,8 +342,7 @@ public class CUDFExtractor
      */
     private String outputArtifactInCUDFInline( String organisation, String name )
     {
-        String packageLine =
-            new StringBuilder( 20 ).append( organisation ).append( SEPARATOR ).append( name ).toString();
+        String packageLine = new StringBuilder( 20 ).append( organisation ).append( ':' ).append( name ).toString();
         return encodingString( packageLine );
     }
 
