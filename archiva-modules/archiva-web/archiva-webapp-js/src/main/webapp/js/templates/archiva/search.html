@@ -775,28 +775,38 @@
 </script>
 
 <script id="cudf-jobs-table-tmpl" type="text/html">
-  <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th>${$.i18n.prop('cudf.job.table.header.id')}</th>
-        <th>${$.i18n.prop('cudf.job.table.header.cronExpression')}</th>
-        <th>${$.i18n.prop('cudf.job.table.header.repositoryGroup')}</th>
-        <th>${$.i18n.prop('cudf.job.table.header.edit')}</th>
-        <th>${$.i18n.prop('cudf.job.table.header.delete')}</th>
-      </tr>
-    </thead>
-    <tbody>
-    {{each(i, cudfJob) cudfJobs}}
-      <tr>
-        <td>${cudfJob.id}</td>
-        <td>${cudfJob.cronExpression}</td>
-        <td>${cudfJob.repositoryGroup}</td>
-        <td><a class="btn btn-info" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-edit"/></a></td>
-        <td><a class="btn btn-info" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-edit"/></a></td>
-      </tr>
-    {{/each}}
+  <table class="table table-striped table-bordered"
+         data-bind="simpleGrid: cudfJobsViewModel,simpleGridTemplate:'table-cudf-scheculer-job-tmpl',pageLinksId:'cudfJobsPageLinkId'">
     </tbody>
   </table>
+  <div id="cudfJobsPageLinkId"></div>
+</script>
+
+<script id="table-cudf-scheculer-job-tmpl" type="text/html">
+    <thead>
+    <tr>
+        {{each(i, columnDefinition) columns}}
+        <th>${ columnDefinition.headerText }</th>
+        {{/each}}
+        <th>${$.i18n.prop('cudf.job.table.header.edit')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.delete')}</th>
+        <th>${$.i18n.prop('cufd.job.table.header.launch')}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{each(i, row) itemsOnCurrentPage()}}
+    <tr>
+        {{each(i, columnDefinition) columns}}
+        {{var val = (typeof columnDefinition.rowText == 'function' ? columnDefinition.rowText(row) : row[columnDefinition.rowText])}}
+        <td>
+            ${val}
+        </td>
+        {{/each}}
+        <td><a class="btn btn-primary" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-pencil icon-white"/></a></td>
+        <td><a class="btn btn-danger" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-trash icon-white"/></a></td>
+        <td><a class="btn btn-warning" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-play-circle  icon-white"/></a></td>
+    </tr>
+    {{/each}}
 </script>
 
 <script id="cudf_scheduler_tmpl" type="text/html">
