@@ -142,7 +142,8 @@
               javax.xml.bind.annotation,
               org.apache.archiva.admin.model,
               org.apache.archiva.admin.repository,
-              org.apache.archiva.configuration
+              org.apache.archiva.configuration,
+              org.apache.archiva.redback.components.scheduler
             </Import-Package>
           </instructions>
         </configuration>
