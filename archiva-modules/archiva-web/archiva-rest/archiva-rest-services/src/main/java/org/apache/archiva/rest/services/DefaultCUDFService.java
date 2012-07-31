@@ -19,9 +19,8 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
-import org.apache.archiva.cudf.admin.api.CUDFSchedulerAdmin;
+import org.apache.archiva.cudf.admin.api.CUDFJobsAdmin;
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
-import org.apache.archiva.cudf.admin.bean.CUDFScheduler;
 import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
@@ -55,7 +54,7 @@ public class DefaultCUDFService
     private CUDFEngine cudfEngine;
 
     @Inject
-    private CUDFSchedulerAdmin cudfSchedulerAdmin;
+    private CUDFJobsAdmin cudfJobsAdmin;
 
     @Inject
     @Named( value = "taskExecutor#cudf" )
@@ -268,10 +267,11 @@ public class DefaultCUDFService
         return "Started in background";
     }
 
-    public Response startCudfTaskGeneration(String filePath)
+    public Response startCudfTaskGeneration( String filePath )
         throws ArchivaRestServiceException
     {
-        if (filePath == null || filePath.isEmpty()) {
+        if ( filePath == null || filePath.isEmpty() )
+        {
             throw new IllegalArgumentException( "The file path for the generation is required" );
         }
         try
@@ -290,15 +290,25 @@ public class DefaultCUDFService
     public List<CUDFJob> getCUDFJobs()
         throws ArchivaRestServiceException
     {
-        return cudfSchedulerAdmin.getCUDFJobs();
+        return cudfJobsAdmin.getCUDFJobs();
     }
 
-    public void updateCUDFScheduler( CUDFJob cudfJob )
+    public CUDFJob getCUDFJob( String id )
+        throws ArchivaRestServiceException
+    {
+        return cudfJobsAdmin.getCUDFJob( id );
+    }
+
+    public void updateCUDFScheduler( String id, CUDFJob cudfJob )
         throws ArchivaRestServiceException
     {
         try
         {
-            cudfSchedulerAdmin.updateCUDFJobs( cudfJob );
+            if ( cudfJob.getId() == null || cudfJob.getId().isEmpty() )
+            {
+                cudfJob.setId( id );
+            }
+            cudfJobsAdmin.updateCUDFJobs( cudfJob );
         }
         catch ( RepositoryAdminException e )
         {

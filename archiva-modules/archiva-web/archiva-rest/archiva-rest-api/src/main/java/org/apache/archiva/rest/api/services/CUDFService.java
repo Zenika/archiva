@@ -127,10 +127,17 @@ public interface CUDFService
     List<CUDFJob> getCUDFJobs()
         throws ArchivaRestServiceException;
 
-    @Path( "job" )
+    @Path( "jobs/{id}" )
+    @GET
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
+    CUDFJob getCUDFJob( @PathParam( "id" ) String id)
+        throws ArchivaRestServiceException;
+
+    @Path( "jobs/{id}" )
     @PUT
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
-    void updateCUDFScheduler( CUDFJob cudfJob )
+    void updateCUDFScheduler( @PathParam( "id" ) String id, CUDFJob cudfJob )
         throws ArchivaRestServiceException;
 }

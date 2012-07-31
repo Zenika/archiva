@@ -1573,8 +1573,10 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
       $('#extract-CUDF').remove();
   }
 
-  CUDFScheduler=function(location,cronExpression,allRepositories,repositoryGroup){
+  CUDFJob=function(id,location,cronExpression,allRepositories,repositoryGroup){
     var self = this;
+
+    this.id=ko.observable(id);
 
     this.location=ko.observable(location);
 
@@ -1585,46 +1587,28 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     this.repositoryGroup=ko.observable(repositoryGroup);
   }
 
-  mapCUDFScheduler=function(data){
-    if (data==null){
-      return null;
-    }
-    return new CUDFScheduler(data.location, data.cronExpression, data.allRepositories, data.repositoryGroup === null ? "" : data.repositoryGroup);
-  }
-
-  mapAvailableRepositoryManager=function(data){
-    if (data==null){
-      return null;
-    }
-    var availableRepositoryGroups = [];
-    $.each(data, function(index,value){
-      availableRepositoryGroups.push(value.id);
-    });
-    return availableRepositoryGroups;
-  }
-
-  CUDFSchedulerViewModel=function(cudfScheduler){
-    this.cudfScheduler=cudfScheduler;
+  CUDFJobViewModel=function(cudfJob,cudfJobsViewModel){
+    this.cudfJob=cudfJob;
+    this.cudfJobsViewModel=cudfJobsViewModel;
     this.availableRepositoryGroups=ko.observableArray([]);
 
     var self = this;
 
     save=function(){
-      var valid = $("#main-content #cudf-scheduler-form" ).valid();
+      var valid = $("#main-content #cudf-job-edit-form" ).valid();
       if (valid==false){
         return;
       }
-      $.log("save: CUDF scheduler");
+      $.log("save: CUDF job");
       clearUserMessages();
-      $.ajax("restServices/archivaServices/cudfService/scheduler",
+      $.ajax("restServices/archivaServices/cudfService/jobs",
         {
           type: "PUT",
-          data: ko.toJSON(this.cudfScheduler),
+          data: ko.toJSON(this.cudfJob),
           contentType: 'application/json',
           dataType: 'json',
           success: function(data){
             displaySuccessMessage($.i18n.prop('cudf.scheduler.message.success'));
-            self.cudfScheduler.modified(false);
           },
           error: function(data){
             var res = $.parseJSON(data.responseText);
@@ -1645,8 +1629,66 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     };
   }
 
-  activateCUDFSchedulerFormValidation=function(){
-    var validator = $("#main-content #cudf-scheduler-form").validate({
+  CUDFJobsViewModel=function(){
+    var self=this;
+    this.cudfJobs=ko.observableArray([]);
+
+    editCUDFJob=function(cudfJob){
+      var cudfJobViewModel=new CUDFJobViewModel(cudfJob,self);
+
+//      ko.applyBindings(cudfJobViewModel,$("#main-content #cu"))
+    }
+
+    notImplementedYetMessage=function(){
+      displayWarningMessage("Not implemented yet");
+    }
+  }
+
+  displayCUDFJobs=function(){
+    screenChange();
+    var mainContent = $("#main-content");
+    mainContent.html(mediumSpinnerImg());
+
+    var self=this;
+    this.cudfJobsViewModel=new CUDFJobsViewModel();
+
+    loadCUDFJobs(function(data){
+      self.cudfJobsViewModel.cudfJobs(mapCUDFJobs(data));
+      mainContent.html($("#cudfJobsMain" ).tmpl());
+      ko.applyBindings(self.cudfJobsViewModel,mainContent.find("#cudf-jobs-view").get(0));
+    })
+  }
+
+  mapCUDFJobs=function(data){
+    if (data == null){
+      return new Array();
+    }
+    var mappedCUDFJobs = $.map(data, function(item){
+      return mapCUDFJob(item);
+    });
+    return mappedCUDFJobs;
+  }
+
+  mapCUDFJob=function(data){
+    if (data==null){
+      return null;
+    }
+    return new CUDFJob(data.id, data.location, data.cronExpression, data.allRepositories, data.repositoryGroup === null ? "" : data.repositoryGroup);
+  }
+
+  mapAvailableRepositoryGroups=function(data){
+    if (data==null){
+      return null;
+    }
+    var availableRepositoryGroups = [];
+    $.each(data, function(index,value){
+      availableRepositoryGroups.push(value.id);
+    });
+    return availableRepositoryGroups;
+  }
+
+  activateCUDFJobFormValidation=function(){
+    var validator = $("#main-content #cudf-job-edit-form").validate({
       rules: {
         location: {
           required: true
@@ -1660,42 +1702,51 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
         }
       },
       showErrors: function(validator, errorMap, errorList){
-        customShowError("#main-content #cudf-scheduler-form",validator,errorMap,errorMap);
+        customShowError("#main-content #cudf-job-edit-form",validator,errorMap,errorMap);
       }
     });
-    validator.settings.messages["cronExpression"]= $.i18n.prop("cudf.scheduler.message.validation.cronExpression");
-    validator.settings.messages["location"]= $.i18n.prop("cudf.scheduler.message.validation.location");
+    validator.settings.messages["cronExpression"]= $.i18n.prop("cudf.job.message.validation.cronExpression");
+    validator.settings.messages["location"]= $.i18n.prop("cudf.job.message.validation.location");
   }
 
-  displayCUDFScheduler=function(){
-    clearUserMessages();
-    var mainContent = $("#main-content");
-    mainContent.html(mediumSpinnerImg());
-    var cudfSchedulerViewModel = new CUDFSchedulerViewModel();
-    addUnSlideVisibleBinding();
-    loadCUDFScheduler(function(data){
-      cudfSchedulerViewModel.cudfScheduler = mapCUDFScheduler(data);
-      $.ajax("restServices/archivaServices/repositoryGroupService/getRepositoriesGroups",{
-        type: "GET",
-        dataType: "json",
-        success: function(data){
-          cudfSchedulerViewModel.availableRepositoryGroups(mapAvailableRepositoryManager(data));
-          mainContent.html($("#cudf_scheduler_tmpl").tmpl(cudfSchedulerViewModel));
-          ko.applyBindings(cudfSchedulerViewModel,mainContent.find("#cudf-scheduler-view").get(0));
-          activateCUDFSchedulerFormValidation();
-        }
-      });
-    });
-  }
+//  displayCUDFJob=function(){
+//    clearUserMessages();
+//    var mainContent = $("#main-content");
+//    mainContent.html(mediumSpinnerImg());
+//    var cudfJobViewModel = new CUDFJobViewModel();
+//    addUnSlideVisibleBinding();
+//    loadCUDFJob(function(data){
+//      cudfJobViewModel.cudfScheduler = mapCUDFJob(data);
+//      $.ajax("restServices/archivaServices/repositoryGroupService/getRepositoriesGroups",{
+//        type: "GET",
+//        dataType: "json",
+//        success: function(data){
+//          cudfJobViewModel.availableRepositoryGroups(mapAvailableRepositoryManager(data));
+//          mainContent.html($("#cudf_job_tmpl").tmpl());
+//          ko.applyBindings(cudfJobViewModel,mainContent.find("#cudf-job-view").get(0));
+//          activateCUDFJobFormValidation();
+//        }
+//      });
+//    });
+//  }
 
-  loadCUDFScheduler=function(successCallBackFn,errorCallBackFn){
-    $.ajax("restServices/archivaServices/cudfService/scheduler", {
+  loadCUDFJob=function(successCallBackFn,errorCallBackFn){
+    $.ajax("restServices/archivaServices/cudfService/job", {
         type: "GET",
         dataType: "json",
         success: successCallBackFn,
         error: errorCallBackFn
     });
   };
+
+  loadCUDFJobs=function(successCallBackFn,errorCallBackFn){
+    $.ajax("restServices/archivaServices/cudfService/jobs", {
+        type: "GET",
+        dataType: "json",
+        success: successCallBackFn,
+        error: errorCallBackFn
+    })
+  }
 
   addUnSlideVisibleBinding=function(){
     ko.bindingHandlers.unSlideVisible = {

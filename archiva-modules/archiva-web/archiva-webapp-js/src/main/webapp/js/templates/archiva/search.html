@@ -750,6 +750,55 @@
     <pre class="prettyprint hide" id="show-cudf-universe-content"></pre>
 </script>
 
+<script id="cudfJobsMain" type="text/html">
+  <div class="header">
+    <h2>${$.i18n.prop('cudf.scheduler.page.header')}</h2>
+  </div>
+  <ul id="cudf-jobs-view-tabs" class="nav nav-tabs">
+    <li id="cudf-jobs-view-tabs-li-grid" class="active">
+      <a id="cudf-jobs-view-tabs-a-grid" data-toggle="tab" href="#cudf-jobs-view">
+        ${$.i18n.prop('cudf.scheduler.tab.jobs.title')}
+      </a>
+    </li>
+    <li id="cudf-jobs-view-tabs-li-edit">
+      <a id="cudf-jobs-view-tabs-a-edit" data-toggle="tab" href="#cudf-jobs-edit">
+        ${$.i18n.prop('cudf.scheduler.tab.edit.title')}
+      </a>
+    </li>
+  </ul>
+  <div id="cudf-jobs-view-tabs-content" class="tab-content">
+    <div id="cudf-jobs-view" class="tab-pane active">
+      <div id="cudf-jobs-table" data-bind="template: {name: 'cudf-jobs-table-tmpl', with: cudfJobs}">
+      </div>
+    </div>
+  </div>
+</script>
+
+<script id="cudf-jobs-table-tmpl" type="text/html">
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <th>${$.i18n.prop('cudf.job.table.header.id')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.cronExpression')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.repositoryGroup')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.edit')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.delete')}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{each(i, cudfJob) cudfJobs}}
+      <tr>
+        <td>${cudfJob.id}</td>
+        <td>${cudfJob.cronExpression}</td>
+        <td>${cudfJob.repositoryGroup}</td>
+        <td><a class="btn btn-info" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-edit"/></a></td>
+        <td><a class="btn btn-info" data-bind="click: function(){notImplementedYetMessage()}"><i class="icon-edit"/></a></td>
+      </tr>
+    {{/each}}
+    </tbody>
+  </table>
+</script>
+
 <script id="cudf_scheduler_tmpl" type="text/html">
     <div id="cudf-scheduler-view">
       <div class="page-header">

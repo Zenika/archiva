@@ -158,7 +158,7 @@ function() {
       this.cudfMenuItems = [
               {  text : $.i18n.prop('cudf.title') , id: null },
               {  text : $.i18n.prop('menu.cudf.universe.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFUniverse()}},
-              {  text : $.i18n.prop('menu.cudf.scheduler.text') , id: "menu-cudf-scheduler" , href: "#cudfScheduler" , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayCUDFScheduler()}}
+              {  text : $.i18n.prop('menu.cudf.scheduler.text') , id: "menu-cudf-scheduler" , href: "#cudfScheduler" , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayCUDFJobs()}}
       ];
       this.administrationMenuItems = [
               {  text : $.i18n.prop('menu.administration') , id: null},

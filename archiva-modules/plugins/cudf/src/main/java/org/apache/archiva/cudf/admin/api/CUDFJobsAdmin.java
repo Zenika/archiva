@@ -29,10 +29,12 @@ import java.util.List;
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
  * @since 1.4-M3
  */
-public interface CUDFSchedulerAdmin
+public interface CUDFJobsAdmin
 {
 
     List<CUDFJob> getCUDFJobs();
+
+    CUDFJob getCUDFJob(String id);
 
     void updateCUDFJobs(CUDFJob cudfJob)
         throws RepositoryAdminException;
