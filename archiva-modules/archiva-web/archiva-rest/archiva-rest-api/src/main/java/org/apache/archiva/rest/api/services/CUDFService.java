@@ -23,6 +23,7 @@ import org.apache.archiva.redback.authorization.RedbackAuthorization;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -147,5 +148,19 @@ public interface CUDFService
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     void addCUDFJob( CUDFJob cudfJob )
+        throws ArchivaRestServiceException;
+
+    @Path( "jobs" )
+    @DELETE
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
+    void deleteCUDFJob( CUDFJob cudfJob )
+        throws ArchivaRestServiceException;
+
+    @Path( "jobs/{id}/" )
+    @DELETE
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
+    void deleteCUDFJob( @PathParam( "id" ) String id )
         throws ArchivaRestServiceException;
 }

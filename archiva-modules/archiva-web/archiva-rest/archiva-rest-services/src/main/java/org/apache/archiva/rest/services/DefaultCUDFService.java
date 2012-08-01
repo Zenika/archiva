@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -329,6 +330,19 @@ public class DefaultCUDFService
         }
     }
 
+    public void deleteCUDFJob( CUDFJob cudfJob )
+        throws ArchivaRestServiceException
+    {
+        cudfJobsAdmin.deleteCUDFJob( cudfJob );
+    }
+
+    public void deleteCUDFJob( @PathParam( "id" ) String id )
+        throws ArchivaRestServiceException
+    {
+        CUDFJob cudfJob = new CUDFJob();
+        cudfJob.setId( id );
+        cudfJobsAdmin.deleteCUDFJob( cudfJob );
+    }
 
     @Override
     protected String getSelectedRepoExceptionMessage()
