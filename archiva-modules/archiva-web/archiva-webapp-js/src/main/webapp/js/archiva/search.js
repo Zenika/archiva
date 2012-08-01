@@ -1696,7 +1696,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     });
 
     editCUDFJob=function(cudfJob){
-      $.log('edit');
       loadAvailableRepositoryGroups(function(data){
         var cudfJobViewModel=new CUDFJobViewModel(cudfJob,self,true);
         activateCUDFJobEditTab();
@@ -1704,6 +1703,35 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
         $("#main-content #cudf-jobs-view-tabs-li-edit a").html($.i18n.prop("cudf.job.tab.edit.title"));
         activateCUDFJobFormValidation();
       });
+    }
+
+    deleteCUDFJob=function(cudfJob){
+      openDialogConfirm(function(){
+        self.removeCUDFJob(cudfJob);
+        window.modalConfirmDialog.modal("hide");
+      }, $.i18n.prop("ok"), $.i18n.prop("cancel"),
+      $.i18n.prop("cudf.job.message.delete.confirm",cudfJob.id()),
+      $("#cudf-job-delete-warning-tmpl").tmpl(self.cudfJob));
+    }
+
+    this.removeCUDFJob=function(cudfJob){
+      clearUserMessages();
+      $.ajax("restServices/archivaServices/cudfService/jobs",{
+          type: "DELETE",
+          data: ko.toJSON(cudfJob),
+          contentType:"application/json",
+          dataType: 'json',
+          success: function(data){
+            var message = $.i18n.prop("cudf.job.message.delete", cudfJob.id());
+            displaySuccessMessage(message);
+            self.cudfJobs.remove(cudfJob);
+          },
+          error: function(data){
+            var res = $.parseJSON(data.responseText);
+            displayRestError(res);
+          }
+        }
+      );
     }
 
     notImplementedYetMessage=function(){
@@ -1814,15 +1842,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
       error: errorCallBackFn
     });
   }
-
-  loadCUDFJob=function(successCallBackFn,errorCallBackFn){
-    $.ajax("restServices/archivaServices/cudfService/job", {
-        type: "GET",
-        dataType: "json",
-        success: successCallBackFn,
-        error: errorCallBackFn
-    });
-  };
 
   loadCUDFJobs=function(successCallBackFn,errorCallBackFn){
     $.ajax("restServices/archivaServices/cudfService/jobs", {

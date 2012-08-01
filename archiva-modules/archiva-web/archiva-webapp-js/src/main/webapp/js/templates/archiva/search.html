@@ -801,8 +801,8 @@
         </td>
         {{/each}}
         <td><a class="btn btn-primary" data-bind="click: function(){editCUDFJob(cudfJob)}"><i class="icon-pencil icon-white"/></a></td>
-        <td><a class="btn btn-danger" data-bind="click: function(){editCUDFJob(cudfJob)}"><i class="icon-trash icon-white"/></a></td>
-        <td><a class="btn btn-warning" data-bind="click: function(){editCUDFJob(cudfJob)}"><i class="icon-play-circle  icon-white"/></a></td>
+        <td><a class="btn btn-danger" data-bind="click: function(){deleteCUDFJob(cudfJob)}"><i class="icon-trash icon-white"/></a></td>
+        <td><a class="btn btn-warning" data-bind="click: function(){notImplementedYetMessage(cudfJob)}"><i class="icon-play-circle  icon-white"/></a></td>
     </tr>
     {{/each}}
     </tbody>
@@ -857,6 +857,12 @@
       </div>
     </fieldset>
   </form>
+</script>
+
+<script id="cudf-job-delete-warning-tmpl" type='text/html'>
+    <div>
+        <span class="label label-warning">${$.i18n.prop('warning.not.undone.operation')}</span>
+    </div>
 </script>
 
 <script id="dependency_tree_tmpl" type="text/html">
