@@ -24,6 +24,7 @@ import org.apache.archiva.redback.authorization.RedbackAuthorization;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -131,13 +132,20 @@ public interface CUDFService
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
-    CUDFJob getCUDFJob( @PathParam( "id" ) String id)
+    CUDFJob getCUDFJob( @PathParam( "id" ) String id )
         throws ArchivaRestServiceException;
 
     @Path( "jobs/{id}" )
     @PUT
     @RedbackAuthorization( noPermission = true, noRestriction = true )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
-    void updateCUDFScheduler( @PathParam( "id" ) String id, CUDFJob cudfJob )
+    void updateCUDFJob( @PathParam( "id" ) String id, CUDFJob cudfJob )
+        throws ArchivaRestServiceException;
+
+    @Path( "jobs" )
+    @POST
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
+    void addCUDFJob( CUDFJob cudfJob )
         throws ArchivaRestServiceException;
 }

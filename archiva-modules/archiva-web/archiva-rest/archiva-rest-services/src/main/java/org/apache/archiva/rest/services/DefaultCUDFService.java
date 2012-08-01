@@ -299,7 +299,7 @@ public class DefaultCUDFService
         return cudfJobsAdmin.getCUDFJob( id );
     }
 
-    public void updateCUDFScheduler( String id, CUDFJob cudfJob )
+    public void updateCUDFJob( String id, CUDFJob cudfJob )
         throws ArchivaRestServiceException
     {
         try
@@ -309,6 +309,19 @@ public class DefaultCUDFService
                 cudfJob.setId( id );
             }
             cudfJobsAdmin.updateCUDFJobs( cudfJob );
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
+    }
+
+    public void addCUDFJob( CUDFJob cudfJob )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            cudfJobsAdmin.addCUDFJob( cudfJob );
         }
         catch ( RepositoryAdminException e )
         {

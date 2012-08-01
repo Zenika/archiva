@@ -86,7 +86,7 @@ public class DefaultCUDFJobsAdmin
         CUDFConfiguration cudfConfiguration = getCUDFConfiguration();
         CUDFJobConfiguration cudfJobConfiguration = cudfConfiguration.findCUDFJobById( cudfJob.getId() );
 
-        if ( cudfConfiguration != null )
+        if ( cudfJobConfiguration != null )
         {
             cudfConfiguration.removeCudfJob( cudfJobConfiguration );
         }
@@ -107,6 +107,7 @@ public class DefaultCUDFJobsAdmin
         CUDFJobConfiguration cudfJobConfiguration = new CUDFJobConfiguration();
         cudfJobConfiguration.setId( cudfJob.getId() );
         cudfJobConfiguration.setLocation( cudfJob.getLocation() );
+        cudfJobConfiguration.setCronExpression( cudfJob.getCronExpression() );
         cudfJobConfiguration.setAllRepositories( cudfJob.isAllRepositories() );
         cudfJobConfiguration.setRepositoryGroup( cudfJob.getRepositoryGroup() );
         return cudfJobConfiguration;
