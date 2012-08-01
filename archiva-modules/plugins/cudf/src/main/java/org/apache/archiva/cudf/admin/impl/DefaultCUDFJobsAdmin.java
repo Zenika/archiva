@@ -26,6 +26,8 @@ import org.apache.archiva.configuration.CUDFJobConfiguration;
 import org.apache.archiva.cudf.admin.api.CUDFJobsAdmin;
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.redback.components.scheduler.CronExpressionValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -41,6 +43,8 @@ public class DefaultCUDFJobsAdmin
     extends AbstractRepositoryAdmin
     implements CUDFJobsAdmin
 {
+
+    private Logger log = LoggerFactory.getLogger( DefaultCUDFJobsAdmin.class );
 
     @Inject
     private CronExpressionValidator cronExpressionValidator;
@@ -77,6 +81,19 @@ public class DefaultCUDFJobsAdmin
 
         cudfConfiguration.addCudfJob( createCUDFJobConfiguration( cudfJob ) );
         saveConfiguration( getArchivaConfiguration().getConfiguration() );
+    }
+
+    public void deleteCUDFJob( CUDFJob cudfJob )
+    {
+        CUDFConfiguration cudfConfiguration = getCUDFConfiguration();
+        CUDFJobConfiguration cudfJobConfiguration = cudfConfiguration.findCUDFJobById( cudfJob.getId() );
+        if ( cudfJobConfiguration == null )
+        {
+            log.warn(
+                "The CUDF job configuration that should be remove with id " + cudfJob.getId() + " doesn't exist." );
+        } else {
+            cudfConfiguration.removeCudfJob( cudfJobConfiguration );
+        }
     }
 
 

@@ -40,4 +40,6 @@ public interface CUDFJobsAdmin
 
     void addCUDFJob( CUDFJob cudfJob )
         throws RepositoryAdminException;
+
+    void deleteCUDFJob( CUDFJob cudfJob );
 }
