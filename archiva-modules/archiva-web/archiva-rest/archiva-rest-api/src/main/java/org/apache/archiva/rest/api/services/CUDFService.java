@@ -122,6 +122,12 @@ public interface CUDFService
     Response startCudfTaskGeneration( @QueryParam( "filePath" ) String filePath )
         throws ArchivaRestServiceException;
 
+    @Path( "jobs/{id}/start" )
+    @POST
+    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    void startCUDFJob( @PathParam( "id" ) String id )
+        throws ArchivaRestServiceException;
+
     @Path( "jobs" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )

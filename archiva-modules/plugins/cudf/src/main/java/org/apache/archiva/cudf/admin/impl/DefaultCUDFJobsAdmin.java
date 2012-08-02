@@ -84,6 +84,7 @@ public class DefaultCUDFJobsAdmin
     }
 
     public void deleteCUDFJob( CUDFJob cudfJob )
+        throws RepositoryAdminException
     {
         CUDFConfiguration cudfConfiguration = getCUDFConfiguration();
         CUDFJobConfiguration cudfJobConfiguration = cudfConfiguration.findCUDFJobById( cudfJob.getId() );
@@ -94,6 +95,7 @@ public class DefaultCUDFJobsAdmin
         } else {
             cudfConfiguration.removeCudfJob( cudfJobConfiguration );
         }
+        saveConfiguration( getArchivaConfiguration().getConfiguration() );
     }
 
 

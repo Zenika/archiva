@@ -19,12 +19,16 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
+import org.apache.archiva.admin.model.beans.RepositoryGroup;
+import org.apache.archiva.admin.model.group.RepositoryGroupAdmin;
 import org.apache.archiva.cudf.admin.api.CUDFJobsAdmin;
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.cudf.extractor.CUDFEngine;
+import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.CUDFService;
+import org.apache.archiva.scheduler.ArchivaTaskScheduler;
 import org.apache.archiva.scheduler.cudf.ArchivaCUDFTaskExecutor;
 import org.apache.archiva.scheduler.cudf.CUDFTask;
 import org.springframework.stereotype.Service;
@@ -60,6 +64,13 @@ public class DefaultCUDFService
     @Inject
     @Named( value = "taskExecutor#cudf" )
     private ArchivaCUDFTaskExecutor archivaCUDFTaskExecutor;
+
+    @Inject()
+    @Named( "scheduler#cudf" )
+    private ArchivaTaskScheduler<CUDFTask> cudfTaskArchivaTaskScheduler;
+
+    @Inject
+    private RepositoryGroupAdmin repositoryGroupAdmin;
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
                              HttpServletResponse servletResponse )
@@ -288,6 +299,40 @@ public class DefaultCUDFService
         }
     }
 
+    public void startCUDFJob( @PathParam( "id" ) String id )
+        throws ArchivaRestServiceException
+    {
+        CUDFJob cudfJob = cudfJobsAdmin.getCUDFJob( id );
+        CUDFTask cudfTask = new CUDFTask();
+        cudfTask.setId( cudfJob.getId() );
+        cudfTask.setResourceDestination( new File( cudfJob.getLocation() ) );
+        if ( cudfJob.isAllRepositories() )
+        {
+            cudfTask.setAllRepositories( true );
+        }
+        else
+        {
+            try
+            {
+                RepositoryGroup repositoryGroup =
+                    repositoryGroupAdmin.getRepositoryGroup( cudfJob.getRepositoryGroup() );
+                cudfTask.setRepositoriesId( repositoryGroup.getRepositories() );
+            }
+            catch ( RepositoryAdminException e )
+            {
+                throw new ArchivaRestServiceException( e.getMessage(), e );
+            }
+        }
+        try
+        {
+            cudfTaskArchivaTaskScheduler.queueTask( cudfTask );
+        }
+        catch ( TaskQueueException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
+    }
+
     public List<CUDFJob> getCUDFJobs()
         throws ArchivaRestServiceException
     {
@@ -333,7 +378,14 @@ public class DefaultCUDFService
     public void deleteCUDFJob( CUDFJob cudfJob )
         throws ArchivaRestServiceException
     {
-        cudfJobsAdmin.deleteCUDFJob( cudfJob );
+        try
+        {
+            cudfJobsAdmin.deleteCUDFJob( cudfJob );
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
     }
 
     public void deleteCUDFJob( @PathParam( "id" ) String id )
@@ -341,7 +393,14 @@ public class DefaultCUDFService
     {
         CUDFJob cudfJob = new CUDFJob();
         cudfJob.setId( id );
-        cudfJobsAdmin.deleteCUDFJob( cudfJob );
+        try
+        {
+            cudfJobsAdmin.deleteCUDFJob( cudfJob );
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
     }
 
     @Override
