@@ -100,7 +100,7 @@ public class CUDFArchivaTaskScheduler
         configuration.addListener( this );
         try
         {
-            scheduleCUDFJob( configuration.getConfiguration().getCudf() );
+            scheduleCUDFJob();
         }
         catch ( SchedulerException e )
         {
@@ -153,11 +153,10 @@ public class CUDFArchivaTaskScheduler
 
     public void configurationEvent( ConfigurationEvent event )
     {
-        configuration.addListener( this );
         try
         {
             unScheduleJobs();
-            scheduleCUDFJob( configuration.getConfiguration().getCudf() );
+            scheduleCUDFJob();
         }
         catch ( SchedulerException e )
         {
@@ -165,9 +164,10 @@ public class CUDFArchivaTaskScheduler
         }
     }
 
-    private void scheduleCUDFJob( CUDFConfiguration cudfConfiguration )
+    private void scheduleCUDFJob()
         throws SchedulerException
     {
+        CUDFConfiguration cudfConfiguration = configuration.getConfiguration().getCudf();
         for ( CUDFJobConfiguration cudfJobConfiguration : cudfConfiguration.getCudfJobs() )
         {
             scheduleCUDFJob( cudfJobConfiguration );
@@ -214,16 +214,21 @@ public class CUDFArchivaTaskScheduler
         JobDataMap dataMap = new JobDataMap();
         dataMap.put( TASK_QUEUE, taskQueue );
         dataMap.put( CUDF_TASK, cudfTask );
+
+        String jobId = CUDF_JOB + ":" + cudfJobConfiguration.getId();
+
         JobDetail cudfJob =
-            JobBuilder.newJob( CUDFTaskJob.class ).withIdentity( CUDF_JOB + ":" + cudfJobConfiguration.getId(),
-                                                                 CUDF_GROUP ).usingJobData( dataMap ).build();
+            JobBuilder.newJob( CUDFTaskJob.class ).withIdentity( jobId, CUDF_GROUP ).usingJobData( dataMap ).build();
         Trigger trigger = TriggerBuilder.newTrigger().withIdentity( CUDF_JOB_TRIGGER + ":" + cudfJobConfiguration,
                                                                     CUDF_GROUP ).withSchedule(
             CronScheduleBuilder.cronSchedule( cronExpression ) ).build();
         jobIdsLock.lock();
-        try {
-            jobIds.add( cudfJobConfiguration.getId() );
-        } finally {
+        try
+        {
+            jobIds.add( jobId );
+        }
+        finally
+        {
             jobIdsLock.unlock();
         }
         scheduler.scheduleJob( cudfJob, trigger );
