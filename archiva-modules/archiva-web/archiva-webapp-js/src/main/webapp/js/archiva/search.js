@@ -1626,7 +1626,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
   }
 
   CUDFJobViewModel=function(cudfJob,cudfJobsViewModel,update){
-    this.cudfJob=cudfJob;
+    this.cudfJob=ko.observable(cudfJob);
     this.cudfJobsViewModel=cudfJobsViewModel;
     this.update=update;
 
@@ -1675,7 +1675,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     };
 
     reset=function(){
-      displayCUDFScheduler();
+      displayCUDFJobs();
     };
   }
 
@@ -1733,10 +1733,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
         }
       );
     }
-
-    notImplementedYetMessage=function(){
-      displayWarningMessage("Not implemented yet");
-    }
   }
 
   displayCUDFJobs=function(){
@@ -1746,8 +1742,6 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
 
     var self=this;
     this.cudfJobsViewModel=new CUDFJobsViewModel();
-
-    addUnSlideVisibleBinding();
 
     loadCUDFJobs(function(data){
       self.cudfJobsViewModel.cudfJobs(mapCUDFJobs(data));
