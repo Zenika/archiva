@@ -1626,7 +1626,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
   }
 
   CUDFJobViewModel=function(cudfJob,cudfJobsViewModel,update){
-    this.cudfJob=ko.observable(cudfJob);
+    this.cudfJob=cudfJob;
     this.cudfJobsViewModel=cudfJobsViewModel;
     this.update=update;
 
