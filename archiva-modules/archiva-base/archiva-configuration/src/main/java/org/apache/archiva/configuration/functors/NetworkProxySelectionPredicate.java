@@ -19,14 +19,14 @@ package org.apache.archiva.configuration.functors;
  * under the License.
  */
 
+import org.apache.archiva.configuration.NetworkProxyConfiguration;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
-import org.apache.archiva.configuration.NetworkProxyConfiguration;
 
 /**
- * NetworkProxySelectionPredicate 
+ * NetworkProxySelectionPredicate
  *
- * @version $Id$
+ *
  */
 public class NetworkProxySelectionPredicate
     implements Predicate

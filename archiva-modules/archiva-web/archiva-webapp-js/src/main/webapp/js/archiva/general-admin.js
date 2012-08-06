@@ -16,8 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl","order!knockout","order!knockout.simpleGrid",
-  "jquery.validate","bootstrap"]
+define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout","knockout.simpleGrid",
+  "knockout.sortable","jquery.validate","bootstrap"]
     , function() {
 
   //-------------------------
@@ -873,6 +873,251 @@ define("archiva.general-admin",["jquery","i18n","order!utils","order!jquery.tmpl
         });
       }
     });
+  }
+
+  //---------------------------
+  // report configuration page
+  //---------------------------
+  StatisticsReportRequest=function() {
+    this.repositories = ko.observableArray( [] );
+    this.rowCount = ko.observable(100);
+    this.startDate = ko.observable();
+    this.endDate = ko.observable();
+  }
+
+  reportStatisticsFormValidator=function(){
+    $.log("reportStatisticsFormValidator");
+    var validate = $("#main-content #report-statistics-form-id").validate({
+      rules: {
+        rowCountStatistics: {
+          required:true,
+          number: true,
+          min: 10
+        },
+        startDate: {
+          date: true
+        },
+        endDate: {
+          date: true
+        }
+      },
+      showErrors: function(validator, errorMap, errorList) {
+        $.log("showErrors");
+        customShowError("#main-content #report-statistics-form-id", validator, errorMap, errorMap);
+      }
+    })
+  }
+  ReportStatisticsViewModel=function(repositoriesAvailable){
+    var mainContent=$("#main-content");
+    reportStatisticsFormValidator();
+
+    var self=this;
+    this.availableRepositories = ko.observableArray( repositoriesAvailable );
+    this.statisticsReport = ko.observable( new StatisticsReportRequest() );
+
+    mainContent.find("#startDate" ).datepicker();
+    mainContent.find("#endDate" ).datepicker();
+    mainContent.find("#rowCount-info-button" ).popover();
+
+    this.showStatistics=function() {
+      $.log("showStatistics");
+      clearUserMessages( "repositoriesErrorMessage" );
+      if (!mainContent.find("#report-statistics-form-id").valid()) {
+        return;
+      }
+      if(this.statisticsReport().repositories().length==0){
+        displayErrorMessage( $.i18n.prop('report.statistics.repositories.required'), "repositoriesErrorMessage" );
+        return;
+      }
+
+      var resultTabContent = mainContent.find("#report-result");
+
+      url = "restServices/archivaServices/reportServices/getStatisticsReport/?rowCount="
+        + this.statisticsReport().rowCount();
+
+      for(var i=0;i<this.statisticsReport().repositories().length;i++){
+        url += "&repository=" + this.statisticsReport().repositories()[i];
+      }
+
+      if(this.statisticsReport().startDate()!=null){
+        url += "&startDate=" + this.statisticsReport().startDate();
+      }
+      if(this.statisticsReport().endDate()!=null){
+        url += "&endDate=" + this.statisticsReport().endDate();
+      }
+
+      $.ajax(url, {
+        type: "GET",
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(data){
+          resultTabContent.html( $( "#report-statistics" ).tmpl() );
+          var reportStatistics = new ReportStatisticsResultViewModel( data );
+          ko.applyBindings( reportStatistics, resultTabContent.get( 0 ) );
+          $( "#report-result-tab-li" ).removeClass( "hide" );
+          $( "#report-result-tab-li" ).addClass( "active" );
+          $( "#report-stat-tab-li" ).removeClass( "active" );
+          $( "#report-stat-tab-content" ).removeClass( "active" );
+          resultTabContent.addClass( "active" );
+        },
+        error: function(data){
+          var res = $.parseJSON(data.responseText);
+          displayErrorMessage($.i18n.prop(res.errorMessage));
+        }
+      });
+    }
+  }
+  ReportStatisticsResultViewModel=function(report){
+    this.reports = ko.observableArray( report );
+
+    this.tableReportViewModel = new ko.simpleGrid.viewModel({
+      data: this.reports,
+      viewModel: this,
+      columns: [
+        { headerText: "Repository ID", rowText: "repositoryId" },
+        { headerText: "Start Date", rowText: function(item){return new Date(item.scanStartTime);}},
+        { headerText: "Total File Count", rowText: "totalFileCount" },
+        { headerText: "Total Size", rowText: "totalArtifactFileSize" },
+        { headerText: "Artifact Count", rowText: "totalArtifactCount" },
+        { headerText: "Group Count", rowText: "totalGroupCount" },
+        { headerText: "Project Count", rowText: "totalProjectCount" },
+        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom != null ? item.totalCountForType.pom : "0"} },
+        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar != null ? item.totalCountForType.jar : "0" } },
+        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war != null ? item.totalCountForType.war : "0" } },
+        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear != null ? item.totalCountForType.ear : "0" } },
+        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe != null ? item.totalCountForType.exe : "0" } },
+        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll != null ? item.totalCountForType.dll : "0" } },
+        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip != null ? item.totalCountForType.zip : "0" } }
+      ],
+      pageSize: 10
+    });
+  }
+
+  HealthReportRequest=function(){
+    this.repositoryId = ko.observable();
+    this.rowCount = ko.observable(100);
+    this.groupId = ko.observable();
+  }
+  HealthReportResult=function(repositoryId,namespace,project,version,id,message,problem,name,facetId){
+    this.repositoryId = repositoryId;
+    this.namespace = namespace;
+    this.project = project;
+    this.version = version;
+    this.id = id;
+    this.message = message;
+    this.problem = problem;
+    this.name = name;
+    this.facetId = facetId;
+  }
+  mapHealthReportResult=function(data){
+    if(data==null) return;
+    return new HealthReportResult( data.repositoryId, data.namespace, data.project, data.version, data.id, data.message,
+                                   data.problem, data.name, data.facetId );
+  }
+  mapHealthReportResults=function(data){
+    if (data != null)
+    {
+      return $.isArray(data)? $.map(data, function(item){
+        return mapHealthReportResult(item);
+      }):[mapHealthReportResult(data)];
+    }
+    return [];
+  }
+  ReportHealthResultViewModel=function(report){
+    this.reports = ko.observableArray( report );
+    var self = this;
+    this.tableReportViewModel = new ko.simpleGrid.viewModel({
+      data: this.reports,
+      viewModel: this,
+      columns: [
+        { headerText: "ID", rowText: "id" },
+        { headerText: "Namespace", rowText: "namespace" },
+        { headerText: "Project", rowText: "project" },
+        { headerText: "Version", rowText: "version" },
+        { headerText: "Name", rowText: "name" },
+        { headerText: "Problem", rowText: "problem" },
+        { headerText: "Message", rowText: "message" }
+        ],
+      pageSize: 10
+    });
+  }
+
+  reportHealthFormValidator=function(){
+    var validate = $("#main-content #report-health-form-id").validate({
+      rules: {
+        rowCountHealth: {
+          required: true,
+          number: true,
+          min: 10
+        },
+        repositoryId: {
+          required: true
+        }
+      },
+      showErrors: function(validator, errorMap, errorList) {
+        customShowError("#main-content #report-health-form-id", validator, errorMap, errorMap);
+      }
+    })
+  }
+  ReportHealthViewModel=function(){
+    reportHealthFormValidator();
+    this.healthReport = ko.observable(new HealthReportRequest());
+
+    this.showHealth=function() {
+      if (!$("#main-content #report-health-form-id").valid()) {
+        return;
+      }
+
+      var resultTabContent = $("#main-content #report-result");
+
+      var url =
+        "restServices/archivaServices/reportServices/getHealthReports/" + this.healthReport().repositoryId() + "/"
+          + this.healthReport().rowCount();
+
+      if (this.healthReport().groupId())
+      {
+        url += "?groupId=" + this.healthReport().groupId();
+      }
+
+      $.ajax(url, {
+        type: "GET",
+        contentType: 'application/json',
+        dataType: 'json',
+        success: function(data){
+          var reports = new ReportHealthResultViewModel( mapHealthReportResults( data ) );
+          resultTabContent.html( $( "#report-health" ).tmpl() );
+          ko.applyBindings( reports, resultTabContent.get( 0 ) );
+          $( "#report-result-tab-li" ).removeClass( "hide" );
+          $( "#report-result-tab-li" ).addClass( "active" );
+          $( "#report-health-tab-li" ).removeClass( "active" );
+          $( "#report-health-tab-content" ).removeClass( "active" );
+          resultTabContent.addClass( "active" );
+        },
+        error: function(data){
+            var res = $.parseJSON(data.responseText);
+            displayRestError(res);
+          }
+      });
+    }
+  }
+
+  displayReportsPage=function(){
+    screenChange();
+    clearUserMessages();
+    var mainContent = $("#main-content");
+    mainContent.html(mediumSpinnerImg());
+    $.ajax("restServices/archivaServices/searchService/observableRepoIds", {
+      type: "GET",
+      dataType: 'json',
+      success: function(data) {
+        var repos = mapStringList( data );
+        mainContent.html( $( "#report-base" ).tmpl( {repositoriesList:repos} ) );
+        var statisticsReportViewModel = ReportStatisticsViewModel( repos );
+        var healthReportViewModel = ReportHealthViewModel( );
+        ko.applyBindings( statisticsReportViewModel, mainContent.get( 0 ) );
+        ko.applyBindings( healthReportViewModel, mainContent.get( 0 ) );
+      }
+    })
   }
 
 });

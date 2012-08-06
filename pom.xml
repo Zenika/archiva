@@ -27,7 +27,7 @@
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva-parent</artifactId>
     <version>9-SNAPSHOT</version>
-    <relativePath>../parent/pom.xml</relativePath>
+    <relativePath></relativePath>
   </parent>
 
   <artifactId>archiva</artifactId>
@@ -62,9 +62,10 @@
     <struts.version>2.2.3.1</struts.version>
     <maven3x.version>3.0.4</maven3x.version>
     <maven.version>2.0.8</maven.version>
-    <maven-dependency-tree.version>1.2</maven-dependency-tree.version>
+    <aether.version>1.13.1</aether.version>
+
     <maven-model-converter.version>2.1</maven-model-converter.version>
-    <maven.indexer.version>4.1.3-SNAPSHOT</maven.indexer.version>
+    <maven.indexer.version>4.1.3</maven.indexer.version>
     <wagon.version>2.2</wagon.version>
     <redback.version>2.0-SNAPSHOT</redback.version>
     <redback.cache.version>2.0-SNAPSHOT</redback.cache.version>
@@ -74,12 +75,17 @@
     <redback.taskqueue.version>2.0-SNAPSHOT</redback.taskqueue.version>
     <slf4j.version>1.6.6</slf4j.version>
     <binder.version>0.11</binder.version>
-    <spring.version>3.1.1.RELEASE</spring.version>
-    <jackrabbit.version>2.5.0</jackrabbit.version>
+    <spring.version>3.1.2.RELEASE</spring.version>
+
     <javax.jcr.version>2.0</javax.jcr.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
-    <lucene.version>3.0.3</lucene.version>
+
+    <!-- jackrabbit 2.5.0 supports only lucene 3.0.3 -->
+    <!-- jackrabbit 2.6 will support lucene 3.6.x -->
+    <lucene.version>3.6.1</lucene.version>
+    <jackrabbit.version>2.6-SNAPSHOT</jackrabbit.version>
+
     <cxfVersion>2.6.1</cxfVersion>
     <derbyVersion>10.8.2.2</derbyVersion>
     <httpclient.version>4.1.3</httpclient.version>
@@ -96,7 +102,7 @@
     <plexus-expression-evaluator.version>2.0-SNAPSHOT</plexus-expression-evaluator.version>
     <plexus-utils.version>1.5.5</plexus-utils.version>
     <asfTomcatMavenPluginVersion>2.0-SNAPSHOT</asfTomcatMavenPluginVersion>
-    <tomcat7Version>7.0.28</tomcat7Version>
+    <tomcat7Version>7.0.29</tomcat7Version>
   </properties>
 
   <dependencyManagement>
@@ -109,8 +115,8 @@
       </dependency>
       <dependency>
         <groupId>org.easytesting</groupId>
-        <artifactId>fest-assert</artifactId>
-        <version>1.4</version>
+        <artifactId>fest-assert-core</artifactId>
+        <version>2.0M6</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -154,6 +160,11 @@
       <dependency>
         <groupId>org.apache.archiva</groupId>
         <artifactId>archiva-maven2-metadata</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.archiva</groupId>
+        <artifactId>archiva-maven2-model</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -365,6 +376,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.archiva</groupId>
+        <artifactId>archiva-scheduler-cudf</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.archiva</groupId>
         <artifactId>archiva-security</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -426,6 +442,11 @@
       <dependency>
         <groupId>org.apache.archiva</groupId>
         <artifactId>stage-repository-merge</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.archiva</groupId>
+        <artifactId>cudf</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -515,7 +536,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>11.0.1</version>
+        <version>13.0</version>
       </dependency>
       <dependency>
         <groupId>stax</groupId>
@@ -749,12 +770,13 @@
         <artifactId>maven-compat</artifactId>
         <version>${maven3x.version}</version>
       </dependency>
+      -->
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
         <version>${maven3x.version}</version>
       </dependency>
-      -->
+
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-artifact</artifactId>
@@ -771,6 +793,28 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>org.sonatype.aether</groupId>
+        <artifactId>aether-api</artifactId>
+        <version>${aether.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonatype.aether</groupId>
+        <artifactId>aether-impl</artifactId>
+        <version>${aether.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonatype.aether</groupId>
+        <artifactId>aether-util</artifactId>
+        <version>${aether.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonatype.aether</groupId>
+        <artifactId>aether-connector-file</artifactId>
+        <version>${aether.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-repository-metadata</artifactId>
@@ -1390,22 +1434,11 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>
-        <groupId>org.apache.maven.shared</groupId>
-        <artifactId>maven-dependency-tree</artifactId>
-        <version>${maven-dependency-tree.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.codehaus.plexus</groupId>
-            <artifactId>plexus-container-default</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
 
       <dependency>
         <groupId>net.sf.ehcache</groupId>
         <artifactId>ehcache-core</artifactId>
-        <version>2.5.2</version>
+        <version>2.5.3</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -1518,6 +1551,15 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rat-verify</id>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.tomcat.maven</groupId>
@@ -1651,18 +1693,11 @@
     </plugins>
     <pluginManagement>
       <plugins>
+        <!-- last version version 2.3 have permisson issue !! -->
         <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <version>0.8</version>
-          <configuration>
-            <excludes>
-              <exclude>.gitignore</exclude>
-              <exclude>DEPENDENCIES</exclude>
-              <exclude>README.txt</exclude>
-              <exclude>*.sh</exclude>
-            </excludes>
-          </configuration>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.2.2</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -1716,13 +1751,8 @@
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.2-beta-3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.3</version>
+          <version>2.5</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1732,14 +1762,14 @@
             <useReleaseProfile>false</useReleaseProfile>
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <goals>deploy</goals>
-            <preparationGoals>clean</preparationGoals>
-            <!-- TODO: merge these when upgrading to latest ASF parent POM -->
-            <arguments>-Papache-release,release</arguments>
+            <preparationGoals>clean install</preparationGoals>
+            <arguments>-Prelease</arguments>
           </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.12</version>
           <configuration>
             <redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</redirectTestOutputToFile>
             <runOrder>alphabetical</runOrder>
@@ -1766,6 +1796,25 @@
           <artifactId>tomcat7-maven-plugin</artifactId>
           <version>${asfTomcatMavenPluginVersion}</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <configuration>
+            <excludes>
+              <exclude>.gitignore</exclude>
+              <exclude>DEPENDENCIES</exclude>
+              <exclude>README.txt</exclude>
+              <exclude>*.sh</exclude>
+              <exclude>.git/**</exclude>
+              <exclude>src/test/resources/projects/compile/goal.txt</exclude>
+              <exclude>**/*.iml</exclude>
+              <exclude>build-number.txt</exclude>
+              <exclude>.idea/**</exclude>
+              <exclude>.repository/**</exclude>
+              <exclude>*.patch</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -1774,77 +1823,17 @@
     <profile>
       <id>release</id>
       <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <inherited>false</inherited>
-            <configuration>
-              <descriptors>
-                <descriptor>src/main/assembly/src.xml</descriptor>
-              </descriptors>
-              <tarLongFileMode>gnu</tarLongFileMode>
-              <finalName>apache-archiva-${project.version}-src</finalName>
-            </configuration>
-            <executions>
-              <execution>
-                <id>make-assembly</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <!-- We want to sign the artifact, the POM, and all attached artifacts -->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <configuration>
-              <passphrase>${gpg.passphrase}</passphrase>
-              <useAgent>true</useAgent>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <!-- We want to deploy the artifact to a staging location for perusal -->
-          <plugin>
-            <inherited>true</inherited>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <configuration>
-              <updateReleaseInfo>true</updateReleaseInfo>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <inherited>false</inherited>
+              <configuration>
+                <finalName>apache-archiva-${project.version}-src</finalName>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
       </build>
     </profile>
 

@@ -1,4 +1,5 @@
 package org.apache.archiva.rest.services;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -29,7 +30,7 @@ import org.apache.archiva.redback.rest.services.RedbackAuthenticationThreadLocal
 import org.apache.archiva.redback.rest.services.RedbackRequestInformation;
 import org.apache.archiva.redback.users.User;
 import org.apache.archiva.redback.users.UserManager;
-import org.apache.archiva.rest.api.model.Artifact;
+import org.apache.archiva.maven2.model.Artifact;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.security.AccessDeniedException;
 import org.apache.archiva.security.ArchivaSecurityException;

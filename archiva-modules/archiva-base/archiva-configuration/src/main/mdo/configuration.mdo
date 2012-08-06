@@ -169,6 +169,17 @@
             The NetworkConfiguration .
           </description>
         </field>
+        <field>
+          <name>cudf</name>
+          <version>1.4.0.+</version>
+          <association>
+            <type>CUDFConfiguration</type>
+            <multiplicity>1</multiplicity>
+          </association>
+          <description>
+            The CUDF configuration.
+          </description>
+        </field>
       </fields>
       <codeSegments>
         <codeSegment>
@@ -241,7 +252,7 @@
             {
                 for ( RepositoryGroupConfiguration group : (java.util.List<RepositoryGroupConfiguration>) repositoryGroups )
                 {
-                    if ( !group.getRepositories().contains( repo.getId() ) )
+                    if ( group.getRepositories().contains( repo.getId() ) )
                     {
                         String groupId = group.getId();
                         java.util.List<String> repos = map.get( groupId );
@@ -1338,6 +1349,82 @@
           <version>1.4.0+</version>
           <type>boolean</type>
           <defaultValue>true</defaultValue>
+        </field>
+      </fields>
+    </class>
+    <!-- CUDF -->
+    <class>
+      <name>CUDFConfiguration</name>
+      <version>1.4.0+</version>
+      <description>Configuration about CUDF task and scheduler</description>
+      <fields>
+        <field>
+          <name>cudfJobs</name>
+          <description>List of CUDF generation jobs</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>CUDFJobConfiguration</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+      </fields>
+      <codeSegments>
+        <codeSegment>
+          <version>1.4.0+</version>
+          <code><![CDATA[
+              public CUDFJobConfiguration findCUDFJobById( String id )
+              {
+                  if ( cudfJobs != null )
+                  {
+                      for ( java.util.Iterator<CUDFJobConfiguration> i = cudfJobs.iterator(); i.hasNext(); )
+                      {
+                          CUDFJobConfiguration cudfJobConfiguration = i.next();
+                          if ( cudfJobConfiguration.getId().equals( id ) )
+                          {
+                              return cudfJobConfiguration;
+                          }
+                      }
+                  }
+                  return null;
+              }
+          ]]></code>
+        </codeSegment>
+      </codeSegments>
+    </class>
+    <class>
+      <name>CUDFJobConfiguration</name>
+      <version>1.4.0+</version>
+      <description>CUDF configuration about universe generation job</description>
+      <fields>
+        <field>
+          <name>id</name>
+          <description>Id of job</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>location</name>
+          <description>The file system location of generated universe</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>cronExpression</name>
+          <description>The cron expression for CUDF generation job</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>allRepositories</name>
+          <description>Generate universe for all repositories if is true</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+        </field>
+        <field>
+          <name>repositoryGroup</name>
+          <description>Repository group selected for the universe generation</description>
+          <version>1.4.0+</version>
+          <type>String</type>
         </field>
       </fields>
     </class>

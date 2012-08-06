@@ -21,8 +21,10 @@ package org.apache.archiva.rest.services;
 
 import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.common.utils.FileUtil;
+import org.apache.archiva.redback.rest.services.AbstractRestServicesTest;
 import org.apache.archiva.rest.api.services.ArchivaAdministrationService;
 import org.apache.archiva.rest.api.services.BrowseService;
+import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.rest.api.services.CommonServices;
 import org.apache.archiva.rest.api.services.ManagedRepositoriesService;
 import org.apache.archiva.rest.api.services.NetworkProxyService;
@@ -38,17 +40,19 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-import org.apache.archiva.redback.rest.services.AbstractRestServicesTest;
 import org.junit.Before;
 
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
+import org.junit.runner.RunWith;
 
 /**
  * @author Olivier Lamy
  */
+@RunWith( ArchivaBlockJUnit4ClassRunner.class )
 public abstract class AbstractArchivaRestTest
     extends AbstractRestServicesTest
 {
@@ -193,11 +197,11 @@ public abstract class AbstractArchivaRestTest
                                        ArchivaAdministrationService.class,
                                        Collections.singletonList( new JacksonJaxbJsonProvider() ) );
 
-        WebClient.client( service ).accept( MediaType.APPLICATION_JSON_TYPE );
-        WebClient.client( service ).type( MediaType.APPLICATION_JSON_TYPE );
+        WebClient.client( service ).accept(MediaType.APPLICATION_JSON_TYPE);
+        WebClient.client(service).type(MediaType.APPLICATION_JSON_TYPE);
 
-        WebClient.client( service ).header( "Authorization", authorizationHeader );
-        WebClient.getConfig( service ).getHttpConduit().getClient().setReceiveTimeout( 300000 );
+        WebClient.client( service ).header("Authorization", authorizationHeader);
+        WebClient.getConfig( service ).getHttpConduit().getClient().setReceiveTimeout(300000);
         return service;
     }
 
@@ -213,7 +217,7 @@ public abstract class AbstractArchivaRestTest
             WebClient.client( service ).header( "Authorization", authzHeader );
         }
 
-        WebClient.getConfig( service ).getHttpConduit().getClient().setReceiveTimeout( 100000000 );
+        WebClient.getConfig( service ).getHttpConduit().getClient().setReceiveTimeout(100000000);
         if ( useXml )
         {
             WebClient.client( service ).accept( MediaType.APPLICATION_XML_TYPE );
@@ -226,6 +230,13 @@ public abstract class AbstractArchivaRestTest
         }
         return service;
 
+    }
+
+    protected CUDFService getCUDFService(String authzHeader) {
+        CUDFService service = JAXRSClientFactory.create(getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
+                CUDFService.class, Collections.singletonList(new JacksonJaxbJsonProvider()));
+        WebClient.client( service ).header( "Authorization", authzHeader );
+        return service;
     }
 
     protected SearchService getSearchService( String authzHeader )
@@ -344,13 +355,29 @@ public abstract class AbstractArchivaRestTest
 
         if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( TARGET_REPO_ID ) != null )
         {
-            getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( TARGET_REPO_ID, true );
-            assertNull( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( TARGET_REPO_ID ) );
+            try
+            {
+                getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( TARGET_REPO_ID, true );
+                assertNull(
+                    getManagedRepositoriesService( authorizationHeader ).getManagedRepository( TARGET_REPO_ID ) );
+            }
+            catch ( Exception e )
+            {
+                log.warn( "skip issue while cleaning test repository: this can cause test failure", e );
+            }
         }
         if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( SOURCE_REPO_ID ) != null )
         {
-            getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( SOURCE_REPO_ID, true );
-            assertNull( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( SOURCE_REPO_ID ) );
+            try
+            {
+                getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( SOURCE_REPO_ID, true );
+                assertNull(
+                    getManagedRepositoriesService( authorizationHeader ).getManagedRepository( SOURCE_REPO_ID ) );
+            }
+            catch ( Exception e )
+            {
+                log.warn( "skip issue while cleaning test repository: this can cause test failure", e );
+            }
         }
 
     }

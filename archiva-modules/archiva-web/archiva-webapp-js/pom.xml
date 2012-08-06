@@ -78,6 +78,31 @@
       <artifactId>archiva-repository-admin-api</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-inject-plexus</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.sonatype.sisu</groupId>
+          <artifactId>sisu-guice</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.sisu</groupId>
+      <artifactId>sisu-guice</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.sonatype.sisu</groupId>
+          <artifactId>sisu-guava</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.archiva</groupId>
@@ -258,6 +283,24 @@
       <artifactId>wagon-file</artifactId>
       <scope>runtime</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-connector-file</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
@@ -650,7 +693,18 @@
       <artifactId>mail</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-test-utils</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>  
   </dependencies>
 
   <build>
@@ -661,7 +715,25 @@
       </resource>
     </resources>
 
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <configuration>
+            <excludes>
+              <exclude>src/main/webapp/css/*.css</exclude>
+              <exclude>src/main/webapp/js/*.js</exclude>
+              <exclude>src/site/resources/css/*.css</exclude>
+              <exclude>src/site/resources/js/*.js</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
+
       <!-- commented as not needed now
       <plugin>
         <groupId>com.samaxes.maven</groupId>
@@ -785,7 +857,8 @@
             <appserver.base>${archivaAppServerBase}</appserver.base>
             <appserver.home>${archivaAppServerBase}</appserver.home>
             <derby.system.home>${archivaAppServerBase}/logs</derby.system.home>
-            <redback.admin.creation.file>${basedir}/target/auto-admin-creation.properties</redback.admin.creation.file>
+            <!-- remove admin auto creation that must be tested too -->
+            <!--redback.admin.creation.file>${basedir}/target/auto-admin-creation.properties</redback.admin.creation.file-->
             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
             <archiva.user.configFileName>${archivaAppServerBase}/conf/archiva.xml</archiva.user.configFileName>
             <archiva.devMode>${archiva.devMode}</archiva.devMode>

@@ -1,4 +1,24 @@
 <!DOCTYPE html>
+
+<!--
+~  ~ Licensed to the Apache Software Foundation (ASF) under one
+~  ~ or more contributor license agreements.  See the NOTICE file
+~  ~ distributed with this work for additional information
+~  ~ regarding copyright ownership.  The ASF licenses this file
+~  ~ to you under the Apache License, Version 2.0 (the
+~  ~ "License"); you may not use this file except in compliance
+~  ~ with the License.  You may obtain a copy of the License at
+~  ~
+~  ~  http://www.apache.org/licenses/LICENSE-2.0
+~  ~
+~  ~ Unless required by applicable law or agreed to in writing,
+~  ~ software distributed under the License is distributed on an
+~  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~  ~ KIND, either express or implied.  See the License for the
+~  ~ specific language governing permissions and limitations
+~  ~ under the License.
+~  -->
+
 <html>
 <head>
   <link rel="stylesheet" href="css/prettify.css"/>
@@ -12,8 +32,9 @@
 
 
   <script type="text/javascript" src="js/jquery-1.7.2.js"></script>
+  <script type="text/javascript" src="js/sammy.0.7.1.js"></script>
 
-  <script type="text/javascript" src="js/require.1.0.7.js"></script>
+  <script type="text/javascript" src="js/require.2.0.2.js"></script>
 
   <title>Apache Archiva</title>
 
@@ -82,6 +103,10 @@
                 require.config({
                     baseUrl: "js/",
                     urlArgs: ""+appendJsNoCacheUrl(),
+                    shim: {
+                            'sammy':['jquery'],
+                            'archiva.main':["jquery","sammy"]
+                          },
                     paths: {
                         "i18n":"jquery.i18n.properties-1.0.9",
                         "jquery": "jquery-1.7.2",
@@ -104,6 +129,7 @@
                         "jquery.fileupload.ui":"jquery.fileupload-ui-6.6.3",
                         "tmpl": "tmpl.min",
                         "prettify": "prettify",
+                        "sammy": "sammy.0.7.1",
                         "jqueryFileTree": "jqueryFileTree-1.0.1",
                         "redback": "redback/redback",
                         "redback.roles": "redback/roles",
@@ -117,15 +143,12 @@
                         "archiva.proxy-connectors": "archiva/proxy-connectors",
                         "archiva.repository-groups": "archiva/repository-groups",
                         "archiva.artifacts-management": "archiva/artifacts-management",
+                        "archiva.search": "archiva/search",
                         "archiva.main": "archiva/main"
                     }
                 });
 
-
-
-
-                require(['order!domReady','order!jquery','order!i18n','order!startup'], function (domReady) {
-                  domReady.withResources(
+                require(['jquery','i18n','sammy','startup','utils','domReady!'], function (domReady) {
                     loadi18n(function () {
                       $.ajax({
                           url: "restServices/archivaUiServices/runtimeInfoService/archivaRuntimeInfo/"+usedLang(),
@@ -135,20 +158,13 @@
                               window.archivaJavascriptLog=data.javascriptLog;
                               window.archivaRuntimeInfo=data;
 
-
-                              require(['order!domReady','archiva/main'],function (domReady) {
-                                  domReady.withResources(function () {
-                                      startArchivaApplication();
-                                      $("#loadingDiv").hide();
-                                  })
+                              require(['sammy','archiva.main','domReady!'],function (domReady) {
+                                  startArchivaApplication();
+                                  $("#loadingDiv").hide();
                               })
-
-
-
                           }
                         })
                     })
-                  );
                 });
         }
     })

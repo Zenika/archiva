@@ -121,6 +121,12 @@ public class RepositoryModelResolver
 
             }
 
+            if ( remoteRepositories == null )
+            {
+                throw new UnresolvableModelException( "There is a problem with this project", groupId, artifactId,
+                                                      version );
+            }
+
             for ( RemoteRepository remoteRepository : remoteRepositories )
             {
                 try

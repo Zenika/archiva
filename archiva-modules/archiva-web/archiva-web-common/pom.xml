@@ -70,6 +70,10 @@
       <artifactId>archiva-scheduler-repository</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-scheduler-cudf</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.archiva.redback</groupId>
       <artifactId>redback-rbac-model</artifactId>
     </dependency>
@@ -139,6 +143,18 @@
       <artifactId>slf4j-log4j12</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-test-utils</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-simple</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency> 
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
       <artifactId>wagon-http</artifactId>
@@ -218,7 +234,8 @@
               org.apache.archiva.redback.policy,
               org.apache.archiva.redback.system,
               org.apache.archiva.redback.users,
-              org.apache.archiva.redback.integration.filter.authentication
+              org.apache.archiva.redback.integration.filter.authentication,
+              org.apache.archiva.scheduler.cudf
             </Import-Package>
           </instructions>
         </configuration>

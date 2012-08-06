@@ -23,17 +23,17 @@ import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
 
 /**
  */
-@RunWith( JUnit4.class )
+@RunWith( ArchivaBlockJUnit4ClassRunner.class )
 public class MavenProxyPropertyLoaderTest
     extends TestCase
 {

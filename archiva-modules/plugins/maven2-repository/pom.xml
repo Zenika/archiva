@@ -85,23 +85,55 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-model</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>org.apache.maven.shared</groupId>
-      <artifactId>maven-dependency-tree</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.maven</groupId>
-          <artifactId>maven-project</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-aether-provider</artifactId>
+      <version>${maven3x.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.aether</groupId>
+      <artifactId>aether-connector-file</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-configuration</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-maven2-model</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven.wagon</groupId>
       <artifactId>wagon-provider-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.beanlib</groupId>
+      <artifactId>beanlib</artifactId>
+        <exclusions>
+          <exclusion>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
+          </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
@@ -129,8 +161,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-test-utils</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -139,20 +172,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>net.sf.beanlib</groupId>
-      <artifactId>beanlib</artifactId>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-assert-core</artifactId>
       <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>aopalliance</groupId>
-            <artifactId>aopalliance</artifactId>
-          </exclusion>
-        </exclusions>
     </dependency>
+
   </dependencies>
   <build>
     <plugins>
@@ -204,7 +228,23 @@
               org.codehaus.redback.components*,
               org.dom4j*;version="[1.6,2)",
               org.springframework*;version="[3,4)",
-              org.slf4j;resolution:=optional
+              org.slf4j;resolution:=optional,
+              org.apache.maven.repository.internal,
+              org.sonatype.aether.connector.file,
+              org.sonatype.aether.impl,
+              org.sonatype.aether.spi.connector,
+              org.sonatype.aether.transfer,
+              org.sonatype.aether,
+              org.sonatype.aether.artifact,
+              org.sonatype.aether.collection,
+              org.sonatype.aether.graph,
+              org.sonatype.aether.impl.internal,
+              org.sonatype.aether.repository,
+              org.sonatype.aether.util,
+              org.sonatype.aether.util.artifact,
+              net.sf.beanlib.provider.replicator,
+              org.apache.archiva.maven2.model,
+              org.sonatype.aether.util.graph.selector
             </Import-Package>
           </instructions>
         </configuration>

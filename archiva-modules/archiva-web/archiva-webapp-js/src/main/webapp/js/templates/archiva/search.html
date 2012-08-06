@@ -55,7 +55,7 @@
         {{else}}
           <li class="browse-list" data-bind="click:function(){displayGroupId(browseResultEntry.name)}">
             <a href="#" title="folder ${displayEntry(browseResultEntry.name)}">${displayEntry(browseResultEntry.name)}</a>
-        {{/if}}          
+        {{/if}}
           </li>
       {{/each}}
     </ul>
@@ -111,21 +111,25 @@
               <th>${$.i18n.prop('browse.artifact.artifactId')}</th>
               <td>${artifactId}</td>
             </tr>
+            {{if projectVersionMetadata}}
             <tr>
               <th>${$.i18n.prop('browse.artifact.name')}</th>
               <td>${projectVersionMetadata.name}</td>
             </tr>
+            {{/if}}
+            {{if projectVersionMetadata}}
             <tr>
               <th>${$.i18n.prop('browse.artifact.description')}</th>
               <td>${projectVersionMetadata.description}</td>
             </tr>
-            {{if projectVersionMetadata.mavenFacet}}
+            {{/if}}
+            {{if projectVersionMetadata && projectVersionMetadata.mavenFacet}}
             <tr>
               <th>${$.i18n.prop('browse.artifact.packaging')}</th>
               <td>${projectVersionMetadata.mavenFacet.packaging}</td>
             </tr>
             {{/if}}
-            {{if projectVersionMetadata.organization}}
+            {{if projectVersionMetadata && projectVersionMetadata.organization}}
             <tr>
               <th>${$.i18n.prop('browse.artifact.organization.name')}</th>
               {{if projectVersionMetadata.organization.url}}
@@ -139,7 +143,7 @@
               {{/if}}
             </tr>
             {{/if}}
-            {{if projectVersionMetadata.issueManagement}}
+            {{if projectVersionMetadata && projectVersionMetadata.issueManagement}}
             <tr>
               <th>${$.i18n.prop('browse.artifact.organization.issueManagement')}</th>
               <td>
@@ -170,8 +174,7 @@
   </div>
 </script>
 <script id="search-artifacts-div-tmpl" type="text/html">
-    <div id="search-artifacts-div" data-bind='template:{name:"search-artifacts-form-tmpl"}'>
-    </div>
+  <div id="search-artifacts-div" data-bind='template:{name:"search-artifacts-form-tmpl"}'></div>
 </script>
 
 <script id="search-artifacts-form-tmpl" type="text/html">
@@ -349,6 +352,7 @@
         <table class="table table-striped table-bordered" id="search-results-grid">
         </table>
         <div id="search-results-view-grid-pagination"></div>
+
       </div>
 
       </div>
@@ -451,6 +455,7 @@
       </li>
     </ul>
     <div class="tab-content">
+      {{if projectVersionMetadata}}
   	  <div id="artifact-details-info-content" class="tab-pane active">
         <blockquote>${projectVersionMetadata.description}</blockquote>
         <div class="row-fluid">
@@ -596,6 +601,7 @@
         </div>
         {{/if}}
   	  </div>
+      {{/if}}
 
 
   	  <div id="artifact-details-dependencies-content" class="tab-pane">
@@ -736,12 +742,128 @@
       <a href="#" onclick="showCUDFUniverseExtract()" class="btn" id="show-cudf-universe-button">
         ${$.i18n.prop('cudf.show-text')}
       </a>
-      <a href="#" class='btn' onclick="getCUDFUniverseExtract()">
+      <a href="#" onclick="getCUDFUniverseExtract()" class='btn' id="get-cudf-universe-extract">
         ${$.i18n.prop('cudf.extract-text')}
       </a>
       <div id="get-cudf-universe-spinner-div"></div>
     </div>
     <pre class="prettyprint hide" id="show-cudf-universe-content"></pre>
+</script>
+
+<script id="cudfJobsMain" type="text/html">
+  <div class="header">
+    <h2>${$.i18n.prop('cudf.job.page.header')}</h2>
+  </div>
+  <ul id="cudf-jobs-view-tabs" class="nav nav-tabs">
+    <li id="cudf-jobs-view-tabs-li-grid" class="active">
+      <a id="cudf-jobs-view-tabs-a-grid" data-toggle="tab" href="#cudf-jobs-view">
+        ${$.i18n.prop('cudf.job.tab.grid.title')}
+      </a>
+    </li>
+    <li id="cudf-jobs-view-tabs-li-edit">
+      <a id="cudf-jobs-view-tabs-a-edit" data-toggle="tab" href="#cudf-jobs-edit">
+        ${$.i18n.prop('cudf.job.tab.add.title')}
+      </a>
+    </li>
+  </ul>
+  <div id="cudf-jobs-view-tabs-content" class="tab-content">
+    <div id="cudf-jobs-view" class="tab-pane active">
+        <table class="table table-striped table-bordered"
+               data-bind="simpleGrid: cudfJobsViewModel,simpleGridTemplate:'table-cudf-job-tmpl',pageLinksId:'cudf-jobs-page-link-id'">
+        </table>
+        <div id="cudf-jobs-page-link-id"></div>
+    </div>
+    <div id="cudf-jobs-edit" class="tab-pane">
+      <div id="cudf-jobs-edit-div" data-bind="template: {name: 'cudf-job-edit-tmpl'}">
+      </div>
+    </div>
+  </div>
+</script>
+
+<script id="table-cudf-job-tmpl" type="text/html">
+    <thead>
+    <tr>
+        {{each(i, columnDefinition) columns}}
+        <th>${ columnDefinition.headerText }</th>
+        {{/each}}
+        <th>${$.i18n.prop('cudf.job.table.header.edit')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.delete')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.launch')}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{each(i, cudfJob) itemsOnCurrentPage()}}
+    <tr>
+        {{each(i, columnDefinition) columns}}
+        {{var val = (typeof columnDefinition.rowText == 'function' ? columnDefinition.rowText(cudfJob) : cudfJob[columnDefinition.rowText])}}
+        <td>
+            ${val}
+        </td>
+        {{/each}}
+        <td><a class="btn btn-primary" data-bind="click: function(){editCUDFJob(cudfJob)}"><i class="icon-pencil icon-white"/></a></td>
+        <td><a class="btn btn-danger" data-bind="click: function(){deleteCUDFJob(cudfJob)}"><i class="icon-trash icon-white"/></a></td>
+        <td><a class="btn btn-warning" data-bind="click: function(){notImplementedYetMessage(cudfJob)}"><i class="icon-play-circle  icon-white"/></a></td>
+    </tr>
+    {{/each}}
+    </tbody>
+</script>
+
+<script id="cudf-job-edit-tmpl" type="text/html">
+  <form id="cudf-job-edit-form" class="form-horizontal">
+    <fieldset>
+      <div class="control-group">
+        <label class="control-label" for="id">${$.i18n.prop('cudf.job.form.id')}</label>
+        <div class="controls">
+          <input id="id" type="text" class="input-large required" name="id" data-bind="value: cudfJob.id"/>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="location">${$.i18n.prop('cudf.job.form.location')}</label>
+        <div class="controls">
+          <input id="location" type="text" class="input-xxlarge required" name="location" data-bind="value: cudfJob.location"/>
+          <p class="help-block">${$.i18n.prop('cudf.job.form.location.explanations')}</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="cronExpression">${$.i18n.prop('cudf.job.form.cronExpression')}</label>
+        <div class="controls">
+          <input id="cronExpression" type="text" class="input-large required" name="cronExpression" data-bind="value: cudfJob.cronExpression"/>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="allRepositories">${$.i18n.prop('cudf.job.form.allRepositories')}</label>
+        <div class="controls">
+          <input id="allRepositories" type="checkbox" name="allRepositories" data-bind="checked: cudfJob.allRepositories"
+                  data-toggle="collapse" data-target="#cudf-repository-list"/>
+        </div>
+      </div>
+      <hr/>
+        <div id="cudf-repository-list" class="collapse">
+          <h4>${$.i18n.prop('cudf.job.form.repositoryGroup')}</h4>
+          <div id="repository-group-view" class="control-group">
+            <label class="control-label">${$.i18n.prop('cudf.job.form.repositoryGroup')}</label>
+            <div class="controls">
+              {{each(i, repositoryGroup) cudfJobsViewModel.availableRepositoryGroups}}
+              <label class="radio">
+                <input type="radio" name="group" data-bind="attr: {value: repositoryGroup}, checked: $root.cudfJob.repositoryGroup"/>
+                <span data-bind="text: repositoryGroup"></span>
+              </label>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" data-bind="click: save">${$.i18n.prop('cudf.job.form.submit')}</button>
+        <button class="btn" data-bind="click: reset">${$.i18n.prop('cudf.job.form.reset')}</button>
+      </div>
+    </fieldset>
+  </form>
+</script>
+
+<script id="cudf-job-delete-warning-tmpl" type='text/html'>
+    <div>
+        <span class="label label-warning">${$.i18n.prop('warning.not.undone.operation')}</span>
+    </div>
 </script>
 
 <script id="dependency_tree_tmpl" type="text/html">

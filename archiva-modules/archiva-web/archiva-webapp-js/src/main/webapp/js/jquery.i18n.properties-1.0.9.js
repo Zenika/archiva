@@ -12,6 +12,20 @@
  * 
  *****************************************************************************/
 
+// START olamy hack more AMD compliant
+(function($, window) {
+  (function(factory){
+    // Support module loading scenarios
+    if (typeof define === 'function' && define.amd){
+      // AMD Anonymous Module
+      define(['jquery'], factory);
+    } else {
+      // No module loader (plain <script> tag) - put directly in global namespace
+      $.sammy = window.Sammy = factory($);
+    }
+  })
+
+// END olamy hack
 (function($) {
 $.i18n = {};
 
@@ -478,5 +492,8 @@ String.prototype.split = function (separator, limit) {
     return cbSplit(this, separator, limit);
 };
 
-})(jQuery);
-                
+});// (jQuery);
+
+// START olamy hack more AMD compliant
+})(jQuery, window);
+// END olamy hack

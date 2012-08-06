@@ -29,6 +29,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>archiva-test-utils</module>
     <module>archiva-common</module>
     <module>archiva-model</module>
     <module>archiva-configuration</module>
@@ -48,5 +49,6 @@
     <module>archiva-repository-admin</module>
     <module>archiva-security-common</module>
     <module>archiva-maven2-metadata</module>
+    <module>archiva-maven2-model</module>
   </modules>
 </project>

@@ -21,6 +21,8 @@ package org.apache.archiva.rest.services;
 import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.common.utils.VersionComparator;
 import org.apache.archiva.dependency.tree.maven2.DependencyTreeBuilder;
+import org.apache.archiva.maven2.model.Artifact;
+import org.apache.archiva.maven2.model.TreeEntry;
 import org.apache.archiva.metadata.generic.GenericMetadataFacet;
 import org.apache.archiva.metadata.model.ArtifactMetadata;
 import org.apache.archiva.metadata.model.MetadataFacet;
@@ -38,25 +40,21 @@ import org.apache.archiva.repository.ManagedRepositoryContent;
 import org.apache.archiva.repository.RepositoryContentFactory;
 import org.apache.archiva.repository.RepositoryException;
 import org.apache.archiva.repository.RepositoryNotFoundException;
-import org.apache.archiva.rest.api.model.Artifact;
 import org.apache.archiva.rest.api.model.ArtifactContent;
 import org.apache.archiva.rest.api.model.ArtifactContentEntry;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
 import org.apache.archiva.rest.api.model.Entry;
-import org.apache.archiva.rest.api.model.TreeEntry;
 import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.services.utils.ArtifactContentEntryComparator;
 import org.apache.archiva.rest.services.utils.ArtifactDownloadInfoBuilder;
-import org.apache.archiva.rest.services.utils.TreeDependencyNodeVisitor;
 import org.apache.archiva.security.ArchivaSecurityException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -424,19 +422,18 @@ public class DefaultBrowseService
     {
         List<String> selectedRepos = getSelectedRepos( repositoryId );
 
-        List<TreeEntry> treeEntries = new ArrayList<TreeEntry>();
-        TreeDependencyNodeVisitor treeDependencyNodeVisitor = new TreeDependencyNodeVisitor( treeEntries );
         try
         {
-            dependencyTreeBuilder.buildDependencyTree( selectedRepos, groupId, artifactId, version,
-                                                       treeDependencyNodeVisitor );
+
+            return dependencyTreeBuilder.buildDependencyTree( selectedRepos, groupId, artifactId, version );
+
         }
-        catch ( DependencyTreeBuilderException e )
+        catch ( Exception e )
         {
-            throw new ArchivaRestServiceException( e.getMessage(),
-                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e );
+            log.error( e.getMessage(), e );
         }
-        return treeEntries;
+
+        return Collections.emptyList();
     }
 
     public List<ManagedRepository> getUserRepositories()
@@ -752,6 +749,7 @@ public class DefaultBrowseService
                     }
                     finally
                     {
+                        closeQuietly( jarFile );
                         IOUtils.closeQuietly( inputStream );
                     }
                 }
@@ -780,6 +778,21 @@ public class DefaultBrowseService
                    Arrays.asList( groupId, artifactId, version, classifier, type ).toArray( new String[5] ) );
         // 404 ?
         return new ArtifactContent();
+    }
+
+    private void closeQuietly( JarFile jarFile )
+    {
+        if ( jarFile != null )
+        {
+            try
+            {
+                jarFile.close();
+            }
+            catch ( IOException e )
+            {
+                log.warn( "ignore error closing jarFile {}", jarFile.getName() );
+            }
+        }
     }
 
     //---------------------------

@@ -38,7 +38,7 @@ import java.util.Properties;
 
 /**
  * @author <a href="mailto:evenisse@apache.org">Emmanuel Venisse</a>
- * @version $Id: AbstractSeleniumTestCase.java 761154 2009-04-02 03:31:19Z wsmoak $
+ *
  */
 
 public abstract class AbstractSeleniumTest
@@ -57,6 +57,8 @@ public abstract class AbstractSeleniumTest
     public String seleniumHost = System.getProperty( "seleniumHost", "localhost" );
 
     public int seleniumPort = Integer.getInteger( "seleniumPort", 4444 );
+
+    public boolean networkCapture = false;
 
     private Selenium selenium = null;
 
@@ -108,7 +110,14 @@ public abstract class AbstractSeleniumTest
             if ( getSelenium() == null )
             {
                 selenium = new DefaultSelenium( seleniumHost, seleniumPort, browser, baseUrl );
-                selenium.start();
+                if (networkCapture)
+                {
+                    selenium.start(p.getProperty("SELENIUM_NETWORK_TRAFFIC"));
+                }
+                else
+                {
+                    selenium.start();
+                }
                 selenium.setTimeout( Integer.toString( maxWaitTimeInMs ) );
             }
         }
@@ -691,4 +700,8 @@ public abstract class AbstractSeleniumTest
         return fileName.getAbsolutePath();
     }
 
+    public void setNetworkCapture(boolean networkCapture)
+    {
+        this.networkCapture = networkCapture;
+    }
 }

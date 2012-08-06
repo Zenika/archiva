@@ -688,6 +688,15 @@ public class ArchivaDavResourceFactory
             return connectors.fetchMetatadaFromProxies( managedRepository, path ) != null;
         }
 
+        // Is it an Archetype Catalog?
+        if ( repositoryRequest.isArchetypeCatalog( path ) )
+        {
+            // FIXME we must implement a merge of remote archetype catalog from remote servers.
+            File proxiedFile = connectors.fetchFromProxies( managedRepository, path );
+
+            return ( proxiedFile != null );
+        }
+        
         // Not any of the above? Then it's gotta be an artifact reference.
         try
         {
@@ -844,12 +853,12 @@ public class ArchivaDavResourceFactory
         // header.
         if ( locator.getResourcePath().endsWith( "/maven-metadata.xml" ) )
         {
-            response.addHeader( "Pragma", "no-cache" );
-            response.addHeader( "Cache-Control", "no-cache" );
+            response.setHeader( "Pragma", "no-cache" );
+            response.setHeader( "Cache-Control", "no-cache" );
         }
 
         // We need to specify this so connecting wagons can work correctly
-        response.addDateHeader( "last-modified", resource.getModificationTime() );
+        response.setDateHeader( "last-modified", resource.getModificationTime() );
 
         // TODO: [MRM-524] determine http caching options for other types of files (artifacts, sha1, md5, snapshots)
     }

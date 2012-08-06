@@ -22,7 +22,7 @@ import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.admin.model.beans.ProxyConnector;
 import org.apache.archiva.admin.model.beans.RemoteRepository;
 import org.apache.archiva.admin.model.beans.RepositoryGroup;
-import org.apache.archiva.rest.api.model.Artifact;
+import org.apache.archiva.maven2.model.Artifact;
 import org.apache.archiva.rest.api.model.SearchRequest;
 import org.apache.archiva.rest.api.services.ManagedRepositoriesService;
 import org.apache.archiva.rest.api.services.ProxyConnectorService;
@@ -37,16 +37,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
 
 /**
  * @author Olivier Lamy
  */
-@RunWith( JUnit4.class )
+@RunWith( ArchivaBlockJUnit4ClassRunner.class )
 public class DownloadMergedIndexTest
     extends AbstractDownloadTest
 {

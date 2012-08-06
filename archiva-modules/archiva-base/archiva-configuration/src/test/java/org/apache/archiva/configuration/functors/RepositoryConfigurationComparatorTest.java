@@ -23,15 +23,19 @@ import junit.framework.TestCase;
 import org.apache.archiva.configuration.AbstractRepositoryConfiguration;
 import org.apache.archiva.configuration.ManagedRepositoryConfiguration;
 
-
 import java.util.Comparator;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Test the repositry comparator.
  */
+@RunWith( ArchivaBlockJUnit4ClassRunner.class )
 public class RepositoryConfigurationComparatorTest
     extends TestCase
 {
+    @Test
     public void testComparator()
     {
         Comparator<AbstractRepositoryConfiguration> comparator = new RepositoryConfigurationComparator();

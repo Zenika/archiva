@@ -75,7 +75,7 @@ import java.util.regex.Matcher;
 /**
  * MetadataTools
  *
- * @version $Id$
+ *
  */
 @Service( "metadataTools#default" )
 public class MetadataTools
@@ -84,6 +84,8 @@ public class MetadataTools
     private Logger log = LoggerFactory.getLogger( getClass() );
 
     public static final String MAVEN_METADATA = "maven-metadata.xml";
+
+    public static final String MAVEN_ARCHETYPE_CATALOG ="archetype-catalog.xml";
 
     private static final char PATH_SEPARATOR = '/';
 

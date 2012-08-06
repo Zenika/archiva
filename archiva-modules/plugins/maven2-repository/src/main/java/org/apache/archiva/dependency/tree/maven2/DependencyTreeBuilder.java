@@ -1,5 +1,4 @@
 package org.apache.archiva.dependency.tree.maven2;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -9,7 +8,7 @@ package org.apache.archiva.dependency.tree.maven2;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,28 +18,21 @@ package org.apache.archiva.dependency.tree.maven2;
  * under the License.
  */
 
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
-import org.apache.maven.shared.dependency.tree.traversal.DependencyNodeVisitor;
+import org.apache.archiva.maven2.model.TreeEntry;
+import org.sonatype.aether.graph.DependencyVisitor;
 
 import java.util.List;
 
 /**
- * Builds a tree of dependencies for a given Maven project. Customized wrapper for maven-dependency-tree to use
- * maven-model-builder instead of maven-project.
+ * @author Olivier Lamy
  */
 public interface DependencyTreeBuilder
 {
-    /**
-     * Builds a tree of dependencies for the specified Maven project.
-     *
-     * @param repositoryIds the list of repositories to search for metadata
-     * @param groupId       the project groupId to build the tree for
-     * @param artifactId    the project artifactId to build the tree for
-     * @param version       the project version to build the tree for
-     * @param nodeVisitor   visitor to apply to all nodes discovered
-     * @throws DependencyTreeBuilderException if the dependency tree cannot be resolved
-     */
     void buildDependencyTree( List<String> repositoryIds, String groupId, String artifactId, String version,
-                              DependencyNodeVisitor nodeVisitor )
-        throws DependencyTreeBuilderException;
+                              DependencyVisitor dependencyVisitor )
+        throws Exception;
+
+    List<TreeEntry> buildDependencyTree( List<String> repositoryIds, String groupId, String artifactId, String version )
+        throws Exception;
 }
+

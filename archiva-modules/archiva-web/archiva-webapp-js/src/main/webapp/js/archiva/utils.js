@@ -20,6 +20,7 @@
 define("utils",["jquery","i18n","jquery.tmpl"], function() {
 
   loadi18n=function(loadCallback){
+    $.log("loadi18n");
     var browserLang = usedLang();
     $.log("use browserLang:"+browserLang);
 
@@ -39,6 +40,8 @@ define("utils",["jquery","i18n","jquery.tmpl"], function() {
     if ( !window.archivaJavascriptLog ){
       return;
     }
+    Sammy.log(message);
+    return;
     if (typeof window.console != 'undefined' && typeof window.console.log != 'undefined') {
       console.log(message);
     } else {
@@ -401,6 +404,18 @@ define("utils",["jquery","i18n","jquery.tmpl"], function() {
 
   String.prototype.substringAfterLast = function(str) {
     return this.substring(this.lastIndexOf(str)+1);
+  }
+  /**
+   *
+   * @param str
+   * @return {String} if str not found return empty string
+   */
+  String.prototype.substringAfterFirst = function(str) {
+    var idx = this.indexOf(str);
+    if (idx<0){
+      return "";
+    }
+    return this.substring(idx);
   }
 
   //-----------------------------------------

@@ -21,24 +21,22 @@ package org.apache.archiva.repository;
 
 import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.admin.model.beans.RemoteRepository;
-import org.apache.archiva.repository.ManagedRepositoryContent;
-import org.apache.archiva.repository.RemoteRepositoryContent;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
 import javax.inject.Inject;
+import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 
 /**
  * AbstractRepositoryLayerTestCase
  *
- * @version $Id$
+ *
  */
-@RunWith( SpringJUnit4ClassRunner.class )
+@RunWith( ArchivaSpringJUnit4ClassRunner.class )
 @ContextConfiguration( locations = { "classpath*:/META-INF/spring-context.xml", "classpath:/spring-context.xml" } )
 public abstract class AbstractRepositoryLayerTestCase
 {

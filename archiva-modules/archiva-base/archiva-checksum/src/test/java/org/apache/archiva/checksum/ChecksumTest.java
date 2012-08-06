@@ -23,17 +23,23 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import junit.framework.TestCase;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * ChecksumTest
  *
- * @version $Id$
+ *
  */
+@RunWith( ArchivaBlockJUnit4ClassRunner.class )
 public class ChecksumTest
-    extends AbstractChecksumTestCase
+    extends TestCase
 {
     private static final String UNSET_SHA1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
+    @Test
     public void testConstructSha1()
     {
         Checksum checksum = new Checksum( ChecksumAlgorithm.SHA1 );
@@ -41,6 +47,7 @@ public class ChecksumTest
             .getAlgorithm() );
     }
 
+    @Test
     public void testConstructMd5()
     {
         Checksum checksum = new Checksum( ChecksumAlgorithm.MD5 );
@@ -48,6 +55,7 @@ public class ChecksumTest
             .getAlgorithm() );
     }
 
+    @Test
     public void testUpdate()
     {
         Checksum checksum = new Checksum( ChecksumAlgorithm.SHA1 );
@@ -57,6 +65,7 @@ public class ChecksumTest
         assertEquals( "Checksum", "e396119ae0542e85a74759602fd2f81e5d36d762", checksum.getChecksum() );
     }
 
+    @Test
     public void testUpdateMany()
         throws IOException
     {
@@ -76,6 +85,7 @@ public class ChecksumTest
         assertEquals( "Checksum MD5", "21c2c5ca87ec018adacb2e2fb3432219", checksumMd5.getChecksum() );
     }
 
+    @Test
     public void testUpdateWholeUpdatePartial()
     {
         Checksum checksum = new Checksum( ChecksumAlgorithm.SHA1 );
