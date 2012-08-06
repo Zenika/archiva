@@ -104,30 +104,36 @@
       <groupId>org.sonatype.aether</groupId>
       <artifactId>aether-util</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.sonatype.aether</groupId>
       <artifactId>aether-connector-file</artifactId>
-      <version>${aether.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.maven.shared</groupId>
-      <artifactId>maven-dependency-tree</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.maven</groupId>
-          <artifactId>maven-project</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-configuration</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-maven2-model</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.maven.wagon</groupId>
       <artifactId>wagon-provider-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.beanlib</groupId>
+      <artifactId>beanlib</artifactId>
+        <exclusions>
+          <exclusion>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
+          </exclusion>
+        </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
@@ -166,20 +172,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>net.sf.beanlib</groupId>
-      <artifactId>beanlib</artifactId>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-assert-core</artifactId>
       <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>aopalliance</groupId>
-            <artifactId>aopalliance</artifactId>
-          </exclusion>
-        </exclusions>
     </dependency>
+
   </dependencies>
   <build>
     <plugins>
@@ -244,7 +241,10 @@
               org.sonatype.aether.impl.internal,
               org.sonatype.aether.repository,
               org.sonatype.aether.util,
-              org.sonatype.aether.util.artifact
+              org.sonatype.aether.util.artifact,
+              net.sf.beanlib.provider.replicator,
+              org.apache.archiva.maven2.model,
+              org.sonatype.aether.util.graph.selector
             </Import-Package>
           </instructions>
         </configuration>

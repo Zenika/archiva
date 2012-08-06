@@ -52,6 +52,11 @@
 
     <dependency>
       <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-maven2-model</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-repository-scanner</artifactId>
     </dependency>
 
@@ -115,8 +120,6 @@
             </Export-Package>
             <Import-Package>
               javax.ws.rs,
-              javax.servlet.http,
-              javax.ws.rs.core,
               javax.xml.bind.annotation,
               org.apache.archiva.admin.model.beans;version=${project.version},
               org.apache.archiva.redback.authorization,
@@ -125,6 +128,7 @@
               org.codehaus.jackson.annotate,
               org.apache.archiva.metadata.repository.stats,
               org.apache.archiva.reports,
+              org.apache.archiva.maven2.model,
               org.apache.archiva.cudf.admin.bean
             </Import-Package>
           </instructions>

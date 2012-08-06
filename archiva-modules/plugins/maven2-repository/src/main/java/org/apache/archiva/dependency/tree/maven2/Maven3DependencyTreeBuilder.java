@@ -30,6 +30,7 @@ import org.apache.archiva.admin.model.proxyconnector.ProxyConnectorAdmin;
 import org.apache.archiva.admin.model.remote.RemoteRepositoryAdmin;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridge;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridgeException;
+import org.apache.archiva.maven2.model.TreeEntry;
 import org.apache.archiva.metadata.repository.storage.RepositoryPathTranslator;
 import org.apache.archiva.proxy.common.WagonFactory;
 import org.apache.maven.artifact.Artifact;
@@ -47,15 +48,19 @@ import org.sonatype.aether.RepositorySystemSession;
 import org.sonatype.aether.collection.CollectRequest;
 import org.sonatype.aether.collection.CollectResult;
 import org.sonatype.aether.collection.DependencyCollectionException;
+import org.sonatype.aether.collection.DependencySelector;
 import org.sonatype.aether.graph.Dependency;
 import org.sonatype.aether.graph.DependencyVisitor;
 import org.sonatype.aether.impl.ArtifactDescriptorReader;
 import org.sonatype.aether.impl.VersionRangeResolver;
 import org.sonatype.aether.impl.VersionResolver;
 import org.sonatype.aether.impl.internal.DefaultServiceLocator;
+import org.sonatype.aether.impl.internal.SimpleLocalRepositoryManager;
 import org.sonatype.aether.repository.LocalRepository;
 import org.sonatype.aether.spi.connector.RepositoryConnectorFactory;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
+import org.sonatype.aether.util.graph.selector.AndDependencySelector;
+import org.sonatype.aether.util.graph.selector.ExclusionDependencySelector;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -73,6 +78,7 @@ import java.util.Map;
  */
 @Service( "dependencyTreeBuilder#maven3" )
 public class Maven3DependencyTreeBuilder
+    implements DependencyTreeBuilder
 {
     private Logger log = LoggerFactory.getLogger( getClass() );
 
@@ -118,7 +124,7 @@ public class Maven3DependencyTreeBuilder
 
     public void buildDependencyTree( List<String> repositoryIds, String groupId, String artifactId, String version,
                                      DependencyVisitor dependencyVisitor )
-        throws Exception
+        throws DependencyTreeBuilderException
     {
         Artifact projectArtifact = factory.createProjectArtifact( groupId, artifactId, version );
         ManagedRepository repository = null;
@@ -129,7 +135,7 @@ public class Maven3DependencyTreeBuilder
         catch ( RepositoryAdminException e )
         {
             // FIXME better exception
-            throw new Exception( "Cannot build project dependency tree " + e.getMessage(), e );
+            throw new DependencyTreeBuilderException( "Cannot build project dependency tree " + e.getMessage(), e );
         }
 
         if ( repository == null )
@@ -138,33 +144,54 @@ public class Maven3DependencyTreeBuilder
             return;
         }
 
-        // MRM-1411
-        // TODO: this is a workaround for a lack of proxy capability in the resolvers - replace when it can all be
-        //       handled there. It doesn't cache anything locally!
-        List<RemoteRepository> remoteRepositories = new ArrayList<RemoteRepository>();
-        Map<String, NetworkProxy> networkProxies = new HashMap<String, NetworkProxy>();
-
-        Map<String, List<ProxyConnector>> proxyConnectorsMap = proxyConnectorAdmin.getProxyConnectorAsMap();
-        List<ProxyConnector> proxyConnectors = proxyConnectorsMap.get( repository.getId() );
-        if ( proxyConnectors != null )
+        try
         {
-            for ( ProxyConnector proxyConnector : proxyConnectors )
+            // MRM-1411
+            // TODO: this is a workaround for a lack of proxy capability in the resolvers - replace when it can all be
+            //       handled there. It doesn't cache anything locally!
+            List<RemoteRepository> remoteRepositories = new ArrayList<RemoteRepository>();
+            Map<String, NetworkProxy> networkProxies = new HashMap<String, NetworkProxy>();
+
+            Map<String, List<ProxyConnector>> proxyConnectorsMap = proxyConnectorAdmin.getProxyConnectorAsMap();
+            List<ProxyConnector> proxyConnectors = proxyConnectorsMap.get( repository.getId() );
+            if ( proxyConnectors != null )
             {
-                remoteRepositories.add( remoteRepositoryAdmin.getRemoteRepository( proxyConnector.getTargetRepoId() ) );
-
-                NetworkProxy networkProxyConfig = networkProxyAdmin.getNetworkProxy( proxyConnector.getProxyId() );
-
-                if ( networkProxyConfig != null )
+                for ( ProxyConnector proxyConnector : proxyConnectors )
                 {
-                    // key/value: remote repo ID/proxy info
-                    networkProxies.put( proxyConnector.getTargetRepoId(), networkProxyConfig );
+                    remoteRepositories.add( remoteRepositoryAdmin.getRemoteRepository( proxyConnector.getTargetRepoId() ) );
+
+                    NetworkProxy networkProxyConfig = networkProxyAdmin.getNetworkProxy( proxyConnector.getProxyId() );
+
+                    if ( networkProxyConfig != null )
+                    {
+                        // key/value: remote repo ID/proxy info
+                        networkProxies.put( proxyConnector.getTargetRepoId(), networkProxyConfig );
+                    }
                 }
             }
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new DependencyTreeBuilderException( e.getMessage(), e );
         }
 
         // FIXME take care of relative path
         resolve( repository.getLocation(), groupId, artifactId, version, dependencyVisitor );
+    }
 
+
+    public List<TreeEntry> buildDependencyTree( List<String> repositoryIds, String groupId, String artifactId,
+                                                String version )
+        throws DependencyTreeBuilderException
+    {
+
+        List<TreeEntry> treeEntries = new ArrayList<TreeEntry>();
+        TreeDependencyNodeVisitor treeDependencyNodeVisitor = new TreeDependencyNodeVisitor( treeEntries );
+
+        buildDependencyTree( repositoryIds, groupId, artifactId, version, treeDependencyNodeVisitor );
+
+        log.debug( "treeEntrie: {}", treeEntries );
+        return treeEntries;
     }
 
 
@@ -179,10 +206,14 @@ public class Maven3DependencyTreeBuilder
         org.sonatype.aether.artifact.Artifact artifact =
             new DefaultArtifact( groupId + ":" + artifactId + ":" + version );
 
-        //RemoteRepository repo = Booter.newCentralRepository();
-
         CollectRequest collectRequest = new CollectRequest();
         collectRequest.setRoot( new Dependency( artifact, "" ) );
+
+        // add remote repositories ?
+        //collectRequest.addRepository(  )
+
+        collectRequest.setRequestContext( "project" );
+
         //collectRequest.addRepository( repo );
 
         try
@@ -217,8 +248,12 @@ public class Maven3DependencyTreeBuilder
     {
         MavenRepositorySystemSession session = new MavenRepositorySystemSession();
 
+        DependencySelector depFilter = new AndDependencySelector( new ExclusionDependencySelector() );
+        session.setDependencySelector( depFilter );
+
         LocalRepository localRepo = new LocalRepository( localRepoDir );
-        session.setLocalRepositoryManager( system.newLocalRepositoryManager( localRepo ) );
+        session.setLocalRepositoryManager(
+            new SimpleLocalRepositoryManager( localRepoDir ) );// system.newLocalRepositoryManager( localRepo ) );
 
         //session.setTransferListener(  );
         //session.setRepositoryListener( n );
