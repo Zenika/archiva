@@ -120,7 +120,9 @@
             </Export-Package>
             <Import-Package>
               javax.ws.rs,
+              javax.ws.rs.core,
               javax.xml.bind.annotation,
+              javax.servlet.http,
               org.apache.archiva.admin.model.beans;version=${project.version},
               org.apache.archiva.redback.authorization,
               org.apache.archiva.metadata.model,
