@@ -1648,6 +1648,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
                dataType: 'json',
                success: function(data){
                  displaySuccessMessage($.i18n.prop('cudf.job.message.success'));
+                 activateCUDFJobGridTab();
                },
                error: function(data){
                  var res = $.parseJSON(data.responseText);
@@ -1663,7 +1664,9 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
                contentType: 'application/json',
                dataType: 'json',
                success: function(data){
+                 self.cudfJobsViewModel.cudfJobs.push(cudfJob);
                  displaySuccessMessage($.i18n.prop('cudf.job.message.success'));
+                 activateCUDFJobGridTab();
                },
                error: function(data){
                  var res = $.parseJSON(data.responseText);
@@ -1702,6 +1705,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
         ko.applyBindings(cudfJobViewModel,$("#main-content #cudf-jobs-edit").get(0));
         $("#main-content #cudf-jobs-view-tabs-li-edit a").html($.i18n.prop("cudf.job.tab.edit.title"));
         activateCUDFJobFormValidation();
+        activateCUDFRepositoryGroupsCollapse(cudfJob);
       });
     }
 
@@ -1759,6 +1763,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
           var cudfJobViewModel = new CUDFJobViewModel(cudfJob,self.cudfJobsViewModel,false);
           activateCUDFJobEditTab();
           ko.applyBindings(cudfJobViewModel,mainContent.find("#cudf-jobs-edit" ).get(0));
+          activateCUDFJobFormValidation();
         }
         if ($(e.target ).attr("href")=="#cudf-jobs-view"){
           mainContent.find("#cudf-jobs-view-tabs-li-edit a" ).html($.i18n.prop("cudf.job.tab.add.title"));
@@ -1803,7 +1808,18 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     mainContent.find("#cudf-jobs-view-tabs li").removeClass("active");
 
     mainContent.find("#cudf-jobs-edit").addClass("active");
-    mainContent.find("#cudf-jobs-view-tabs-li-edit").addClass(("active"));
+    mainContent.find("#cudf-jobs-view-tabs-li-edit").addClass("active");
+  }
+
+  activateCUDFJobGridTab=function() {
+    var mainContent = $("#main-content");
+
+    mainContent.find("#cudf-jobs-edit").removeClass("active");
+    mainContent.find("#cudf-jobs-view-tabs li").removeClass("active");
+
+    mainContent.find("#cudf-jobs-view").addClass("active");
+    mainContent.find("#cudf-jobs-view-tabs-li-grid" ).addClass("active");
+    mainContent.find("#cudf-jobs-view-tabs-li-edit a").html($.i18n.prop("cudf.job.tab.add.title"));
   }
 
   activateCUDFJobFormValidation=function(){
@@ -1826,6 +1842,12 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
     });
     validator.settings.messages["cronExpression"]= $.i18n.prop("cudf.job.message.validation.cronExpression");
     validator.settings.messages["location"]= $.i18n.prop("cudf.job.message.validation.location");
+  }
+
+  activateCUDFRepositoryGroupsCollapse=function(cudfJob){
+    if (!cudfJob.allRepositories()){
+      $("#cudf-job-repository-groups-list").collapse();
+    }
   }
 
   loadAvailableRepositoryGroups=function(successCallBackFn,errorCallBackFn){

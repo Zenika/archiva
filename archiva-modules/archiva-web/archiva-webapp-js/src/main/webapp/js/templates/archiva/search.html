@@ -834,13 +834,13 @@
         <label class="control-label" for="allRepositories">${$.i18n.prop('cudf.job.form.allRepositories')}</label>
         <div class="controls">
           <input id="allRepositories" type="checkbox" name="allRepositories" data-bind="checked: cudfJob.allRepositories"
-                  data-toggle="collapse" data-target="#cudf-repository-list"/>
+                  data-toggle="collapse" data-target="#cudf-job-repository-groups-list"/>
         </div>
       </div>
       <hr/>
-        <div id="cudf-repository-list" class="collapse">
+        <div id="cudf-job-repository-groups-list" class="collapse">
           <h4>${$.i18n.prop('cudf.job.form.repositoryGroup')}</h4>
-          <div id="repository-group-view" class="control-group">
+          <div id="cudf-job-repository-groups-view" class="control-group">
             <label class="control-label">${$.i18n.prop('cudf.job.form.repositoryGroup')}</label>
             <div class="controls">
               {{each(i, repositoryGroup) cudfJobsViewModel.availableRepositoryGroups}}
