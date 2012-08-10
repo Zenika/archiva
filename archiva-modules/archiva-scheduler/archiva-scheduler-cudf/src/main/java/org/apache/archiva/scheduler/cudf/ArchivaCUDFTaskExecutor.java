@@ -63,7 +63,7 @@ public class ArchivaCUDFTaskExecutor
         {
             if ( !cudfTask.getResourceDestination().exists() )
             {
-                cudfTask.getResourceDestination().mkdir();
+                cudfTask.getResourceDestination().mkdirs();
             }
             else
             {
