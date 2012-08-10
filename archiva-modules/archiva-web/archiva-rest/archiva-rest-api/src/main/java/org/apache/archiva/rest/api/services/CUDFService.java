@@ -57,7 +57,6 @@ public interface CUDFService
      */
     @Path( "cone/{groupId}/{artifactId}/{version}" )
     @RedbackAuthorization( noPermission = true, noRestriction = true )
-    @Produces( MediaType.TEXT_PLAIN )
     void getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
                       @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
                       @QueryParam( "repositoryId" ) String repositoryId, @Context HttpServletResponse servletResponse )
@@ -90,7 +89,6 @@ public interface CUDFService
      */
     @Path( "universe" )
     @RedbackAuthorization( noPermission = true, noRestriction = true )
-    @Produces( MediaType.TEXT_PLAIN )
     void getUniverseCUDF( @QueryParam( "repositoryId" ) String repositoryId,
                           @Context HttpServletResponse servletResponse )
         throws ArchivaRestServiceException;
