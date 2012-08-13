@@ -332,13 +332,13 @@ public class CUDFExtractor
     private String getCUDFPreambule()
     {
         return "preamble: \nproperty: number: string, recommends: vpkgformula = [true!], suggests: vpkglist = [], \n"
-            + "          type: string = [\"\"]\n\n";
+            + " type: string = [\"\"]\n\n";
     }
 
     /**
      * @param organisation (groupId)
      * @param name         (artifactId)
-     * @return organisation:name => org.apache.archiva:archiva
+     * @return organisation%3aname => org.apache.archiva%3aarchiva with %+hexadecimal code of every forbidden characters
      */
     private String outputArtifactInCUDFInline( String organisation, String name )
     {
