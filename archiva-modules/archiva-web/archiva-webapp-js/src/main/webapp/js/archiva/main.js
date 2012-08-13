@@ -183,6 +183,48 @@ function() {
       this.activeMenuId = ko.observable();
 
       window.sammyArchivaApplication = Sammy(function () {
+        this.get('#quicksearch~:artifactId',function(){
+          $("#main-content" ).html(mediumSpinnerImg());
+          var artifactId= this.params.artifactId;
+          // user can be in a non search view so init the search view first
+          var searchViewModel = new SearchViewModel();
+          var searchRequest = new SearchRequest();
+          searchRequest.artifactId(artifactId);
+          searchViewModel.searchRequest(searchRequest);
+          displaySearch(function(){
+            searchViewModel.externalAdvancedSearch();
+          },searchViewModel);
+        });
+
+        this.get('#basicsearch/:queryterms',function(){
+          var queryterms= this.params.queryterms;
+          $.log("queryterms:"+queryterms);
+          var searchViewModel = new SearchViewModel();
+          var searchRequest = new SearchRequest();
+          searchRequest.queryTerms(queryterms);
+          searchViewModel.searchRequest(searchRequest);
+          displaySearch(function(){
+            searchViewModel.externalBasicSearch();
+          },searchViewModel);
+
+        });
+        this.get('#basicsearch~:repositoryIds/:queryterms',function(){
+          var queryterms= this.params.queryterms;
+          var repositoryIds = this.params.repositoryIds;
+          var repos = repositoryIds.split("~");
+          $.log("queryterms:"+queryterms+',repositoryIds:'+repositoryIds+",repos:"+repos.length);
+          var queryterms= this.params.queryterms;
+          $.log("queryterms:"+queryterms);
+          var searchViewModel = new SearchViewModel();
+          var searchRequest = new SearchRequest();
+          searchRequest.queryTerms(queryterms);
+          searchRequest.repositories=repos;
+          searchViewModel.searchRequest(searchRequest);
+          displaySearch(function(){
+            searchViewModel.externalBasicSearch();
+          },searchViewModel);
+        });
+
         this.get('#open-admin-create-box',function(){
           $.log("#open-admin-create-box");
           adminCreateBox();
@@ -199,19 +241,176 @@ function() {
           return;
 
         });
-        this.get('#artifact:repositoryId/:groupId/:artifactId/:version',function(context){
+        this.get('#artifact~:repositoryId/:groupId/:artifactId',function(context){
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var repositoryId = this.params.repositoryId;
+          $.log("get #artifact:"+groupId+":"+artifactId);
+          goToBrowseArtifactDetail(groupId,artifactId,repositoryId);//,null,null);
+          return;
+        });
+
+        var checkArtifactDetailContent=function(groupId,artifactId,version,repositoryId,tabToActivate,idContentToCheck,contentDisplayFn){
+          // no need to recalculate all stuff just activate the tab
+          var htmlId = idContentToCheck?idContentToCheck:"browse_artifact_detail";
+          var htmlIdSelect = $("#main-content #"+htmlId );
+          if(htmlIdSelect.html()!=null){
+            if( $.trim(htmlIdSelect.html().length)>0){
+              $("#main-content #"+tabToActivate).tab('show')
+              return;
+            }
+          }
+          generalDisplayArtifactDetailsVersionView(groupId,artifactId,version,repositoryId,
+                                                   function(artifactVersionDetailViewModel){
+                                                     $("#main-content #"+tabToActivate).tab('show')
+                                                     if(contentDisplayFn){
+                                                       contentDisplayFn(groupId,artifactId,version,artifactVersionDetailViewModel);
+                                                     }
+                                                   }
+          );
+        }
+
+        this.get('#artifact/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-info-content-a");
+        });
+        this.get('#artifact~:repositoryId/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-info-content-a");
+        });
+
+        this.get('#artifact-dependencies/:groupId/:artifactId/:version',function(context){
 
           var repositoryId = this.params.repositoryId;
           var groupId= this.params.groupId;
           var artifactId= this.params.artifactId;
           var version= this.params.version;
 
-          if(!version){
-            displayBrowseArtifactDetail(splitted[0],splitted[1]);//,null,null);
-          } else {
-            generalDisplayArtifactDetailsVersionView(groupId,artifactId,version,repositoryId);
-          }
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-dependencies-content-a");
+
         });
+
+        this.get('#artifact-dependencies~:repositoryId/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-dependencies-content-a");
+        });
+
+
+        this.get('#artifact-dependency-tree/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-dependency-tree-content-a");
+        });
+
+        this.get('#artifact-dependency-tree~:repositoryId/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-dependency-tree-content-a");
+        });
+
+
+        var calculateUsedBy=function(groupId,artifactId,version){
+          var dependeesContentDiv=$("#main-content #artifact-details-used-by-content" );
+          if( $.trim(dependeesContentDiv.html()).length<1){
+            dependeesContentDiv.html(mediumSpinnerImg());
+            var dependeesUrl="restServices/archivaServices/browseService/dependees/"+encodeURIComponent(groupId);
+            dependeesUrl+="/"+encodeURIComponent(artifactId);
+            dependeesUrl+="/"+encodeURIComponent(version);
+            var selectedRepo=getSelectedBrowsingRepository();
+            if (selectedRepo){
+              dependeesUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
+            }
+            $.ajax(dependeesUrl, {
+              type: "GET",
+              dataType: 'json',
+              success: function(data) {
+                var artifacts=mapArtifacts(data);
+                dependeesContentDiv.html($("#dependees_tmpl").tmpl({artifacts: artifacts}));
+              }
+            });
+          }
+        }
+
+        this.get('#artifact-used-by/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-used-by-content-a","artifact-details-used-by-content",calculateUsedBy);
+        });
+
+        this.get('#artifact-used-by~:repositoryId/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-used-by-content-a","artifact-details-used-by-content",calculateUsedBy);
+        });
+
+        var calculateMetadatas=function(groupId,artifactId,version,artifactVersionDetailViewModel){
+
+          var metadatasContentDiv=$("#main-content #artifact-details-metadatas-content" );
+          var metadatasUrl="restServices/archivaServices/browseService/metadatas/"+encodeURIComponent(groupId);
+          metadatasUrl+="/"+encodeURIComponent(artifactId);
+          metadatasUrl+="/"+encodeURIComponent(version);
+          var selectedRepo=getSelectedBrowsingRepository();
+          if (selectedRepo){
+            metadatasUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
+          }
+
+          //fixe self.entries not in the scope
+
+          $.ajax(metadatasUrl, {
+            type: "GET",
+            dataType: 'json',
+            success: function(data) {
+              var entries= $.map(data,function(e,i){
+                return new MetadataEntry( e.key, e.value,false);
+              });
+              artifactVersionDetailViewModel.entries(entries);
+            }
+          });
+        }
+
+        this.get('#artifact-metadatas/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-metadatas-content-a",null,calculateMetadatas);
+        });
+
+        this.get('#artifact-metadatas~:repositoryId/:groupId/:artifactId/:version',function(context){
+
+          var repositoryId = this.params.repositoryId;
+          var groupId= this.params.groupId;
+          var artifactId= this.params.artifactId;
+          var version= this.params.version;
+          checkArtifactDetailContent(groupId,artifactId,version,repositoryId,"artifact-details-metadatas-content-a",null,calculateMetadatas);
+        });
+
+
         this.get('#browse/:groupId',function(context){
           var groupId = this.params.groupId;
           if (groupId){
@@ -359,14 +558,7 @@ function() {
       },
       select: function( event, ui ) {
         $.log("select artifactId:"+ui.item.artifactId);
-        // user can be in a non search view so init the search view first
-        var searchViewModel = new SearchViewModel();
-        var searchRequest = new SearchRequest();
-        searchRequest.artifactId(ui.item.artifactId);
-        searchViewModel.searchRequest(searchRequest);
-        displaySearch(function(){
-          searchViewModel.externalAdvancedSearch();
-        },searchViewModel);
+        window.sammyArchivaApplication.setLocation("#quicksearch~"+ui.item.artifactId);
       }
 		}).data( "autocomplete" )._renderItem = function( ul, item ) {
 							return $( "<li></li>" )

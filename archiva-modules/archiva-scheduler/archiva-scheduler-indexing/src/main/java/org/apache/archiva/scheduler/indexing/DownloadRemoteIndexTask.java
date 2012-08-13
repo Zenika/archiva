@@ -32,6 +32,7 @@ import org.apache.maven.index.updater.IndexUpdater;
 import org.apache.maven.index.updater.ResourceFetcher;
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
+import org.apache.maven.wagon.StreamWagon;
 import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.authentication.AuthenticationException;
@@ -109,7 +110,7 @@ public class DownloadRemoteIndexTask
         stopWatch.start();
         try
         {
-            log.info( "start download remote index for remote repository " + this.remoteRepository.getId() );
+            log.info( "start download remote index for remote repository {}", this.remoteRepository.getId() );
             IndexingContext indexingContext = remoteRepositoryAdmin.createIndexContext( this.remoteRepository );
 
             // create a temp directory to download files
@@ -128,7 +129,7 @@ public class DownloadRemoteIndexTask
                 new URL( this.remoteRepository.getUrl() ).getProtocol() + ( ( this.networkProxy != null
                     && this.networkProxy.isUseNtlm() ) ? "-ntlm" : "" );
 
-            final Wagon wagon = wagonFactory.getWagon( wagonProtocol );
+            final StreamWagon wagon = (StreamWagon) wagonFactory.getWagon( wagonProtocol );
             int timeoutInMilliseconds = remoteRepository.getTimeout() * 1000;
             // FIXME olamy having 2 config values
             wagon.setReadTimeout( timeoutInMilliseconds );
@@ -216,7 +217,7 @@ public class DownloadRemoteIndexTask
         }
         catch ( IOException e )
         {
-            log.warn( "skip error delete " + f + ": " + e.getMessage() );
+            log.warn( "skip error delete {} : {}", f, e.getMessage() );
         }
     }
 
@@ -226,19 +227,19 @@ public class DownloadRemoteIndexTask
     {
         private Logger log = LoggerFactory.getLogger( getClass() );
 
-        String reourceName;
+        String resourceName;
 
         long startTime;
 
         public void transferInitiated( TransferEvent transferEvent )
         {
-            reourceName = transferEvent.getResource().getName();
-            log.debug( "initiate transfer of {}", reourceName );
+            resourceName = transferEvent.getResource().getName();
+            log.debug( "initiate transfer of {}", resourceName );
         }
 
         public void transferStarted( TransferEvent transferEvent )
         {
-            reourceName = transferEvent.getResource().getName();
+            resourceName = transferEvent.getResource().getName();
             startTime = System.currentTimeMillis();
             log.info( "start transfer of {}", transferEvent.getResource().getName() );
         }
@@ -251,7 +252,7 @@ public class DownloadRemoteIndexTask
 
         public void transferCompleted( TransferEvent transferEvent )
         {
-            reourceName = transferEvent.getResource().getName();
+            resourceName = transferEvent.getResource().getName();
             long endTime = System.currentTimeMillis();
             log.info( "end of transfer file {}: {}s", transferEvent.getResource().getName(),
                       ( endTime - startTime ) / 1000 );

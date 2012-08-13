@@ -1,3 +1,4 @@
+package org.apache.archiva.admin.repository;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,29 +18,25 @@
  * under the License.
  */
 
-body{padding-top: 4px;}
+import org.apache.archiva.admin.model.managed.ManagedRepositoryAdmin;
+import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
+import org.apache.commons.validator.GenericValidator;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-.xleftbanner, #bannerLeft img {
-  float: left;
-}
-
-.xrightbanner, #bannerRight img {
-  float: right;
-}
-
-.xright  {
-  float: right;
-}
-
- #breadcrumbs {
-  font-size: 11px;
-}
-
-#footer {
-  margin: 20px 0px 20px 0px;
-  border-top: solid #ccc 1px;
-  color: #333333;
-  padding: 3px 10px 3px 10px;
-  font-size: x-small;
-  text-align: center;
+/**
+ * @author Eric Barboni
+ */
+@RunWith( ArchivaSpringJUnit4ClassRunner.class )
+public  class ValidatorTest
+    extends AbstractRepositoryAdminTest
+{
+    @Test
+    public void testGenericValidator() 
+    {
+        // Be sure M
+        assertFalse("A repo location cannot contains space",GenericValidator.matchRegexp( "/opt/ testme/",
+                     ManagedRepositoryAdmin.REPOSITORY_LOCATION_VALID_EXPRESSION ));
+        
+    }
 }
