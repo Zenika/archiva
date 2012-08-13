@@ -221,9 +221,9 @@ public class CUDFExtractor
         {
             try
             {
-                writer.append( "package: " ).append(
-                    outputArtifactInCUDFInline( extractOrganisation( projectVersionMetadata ),
-                                                extractName( projectVersionMetadata ) ) ).append( '\n' );
+                String projectOneLine = outputArtifactInCUDFInline( extractOrganisation( projectVersionMetadata ),
+                                                                    extractName( projectVersionMetadata ) );
+                writer.append( "package: " ).append( projectOneLine ).append( '\n' );
                 writer.append( "number: " ).append( projectVersionMetadata.getVersion() ).append( '\n' );
                 writer.append( "version: " ).append( Integer.toString( version ) ).append( '\n' );
                 writer.append( "type: " ).append( extractPackaging( projectVersionMetadata ) ).append( '\n' );
@@ -235,6 +235,10 @@ public class CUDFExtractor
                 }
                 writer.append( '\n' );
                 writer.flush();
+            }
+            catch ( IllegalArgumentException e )
+            {
+                log.warn( "No correct information about " + namespace + "#" + project + "#" + version );
             }
             catch ( IOException e )
             {
@@ -303,29 +307,31 @@ public class CUDFExtractor
         }
     }
 
+    // FIXME: what if it is not MavenProjectFacet but NugetsProjectFacet or DebianProjectFacet?
     private String extractOrganisation( ProjectVersionMetadata projectVersionMetadata )
     {
         MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet( MavenProjectFacet.FACET_ID );
         if ( facet != null )
         {
-            return facet.getGroupId() == null ? "" : facet.getGroupId();
+            return facet.getGroupId();
         }
         else
         {
-            return "";
+            return null;
         }
     }
 
+    // FIXME: what if it is not MavenProjectFacet but NugetsProjectFacet or DebianProjectFacet?
     private String extractName( ProjectVersionMetadata projectVersionMetadata )
     {
         MavenProjectFacet facet = (MavenProjectFacet) projectVersionMetadata.getFacet( MavenProjectFacet.FACET_ID );
         if ( facet != null )
         {
-            return facet.getArtifactId() == null ? "" : facet.getArtifactId();
+            return facet.getArtifactId();
         }
         else
         {
-            return "";
+            return null;
         }
     }
 
@@ -339,9 +345,14 @@ public class CUDFExtractor
      * @param organisation (groupId)
      * @param name         (artifactId)
      * @return organisation%3aname => org.apache.archiva%3aarchiva with %+hexadecimal code of every forbidden characters
+     * @throws IllegalArgumentException if the organisation or the name is null
      */
     private String outputArtifactInCUDFInline( String organisation, String name )
     {
+        if ( organisation == null || name == null )
+        {
+            throw new IllegalArgumentException();
+        }
         String packageLine = new StringBuilder( 20 ).append( organisation ).append( ':' ).append( name ).toString();
         return encodingString( packageLine );
     }
