@@ -107,14 +107,6 @@ public interface CUDFService
                                   @QueryParam( "keep" ) boolean keep )
         throws ArchivaRestServiceException;
 
-    @Path( "bgUniverse" )
-    @GET
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
-    @Produces( MediaType.TEXT_PLAIN )
-    String backgroundUniverse( @QueryParam( "repositoryId" ) String repositoryId, @QueryParam( "output" ) String output,
-                               @Context HttpServletResponse servletResponse )
-        throws ArchivaRestServiceException;
-
     @Path( "startCudfGeneration" )
     @GET
     @RedbackAuthorization( noPermission = true, noRestriction = true )

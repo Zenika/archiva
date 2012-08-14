@@ -230,55 +230,6 @@ public class DefaultCUDFService
         }
     }
 
-    public String backgroundUniverse( final String repositoryId, String output, HttpServletResponse response )
-        throws ArchivaRestServiceException
-    {
-        final String outputFilename = output == null ? "/tmp/universe.cudf" : output;
-        new Thread()
-        {
-            @Override
-            public void run()
-            {
-                File output = new File( outputFilename );
-                FileWriter fos = null;
-                try
-                {
-                    fos = new FileWriter( output );
-                    log.info( "Starting CUDF Extract in background" );
-                    cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), fos );
-                    log.info(
-                        "Background CUDF extraction of Universe is done. Find the output file " + outputFilename );
-                }
-                catch ( ArchivaRestServiceException e )
-                {
-                    log.error( "Error while background cudf extraction" );
-                    log.error( e.getMessage(), e );
-                }
-                catch ( IOException e )
-                {
-                    log.error( "Error while background cudf extraction" );
-                    log.error( e.getMessage(), e );
-                }
-                finally
-                {
-                    if ( fos != null )
-                    {
-                        try
-                        {
-                            fos.close();
-                        }
-                        catch ( IOException e )
-                        {
-                            //nothing to do
-                        }
-                    }
-                    log.info( "CUDF Extraction ended." );
-                }
-            }
-        }.start();
-        return "Started in background";
-    }
-
     public Response startCudfTaskGeneration( String filePath )
         throws ArchivaRestServiceException
     {
