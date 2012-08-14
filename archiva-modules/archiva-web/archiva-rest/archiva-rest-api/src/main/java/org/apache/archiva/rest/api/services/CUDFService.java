@@ -21,6 +21,7 @@ package org.apache.archiva.rest.api.services;
 
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.redback.authorization.RedbackAuthorization;
+import org.apache.archiva.security.common.ArchivaRoleConstants;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -109,54 +110,54 @@ public interface CUDFService
 
     @Path( "startCudfGeneration" )
     @GET
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     Response startCudfTaskGeneration( @QueryParam( "filePath" ) String filePath )
         throws ArchivaRestServiceException;
 
     @Path( "jobs/{id}/start" )
     @POST
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     void startCUDFJob( @PathParam( "id" ) String id )
         throws ArchivaRestServiceException;
 
     @Path( "jobs" )
     @GET
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     List<CUDFJob> getCUDFJobs()
         throws ArchivaRestServiceException;
 
     @Path( "jobs/{id}" )
     @GET
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     CUDFJob getCUDFJob( @PathParam( "id" ) String id )
         throws ArchivaRestServiceException;
 
     @Path( "jobs/{id}" )
     @PUT
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     void updateCUDFJob( @PathParam( "id" ) String id, CUDFJob cudfJob )
         throws ArchivaRestServiceException;
 
     @Path( "jobs" )
     @POST
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     void addCUDFJob( CUDFJob cudfJob )
         throws ArchivaRestServiceException;
 
     @Path( "jobs" )
     @DELETE
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     void deleteCUDFJob( CUDFJob cudfJob )
         throws ArchivaRestServiceException;
 
     @Path( "jobs/{id}/" )
     @DELETE
-    @RedbackAuthorization( noPermission = true, noRestriction = true )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     void deleteCUDFJob( @PathParam( "id" ) String id )
         throws ArchivaRestServiceException;
