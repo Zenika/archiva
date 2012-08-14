@@ -1879,6 +1879,27 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
         }
       );
     }
+
+    launchCUDFJob = function ( cudfJob ) {
+      openDialogConfirm(
+        function () {
+            closeDialogConfirm();
+            $.ajax("restServices/archivaServices/cudfService/jobs/"+cudfJob.id()+"/start", {
+              type: 'POST',
+              success: function(){
+                displaySuccessMessage( $.i18n.prop( "cudf.job.launch.successful", cudfJob.id() ) );
+              },
+              error: function(){
+                displayErrorMessage( $.i18n.prop( "cudf.job.launch.failure", cudfJob.id() ) );
+              }
+            });
+        },
+        $.i18n.prop( "cudf.job.launch.ok" ),
+        $.i18n.prop( "cudf.job.launch.cancel" ),
+        $.i18n.prop( "cudf.job.launch.title", cudfJob.id() ),
+        $.i18n.prop( "cudf.job.launch.text", cudfJob.id() )
+      );
+    }
   }
 
   displayCUDFJobs=function(){
