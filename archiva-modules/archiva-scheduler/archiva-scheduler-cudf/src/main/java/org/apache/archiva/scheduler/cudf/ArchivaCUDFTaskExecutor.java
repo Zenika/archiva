@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
@@ -54,6 +55,10 @@ public class ArchivaCUDFTaskExecutor
 
     @Inject
     private ManagedRepositoryAdmin managedRepositoryAdmin;
+
+    private SimpleDateFormat simpleDateFormat = null;
+
+    private final Object simpleDateFormatMonitor = new Object();
 
     public void executeTask( Task task )
         throws TaskExecutionException
@@ -81,7 +86,7 @@ public class ArchivaCUDFTaskExecutor
             if ( cudfTask.isAllRepositories() )
             {
                 repositoriesId = getAllRepositories();
-                fileName = "universe-" + generateDateForFilename() + ".cudf";
+                fileName = "universe-" + generateDateForFilename( "yyyyMMdd-HHmmss-SS" ) + ".cudf";
             }
             else
             {
@@ -117,7 +122,7 @@ public class ArchivaCUDFTaskExecutor
             }
             else
             {
-                sb.append("-").append( generateDateForFilename() ).append( ".cudf" );
+                sb.append( "-" ).append( generateDateForFilename( "yyyyMMdd-HHmmss-SS" ) ).append( ".cudf" );
             }
         }
         return sb.toString();
@@ -137,8 +142,12 @@ public class ArchivaCUDFTaskExecutor
         return repositoriesId;
     }
 
-    public Long generateDateForFilename()
+    public String generateDateForFilename( String format )
     {
-        return Calendar.getInstance().getTimeInMillis();
+        synchronized ( simpleDateFormatMonitor )
+        {
+            simpleDateFormat = new SimpleDateFormat( format );
+            return simpleDateFormat.format( Calendar.getInstance().getTime() );
+        }
     }
 }
