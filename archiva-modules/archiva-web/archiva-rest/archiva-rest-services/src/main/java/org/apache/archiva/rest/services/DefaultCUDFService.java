@@ -250,7 +250,7 @@ public class DefaultCUDFService
         }
     }
 
-    public void startCUDFJob( String id )
+    public Boolean startCUDFJob( String id )
         throws ArchivaRestServiceException
     {
         CUDFJob cudfJob = cudfJobsAdmin.getCUDFJob( id );
@@ -282,6 +282,7 @@ public class DefaultCUDFService
         {
             throw new ArchivaRestServiceException( e.getMessage(), e );
         }
+        return true;
     }
 
     public List<CUDFJob> getCUDFJobs()

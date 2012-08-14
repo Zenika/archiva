@@ -117,7 +117,7 @@ public interface CUDFService
     @Path( "jobs/{id}/start" )
     @POST
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
-    void startCUDFJob( @PathParam( "id" ) String id )
+    Boolean startCUDFJob( @PathParam( "id" ) String id )
         throws ArchivaRestServiceException;
 
     @Path( "jobs" )
