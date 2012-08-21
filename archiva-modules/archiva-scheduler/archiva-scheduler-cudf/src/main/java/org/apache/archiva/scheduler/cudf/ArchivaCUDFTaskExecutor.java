@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -81,20 +80,21 @@ public class ArchivaCUDFTaskExecutor
                 }
             }
 
-            String fileName = null;
+            String fileName = cudfTask.getId() + "-" + generateDateForFilename( "yyyyMMdd-HHmmss-SS" ) + ".cudf";
             List<String> repositoriesId = null;
             if ( cudfTask.isAllRepositories() )
             {
                 repositoriesId = getAllRepositories();
-                fileName = "universe-" + generateDateForFilename( "yyyyMMdd-HHmmss-SS" ) + ".cudf";
             }
             else
             {
                 repositoriesId = cudfTask.getRepositoriesId();
-                fileName = generateFileName( cudfTask.getRepositoriesId() );
             }
             cudfEngine.computeCUDFUniverse( repositoriesId,
                                             new FileWriter( new File( cudfTask.getResourceDestination(), fileName ) ) );
+
+            log.info( "Finished CUDF Task. Saved in " + cudfTask.getResourceDestination().getAbsolutePath() +
+                          File.separator + fileName );
         }
         catch ( RepositoryAdminException e )
         {
@@ -106,26 +106,6 @@ public class ArchivaCUDFTaskExecutor
             log.error( e.getMessage(), e );
             throw new TaskExecutionException( e.getMessage(), e );
         }
-        log.info( "Finished CUDF Task" );
-    }
-
-    private String generateFileName( List<String> repositoriesId )
-    {
-        StringBuilder sb = new StringBuilder( 10 );
-        Iterator it = repositoriesId.iterator();
-        while ( it.hasNext() )
-        {
-            sb.append( it.next() );
-            if ( it.hasNext() )
-            {
-                sb.append( "-" );
-            }
-            else
-            {
-                sb.append( "-" ).append( generateDateForFilename( "yyyyMMdd-HHmmss-SS" ) ).append( ".cudf" );
-            }
-        }
-        return sb.toString();
     }
 
     private List<String> getAllRepositories()
