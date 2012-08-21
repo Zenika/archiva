@@ -186,11 +186,23 @@ public class ArchivaStartup
             try
             {
                 cudfArchivaTaskScheduler.stop();
-                cudfArchivaTaskScheduler.getScheduler().shutdown( false );
             }
             catch ( SchedulerException e )
             {
                 log.error( e.getMessage(), e );
+            }
+            try
+            {
+                // shutdown the scheduler, otherwise Quartz scheduler and Threads still exists
+                Field schedulerField = cudfArchivaTaskScheduler.getClass().getDeclaredField( "scheduler" );
+                schedulerField.setAccessible( true );
+
+                DefaultScheduler scheduler = (DefaultScheduler) schedulerField.get( cudfArchivaTaskScheduler );
+                scheduler.stop();
+            }
+            catch ( Exception e )
+            {
+                e.printStackTrace();
             }
         }
     }

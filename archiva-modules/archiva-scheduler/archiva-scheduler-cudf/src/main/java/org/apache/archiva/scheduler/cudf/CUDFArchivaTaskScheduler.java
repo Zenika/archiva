@@ -95,7 +95,6 @@ public class CUDFArchivaTaskScheduler
     @PostConstruct
     public void startup()
         throws ArchivaException
-
     {
         configuration.addListener( this );
         try
@@ -244,7 +243,6 @@ public class CUDFArchivaTaskScheduler
     private void unScheduleJobs()
         throws SchedulerException
     {
-
         jobIdsLock.lock();
         try
         {
@@ -252,15 +250,11 @@ public class CUDFArchivaTaskScheduler
             {
                 scheduler.unscheduleJob( jobId, CUDF_GROUP );
             }
+            jobIds.clear();
         }
         finally
         {
             jobIdsLock.unlock();
         }
-    }
-
-    public Scheduler getScheduler()
-    {
-        return scheduler;
     }
 }
