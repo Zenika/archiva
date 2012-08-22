@@ -537,7 +537,10 @@ public class DefaultArchivaConfiguration
         {
             c.setRefreshCronExpression( escapeCronExpression( c.getRefreshCronExpression() ) );
         }
-
+        for ( CUDFJobConfiguration cudfJobConfiguration : configuration.getCudf().getCudfJobs() )
+        {
+            cudfJobConfiguration.setCronExpression( escapeCronExpression( cudfJobConfiguration.getCronExpression() ) );
+        }
 
     }
 
@@ -812,7 +815,11 @@ public class DefaultArchivaConfiguration
             c.setLocation( removeExpressions( c.getLocation() ) );
             c.setRefreshCronExpression( unescapeCronExpression( c.getRefreshCronExpression() ) );
         }
-
+        for ( CUDFJobConfiguration cudfJobConfiguration : config.getCudf().getCudfJobs() )
+        {
+            cudfJobConfiguration.setCronExpression(
+                unescapeCronExpression( cudfJobConfiguration.getCronExpression() ) );
+        }
         return config;
     }
 
