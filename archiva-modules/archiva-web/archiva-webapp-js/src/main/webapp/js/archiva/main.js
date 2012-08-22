@@ -573,5 +573,16 @@ function() {
   }
 
 
+  //-----------------------------------------
+  // extends jquery tmpl to support var def
+  //-----------------------------------------
+
+  $.extend($.tmpl.tag, {
+      "var": {
+          open: "var $1;"
+      }
+  });
+
+
 });
 
