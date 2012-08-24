@@ -28,15 +28,15 @@ function(jquery,ui,sammy,tmpl) {
    */
   reccordLoginCookie=function(user) {
     $.cookie('redback_login', ko.toJSON(user));
-  }
+  };
 
   getUserFromLoginCookie=function(){
     return $.parseJSON($.cookie('redback_login'));
-  }
+  };
 
   deleteLoginCookie=function(){
     $.cookie('redback_login', null);
-  }
+  };
 
   logout=function(doScreenChange){
     deleteLoginCookie();
@@ -50,7 +50,7 @@ function(jquery,ui,sammy,tmpl) {
     $.ajax({
       url: 'restServices/redbackServices/loginService/logout'
     });
-  }
+  };
 
 
 
@@ -75,13 +75,13 @@ function(jquery,ui,sammy,tmpl) {
         $("#topbar-menu-container").find("[redback-permissions]").each(function(element){
           checkElementKarma(this);
         });
-        $("#sidebar-content [redback-permissions]").each(function(element){
+        $("#sidebar-content").find("[redback-permissions]").each(function(element){
           checkElementKarma(this);
         });
         checkUrlParams();
       }
     });
-  }
+  };
 
   checkElementKarma=function(element){
     var bindingValue = $(element).attr("redback-permissions");
@@ -98,7 +98,7 @@ function(jquery,ui,sammy,tmpl) {
     } else {
       $(element).show();
     }
-  }
+  };
 
   hideElementWithKarma=function(){
     $("#topbar-menu-container [redback-permissions]").each(function(element){
@@ -109,7 +109,7 @@ function(jquery,ui,sammy,tmpl) {
       $(this).hide();
     });
     $.log("hideElementWithKarma");
-  }
+  };
 
   //------------------------------------//
   // Change UI with appearance settings //
@@ -119,31 +119,32 @@ function(jquery,ui,sammy,tmpl) {
           type: "GET",
           dataType: 'json',
           success: function(data) {
-              if(data.url){
-                var url = data.url.startsWith("http://") || data.url.startsWith("https://") ? data.url : "http://"+data.url;
-                var link="<a href='"+url+"' class='brand'>";
-                if (data.logoLocation) {
-                    link+="<img src='"+data.logoLocation+"' style='max-height: 30px'/>";
-                } else if (data.name) {
-                    link+=data.name;
-                } else {
-                    link+="Archiva";
-                }
-                link+="</a>";
-                $("#organisation-logo").html(link);
+            var organisationLogo=$("#organisation-logo");
+            if(data.url){
+              var url = data.url.startsWith("http://") || data.url.startsWith("https://") ? data.url : "http://"+data.url;
+              var link="<a href='"+url+"' class='brand'>";
+              if (data.logoLocation) {
+                  link+="<img src='"+data.logoLocation+"' style='max-height: 30px'/>";
+              } else if (data.name) {
+                  link+=data.name;
+              } else {
+                  link+="Archiva";
               }
+              link+="</a>";
+              organisationLogo.html(link);
+            }
             if (!data.url && data.name){
-              $("#organisation-logo").html("<a href='/' class='brand'>"+data.name+"</a>");
+              organisationLogo.html("<a href='/' class='brand'>"+data.name+"</a>");
             }
             if (!data.url && !data.name){
-              $("#organisation-logo").html("<a href='/' class='brand'>Archiva</a>");
+              organisationLogo.html("<a href='/' class='brand'>Archiva</a>");
             }
           },
           error: function() {
-              $("#organisation-logo").html("<a href='/' class='brand'>Archiva</a>");
+            organisationLogo.html("<a href='/' class='brand'>Archiva</a>");
           }
       });
-  }
+  };
 
 
   MainMenuViewModel=function() {
@@ -279,7 +280,7 @@ function(jquery,ui,sammy,tmpl) {
 
             searchViewModel.search("restServices/archivaServices/searchService/searchArtifacts",repos);//,repositoryIds);
           },searchViewModel);
-        }
+        };
 
         this.get("#advancedsearch/:queryterms",function(){
           advancedSearchRoute(this.params);
@@ -303,8 +304,6 @@ function(jquery,ui,sammy,tmpl) {
           var artifactId= this.params.artifactId;
           $.log("get #artifact:"+groupId+":"+artifactId);
           goToBrowseArtifactDetail(groupId,artifactId);//,null,null);
-          return;
-
         });
         this.get('#artifact~:repositoryId/:groupId/:artifactId',function(context){
           var groupId= this.params.groupId;
@@ -312,7 +311,6 @@ function(jquery,ui,sammy,tmpl) {
           var repositoryId = this.params.repositoryId;
           $.log("get #artifact:"+groupId+":"+artifactId);
           goToBrowseArtifactDetail(groupId,artifactId,repositoryId);//,null,null);
-          return;
         });
 
         var checkArtifactDetailContent=function(groupId,artifactId,version,repositoryId,tabToActivate,idContentToCheck,contentDisplayFn){
@@ -321,19 +319,19 @@ function(jquery,ui,sammy,tmpl) {
           var htmlIdSelect = $("#main-content #"+htmlId );
           if(htmlIdSelect.html()!=null){
             if( $.trim(htmlIdSelect.html().length)>0){
-              $("#main-content #"+tabToActivate).tab('show')
+              $("#main-content #"+tabToActivate).tab('show');
               return;
             }
           }
           generalDisplayArtifactDetailsVersionView(groupId,artifactId,version,repositoryId,
                                                    function(artifactVersionDetailViewModel){
-                                                     $("#main-content #"+tabToActivate).tab('show')
+                                                     $("#main-content #"+tabToActivate).tab('show');
                                                      if(contentDisplayFn){
                                                        contentDisplayFn(groupId,artifactId,version,artifactVersionDetailViewModel);
                                                      }
                                                    }
           );
-        }
+        };
 
         this.get('#artifact/:groupId/:artifactId/:version',function(context){
 
@@ -393,7 +391,7 @@ function(jquery,ui,sammy,tmpl) {
 
 
         var calculateUsedBy=function(groupId,artifactId,version){
-          var dependeesContentDiv=$("#main-content #artifact-details-used-by-content" );
+          var dependeesContentDiv=$("#main-content" ).find("#artifact-details-used-by-content" );
           if( $.trim(dependeesContentDiv.html()).length<1){
             dependeesContentDiv.html(mediumSpinnerImg());
             var dependeesUrl="restServices/archivaServices/browseService/dependees/"+encodeURIComponent(groupId);
@@ -412,7 +410,7 @@ function(jquery,ui,sammy,tmpl) {
               }
             });
           }
-        }
+        };
 
         this.get('#artifact-used-by/:groupId/:artifactId/:version',function(context){
 
@@ -434,7 +432,7 @@ function(jquery,ui,sammy,tmpl) {
 
         var calculateMetadatas=function(groupId,artifactId,version,artifactVersionDetailViewModel){
 
-          var metadatasContentDiv=$("#main-content #artifact-details-metadatas-content" );
+          var metadatasContentDiv=$("#main-content" ).find("#artifact-details-metadatas-content" );
           var metadatasUrl="restServices/archivaServices/browseService/metadatas/"+encodeURIComponent(groupId);
           metadatasUrl+="/"+encodeURIComponent(artifactId);
           metadatasUrl+="/"+encodeURIComponent(version);
@@ -455,7 +453,7 @@ function(jquery,ui,sammy,tmpl) {
               artifactVersionDetailViewModel.entries(entries);
             }
           });
-        }
+        };
 
         this.get('#artifact-metadatas/:groupId/:artifactId/:version',function(context){
 
@@ -506,34 +504,35 @@ function(jquery,ui,sammy,tmpl) {
           ko.utils.arrayFirst(baseItems.concat(self.usersMenuItems, self.cudfMenuItems, self.administrationMenuItems), function(p) {
             if ( p.href == "#"+self.activeMenuId()) {
               p.func();
-              return;
             }
           });
         });
         //this.get('', function () { this.app.runRoute('get', '#search') });
       });
-  }
+  };
 
   userLoggedCallbackFn=function(user){
     $.log("userLoggedCallbackFn:"+ (user?user.username:null));
-
+    var loginLink=$("#login-link");
+    var registerLink=$("#register-link");
+    var changePasswordLink=$("#change-password-link");
     if (!user) {
-      $("#login-link").show();
-      $("#register-link").show();
-      $("#change-password-link").hide();
+      loginLink.show();
+      registerLink.show();
+      changePasswordLink.hide();
       checkUrlParams();
     } else {
-      $("#change-password-link").show();
+      changePasswordLink.show();
       $("#logout-link").show();
-      $("#register-link").hide();
-      $("#login-link").hide();
+      registerLink.hide();
+      loginLink.hide();
       decorateMenuWithKarma(user);
     }
-  }
+  };
 
   checkSecurityLinks=function(){
     userLogged(userLoggedCallbackFn);
-  }
+  };
 
   checkCreateAdminLink=function(callbackFn){
     $.ajax("restServices/redbackServices/userService/isAdminUserExists", {
@@ -541,12 +540,13 @@ function(jquery,ui,sammy,tmpl) {
       dataType: 'json',
       success: function(data) {
         var adminExists = data;
+        var createAdminLink=$("#create-admin-link");
         if (adminExists == false) {
-          $("#create-admin-link").show();
+          createAdminLink.show();
           $("#login-link").hide();
           $("#register-link").hide();
         } else {
-          $("#create-admin-link").hide();
+          createAdminLink.hide();
         }
         if(callbackFn){
           callbackFn()
@@ -554,7 +554,7 @@ function(jquery,ui,sammy,tmpl) {
         $.log("adminExists:"+adminExists);
       }
     });
-  }
+  };
 
   // handle url with registration link
   checkUrlParams=function(){
@@ -577,11 +577,11 @@ function(jquery,ui,sammy,tmpl) {
       window.sammyArchivaApplication.setLocation("#search");
     }
 
-  }
+  };
 
   hasKarma=function(karmaName){
     return $.inArray(karmaName,window.redbackModel.operatioNames)>=0;
-  }
+  };
 
   startArchivaApplication=function(){
 
@@ -608,7 +608,7 @@ function(jquery,ui,sammy,tmpl) {
 
     window.sammyArchivaApplication.run();
 
-  }
+  };
 
   drawQuickSearchAutocomplete=function(){
 
