@@ -22,6 +22,8 @@ package org.apache.archiva.web.startup;
 import org.apache.archiva.common.ArchivaException;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridge;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridgeException;
+import org.apache.archiva.redback.components.cache.Cache;
+import org.apache.archiva.redback.components.cache.ehcache.EhcacheCache;
 import org.apache.archiva.redback.components.scheduler.DefaultScheduler;
 import org.apache.archiva.scheduler.cudf.CUDFArchivaTaskScheduler;
 import org.apache.archiva.scheduler.repository.RepositoryArchivaTaskScheduler;
@@ -156,7 +158,7 @@ public class ArchivaStartup
                     e.printStackTrace();
                 }
             }
-
+            disposeCUDFCache( applicationContext.getBean( "cache#cudf", Cache.class ) );
             shutdownCudfScheduler();
             // close the application context
             //applicationContext.close();
@@ -177,6 +179,14 @@ public class ArchivaStartup
             }
         }
 
+    }
+
+    private void disposeCUDFCache( Cache cudfCache )
+    {
+        if ( cudfCache instanceof EhcacheCache )
+        {
+            ( (EhcacheCache) cudfCache ).dispose();
+        }
     }
 
     private void shutdownCudfScheduler()

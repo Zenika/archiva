@@ -19,6 +19,9 @@ package org.apache.archiva.cudf.extractor;
  * under the License.
  */
 
+import com.zenika.cudf.model.CUDFDescriptor;
+import com.zenika.cudf.parser.DefaultSerializer;
+import com.zenika.cudf.parser.ParsingException;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +42,9 @@ public class DefaultCUDFEngine
     @Inject
     private RepositorySessionFactory repositorySessionFactory;
 
+    @Inject
+    private CUDFUniverseLoader universeLoader;
+    
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                  List<String> repositories, Writer writer )
         throws IOException
@@ -58,6 +64,20 @@ public class DefaultCUDFEngine
     public void computeCUDFUniverse( List<String> repositoryIds, Writer writer )
         throws IOException
     {
-        new CUDFExtractor( writer ).computeCUDFUniverse( repositoryIds, repositorySessionFactory );
+        if ( !universeLoader.isLoaded() )
+        {
+            universeLoader.loadUniverse( repositoryIds );
+        }
+        CUDFDescriptor descriptor = universeLoader.getDescriptor();
+        DefaultSerializer serializer = new DefaultSerializer( writer );
+        try
+        {
+            serializer.serialize( descriptor );
+        }
+        catch ( ParsingException e )
+        {
+            throw new RuntimeException( "Unable to serialize the CUDF document", e );
+        }
     }
+    
 }

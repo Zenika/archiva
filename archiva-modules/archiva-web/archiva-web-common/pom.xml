@@ -235,7 +235,9 @@
               org.apache.archiva.redback.system,
               org.apache.archiva.redback.users,
               org.apache.archiva.redback.integration.filter.authentication,
-              org.apache.archiva.scheduler.cudf
+              org.apache.archiva.scheduler.cudf,
+              org.apache.archiva.redback.components.cache,
+              org.apache.archiva.redback.components.cache.ehcache
             </Import-Package>
           </instructions>
         </configuration>
