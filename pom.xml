@@ -1838,6 +1838,7 @@
               <exclude>.idea/**</exclude>
               <exclude>.repository/**</exclude>
               <exclude>*.patch</exclude>
+              <exclude>**/target/**</exclude>
             </excludes>
           </configuration>
         </plugin>
