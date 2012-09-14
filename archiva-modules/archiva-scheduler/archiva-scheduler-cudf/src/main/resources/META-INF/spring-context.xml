@@ -39,5 +39,8 @@
     <property name="name" value="cudf"/>
   </bean>
 
+  
+  
+  
   <alias name="archivaTaskScheduler#cudf" alias="scheduler#cudf"/>
 </beans>

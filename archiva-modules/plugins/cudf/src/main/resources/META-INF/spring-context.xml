@@ -31,12 +31,21 @@
 
   <bean name="cache#cudf" class="org.apache.archiva.redback.components.cache.ehcache.EhcacheCache"
         init-method="initialize">
-    
+
     <property name="diskPersistent" value="true"/>
     <property name="overflowToDisk" value="true"/>
     <property name="diskStorePath" value="${appserver.base}/data/cudf/cache"/>
     <property name="eternal" value="true"/>
     <property name="maxElementsInMemory" value="100000"/>
     <property name="name" value="cudfCache"/>
+  </bean>
+
+  <bean name="versionResolver#archiva" class="org.apache.archiva.cudf.extractor.ArchivaVersionResolver">
+    <constructor-arg type="org.apache.archiva.metadata.repository.RepositorySessionFactory" name="repositorySessionFactory" ref="repositorySessionFactory#file"/>
+    <constructor-arg type="org.apache.archiva.admin.model.managed.ManagedRepositoryAdmin" name="managedRepositoryAdmin" ref="managedRepositoryAdmin#default"/>
+  </bean>
+
+  <bean name="resolver#p2" class="com.zenika.cudf.resolver.P2Resolver">
+    <constructor-arg ref="versionResolver#archiva"/>
   </bean>
 </beans>

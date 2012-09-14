@@ -19,15 +19,19 @@ package org.apache.archiva.cudf.extractor;
  * under the License.
  */
 
-import com.zenika.cudf.adapter.resolver.CUDFVersionResolver;
 import com.zenika.cudf.model.Binary;
 import com.zenika.cudf.model.BinaryId;
+import com.zenika.cudf.resolver.VersionResolver;
+import org.apache.archiva.admin.model.RepositoryAdminException;
+import org.apache.archiva.admin.model.beans.ManagedRepository;
+import org.apache.archiva.admin.model.managed.ManagedRepositoryAdmin;
 import org.apache.archiva.common.utils.VersionComparator;
 import org.apache.archiva.metadata.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -37,9 +41,11 @@ import java.util.List;
  * @author Antoine Rouaze <antoine.rouaze@zenika.com>
  */
 public class ArchivaVersionResolver
-    implements CUDFVersionResolver
+    implements VersionResolver
 {
 
+    private ManagedRepositoryAdmin managedRepositoryAdmin;
+    
     private final Logger log = LoggerFactory.getLogger( ArchivaVersionResolver.class );
 
     private final RepositorySessionFactory repositorySessionFactory;
@@ -52,7 +58,13 @@ public class ArchivaVersionResolver
         this.repositoryIds = repositoryIds;
     }
 
-    public Binary resolve( Binary binary )
+    public ArchivaVersionResolver( RepositorySessionFactory repositorySessionFactory, ManagedRepositoryAdmin managedRepositoryAdmin ) {
+        this.repositorySessionFactory = repositorySessionFactory;
+        this.managedRepositoryAdmin = managedRepositoryAdmin;
+        this.repositoryIds = getAllRepositoryIds();
+    }
+    
+    public Binary resolveToCUDF( Binary binary )
     {
         RepositorySession repositorySession = null;
         try
@@ -89,5 +101,30 @@ public class ArchivaVersionResolver
             }
         }
         return binary;
+    }
+
+    public Binary resolveFromCUDF( Binary binary )
+    {
+        
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+
+    private List<String> getAllRepositoryIds()
+    {
+        List<String> repositoryIds = new ArrayList<String>();
+        try
+        {
+            List<ManagedRepository> managedRepositories = managedRepositoryAdmin.getManagedRepositories();
+            for ( ManagedRepository managedRepository : managedRepositories )
+            {
+                repositoryIds.add( managedRepository.getId() );
+            }
+        }
+        catch ( RepositoryAdminException e )
+        {
+            throw new RuntimeException(
+                "Unable to retrieve all repositories" ); //TODO: Find best way for exception management
+        }
+        return repositoryIds;
     }
 }

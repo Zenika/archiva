@@ -63,22 +63,21 @@ public class CUDFUniverseLoader
 
     private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
 
-    public void loadUniverse( List<String> repositoryIds )
+    public CUDFDescriptor loadUniverse( List<String> repositoryIds )
     {
-        if ( !isLoaded() )
-        {
-            log.info( "Load CUDF universe" );
-            loadArchivaUniverse( repositoryIds );
-        }
+
+        log.info( "Load CUDF universe" );
+        loadArchivaUniverse( repositoryIds );
         ArchivaDescriptorAdapter archivaAdapter =
-            new ArchivaDescriptorAdapter( new ArchivaVersionResolver( repositorySessionFactory, repositoryIds ),
+            new ArchivaDescriptorAdapter( new ArchivaVersionResolver( repositorySessionFactory, repositoryIds ), 
                                           new ArchivaBinaryAdapter() );
         archivaAdapter.setCache( cache );
         descriptor = archivaAdapter.toCUDF( projectVersionMetadatas );
         descriptor.setPreamble( Preamble.getDefaultPreamble() );
+        return descriptor;
     }
 
-    private void loadArchivaUniverse( List<String> repositoryIds )
+    public void loadArchivaUniverse( List<String> repositoryIds )
     {
         for ( String repositoryId : repositoryIds )
         {
@@ -186,11 +185,5 @@ public class CUDFUniverseLoader
     public CUDFDescriptor getDescriptor()
     {
         return descriptor;
-    }
-
-    public boolean isLoaded()
-    {
-        return cache.get( CachedBinaries.BINARY_ID_KEY_LIST ) != null && !( (Set) cache.get(
-            CachedBinaries.BINARY_ID_KEY_LIST ) ).isEmpty();
     }
 }
