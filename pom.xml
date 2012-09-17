@@ -1935,6 +1935,7 @@
         <enabled>true</enabled>
       </snapshots>
     </pluginRepository>
+    <!--
     <pluginRepository>
       <id>codehaus.snapshots</id>
       <url>https://nexus.codehaus.org/content/groups/snapshots-group/</url>
@@ -1945,6 +1946,7 @@
         <enabled>true</enabled>
       </snapshots>
     </pluginRepository>
+    -->
   </pluginRepositories>
 
 </project>
