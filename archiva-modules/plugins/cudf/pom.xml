@@ -118,6 +118,16 @@
       <artifactId>cudf-adapter-archiva</artifactId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>com.zenika.dorm.cudf.binder</groupId>
+      <artifactId>cudf-resolver-p2</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

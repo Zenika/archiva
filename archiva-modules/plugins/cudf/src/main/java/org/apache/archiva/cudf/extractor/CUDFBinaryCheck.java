@@ -30,6 +30,7 @@ import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -40,15 +41,13 @@ import java.util.Set;
 @Service
 public class CUDFBinaryCheck
 {
-    
-    @Inject    
+
+    @Inject
+    @Named( "universe#default" )
     private CUDFUniverse universe;
-    
+
     @Inject
-    private RepositorySessionFactory repositorySessionFactory;
-    
-    @Inject
-    private ManagedRepositoryAdmin managedRepositoryAdmin;
+    private VersionResolver versionResolver;
 
     public void checkRequestedPackagesAreInUniverse( Request request )
     {
@@ -60,32 +59,29 @@ public class CUDFBinaryCheck
     public void checkPackagesAreInUniverse( Set<Binary> binaries )
     {
         Binaries universeBinaries = universe.getDescriptor().getBinaries();
-        VersionResolver versionResolver = new ArchivaVersionResolver( repositorySessionFactory, getAllRepositoryIds());
         for ( Binary binary : binaries )
         {
-            if ( universeBinaries.getBinaryById( versionResolver.resolveToCUDF( binary ).getBinaryId() ) == null )
+            Binary versionResolvedBinary = versionResolver.resolveToCUDF( binary );
+            if ( versionResolvedBinary == null )
             {
-                throw new IllegalStateException( "The binary requested must be in the universe: " + binary ); //TODO: find a way to retrieve the missing binary in other repository
+                throw new IllegalStateException(
+                    "Can not resolve the binary CUDF version. Maybe it's not in the universe" );
+            }
+            if ( universeBinaries.getBinaryById( versionResolvedBinary.getBinaryId() ) == null )
+            {
+                throw new IllegalStateException( "The binary requested must be in the universe: "
+                                                     + binary ); //TODO: find a way to retrieve the missing binary in other repository
             }
         }
     }
 
-    private List<String> getAllRepositoryIds()
+    public void setUniverse( CUDFUniverse universe )
     {
-        List<String> repositoryIds = new ArrayList<String>();
-        try
-        {
-            List<ManagedRepository> managedRepositories = managedRepositoryAdmin.getManagedRepositories();
-            for ( ManagedRepository managedRepository : managedRepositories )
-            {
-                repositoryIds.add( managedRepository.getId() );
-            }
-        }
-        catch ( RepositoryAdminException e )
-        {
-            throw new RuntimeException(
-                "Unable to retrieve all repositories" ); //TODO: Find best way for exception management
-        }
-        return repositoryIds;
+        this.universe = universe;
+    }
+
+    public void setVersionResolver( VersionResolver versionResolver )
+    {
+        this.versionResolver = versionResolver;
     }
 }
