@@ -26,13 +26,17 @@ import org.apache.archiva.admin.model.managed.ManagedRepositoryAdmin;
 import org.apache.archiva.audit.AuditEvent;
 import org.apache.archiva.audit.AuditListener;
 import org.apache.archiva.common.utils.VersionUtil;
+import org.apache.archiva.maven2.model.Artifact;
+import org.apache.archiva.metadata.model.ArtifactMetadata;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.apache.archiva.redback.rest.services.RedbackAuthenticationThreadLocal;
 import org.apache.archiva.redback.rest.services.RedbackRequestInformation;
 import org.apache.archiva.redback.users.User;
 import org.apache.archiva.redback.users.UserManager;
-import org.apache.archiva.maven2.model.Artifact;
+import org.apache.archiva.repository.RepositoryContentFactory;
+import org.apache.archiva.repository.RepositoryException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
+import org.apache.archiva.rest.services.utils.ArtifactBuilder;
 import org.apache.archiva.security.AccessDeniedException;
 import org.apache.archiva.security.ArchivaSecurityException;
 import org.apache.archiva.security.PrincipalNotFoundException;
@@ -73,7 +77,7 @@ public abstract class AbstractRestService
 
 
     @Inject
-    @Named( value = "repositorySessionFactory" )
+    @Named (value = "repositorySessionFactory")
     protected RepositorySessionFactory repositorySessionFactory;
 
     @Inject
@@ -81,6 +85,9 @@ public abstract class AbstractRestService
 
     @Inject
     protected ManagedRepositoryAdmin managedRepositoryAdmin;
+
+    @Inject
+    protected RepositoryContentFactory repositoryContentFactory;
 
     @Context
     protected HttpServletRequest httpServletRequest;
@@ -261,6 +268,36 @@ public abstract class AbstractRestService
         }
         catch ( RepositoryAdminException e )
         {
+            throw new ArchivaRestServiceException( e.getMessage(),
+                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e );
+        }
+    }
+
+    protected List<Artifact> buildArtifacts( List<ArtifactMetadata> artifactMetadatas, String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            if ( artifactMetadatas != null && !artifactMetadatas.isEmpty() )
+            {
+                List<Artifact> artifacts = new ArrayList<Artifact>( artifactMetadatas.size() );
+                for ( ArtifactMetadata artifact : artifactMetadatas )
+                {
+
+                    ArtifactBuilder builder =
+                        new ArtifactBuilder().forArtifactMetadata( artifact ).withManagedRepositoryContent(
+                            repositoryContentFactory.getManagedRepositoryContent( repositoryId ) );
+                    Artifact art = builder.build();
+                    art.setUrl( getArtifactUrl( art ) );
+                    artifacts.add( art );
+                }
+                return artifacts;
+            }
+            return Collections.emptyList();
+        }
+        catch ( RepositoryException e )
+        {
+            log.error( e.getMessage(), e );
             throw new ArchivaRestServiceException( e.getMessage(),
                                                    Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e );
         }
