@@ -56,7 +56,7 @@ import java.util.Date;
 /**
  * @author Olivier Lamy
  */
-@RunWith ( ArchivaBlockJUnit4ClassRunner.class )
+@RunWith (ArchivaBlockJUnit4ClassRunner.class)
 public abstract class AbstractArchivaRestTest
     extends AbstractRestServicesTest
 {
@@ -124,16 +124,16 @@ public abstract class AbstractArchivaRestTest
         return getRepositoriesService( null );
     }
 
-    protected MergeRepositoriesService getMergeRepositoriesService()
+    protected MergeRepositoriesService getMergeRepositoriesService( String authzHeader )
     {
         MergeRepositoriesService service =
             JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
                                        MergeRepositoriesService.class,
                                        Collections.singletonList( new JacksonJaxbJsonProvider() ) );
 
-        if ( authorizationHeader != null )
+        if ( authzHeader != null )
         {
-            WebClient.client( service ).header( "Authorization", authorizationHeader );
+            WebClient.client( service ).header( "Authorization", authzHeader );
         }
         WebClient.getConfig( service ).getHttpConduit().getClient().setReceiveTimeout( 100000000 );
         WebClient.client( service ).accept( MediaType.APPLICATION_JSON_TYPE );
@@ -489,11 +489,17 @@ public abstract class AbstractArchivaRestTest
     protected void deleteTestRepo( String id )
         throws Exception
     {
-        if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( id ) != null )
+        try
         {
-            getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( id, false );
+            if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( id ) != null )
+            {
+                getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( id, false );
+            }
         }
-
+        catch ( Exception e )
+        {
+            log.warn( "skip error deleting repo {}", id, e );
+        }
     }
 
     public String getBasedir()
