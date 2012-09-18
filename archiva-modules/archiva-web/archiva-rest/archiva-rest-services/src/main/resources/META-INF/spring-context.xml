@@ -71,6 +71,7 @@
       <ref bean="systemStatusService#rest"/>
       <ref bean="cudfService#rest"/>
       <ref bean="reportRepositoriesService#rest" />
+      <ref bean="mergeRepositoriesService#rest"/>
     </jaxrs:serviceBeans>
 
     <jaxrs:outInterceptors>
