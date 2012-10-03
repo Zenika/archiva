@@ -46,7 +46,6 @@ import java.util.Map;
  */
 public class CUDFExtractor
 {
-
     private final Map<String, String> illegals = new HashMap<String, String>();
 
     private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
@@ -55,9 +54,15 @@ public class CUDFExtractor
 
     private Writer writer;
 
-    public CUDFExtractor( Writer writer )
+    /**
+     * Should be used for versions conversion table
+     */
+    private Writer optionalWriter;
+
+    public CUDFExtractor( Writer writer, Writer optionalWriter )
     {
         this.writer = writer;
+        this.optionalWriter = optionalWriter;
         initiateIllegalsCharatersForCUDF();
     }
 
@@ -291,7 +296,20 @@ public class CUDFExtractor
                 metadataResolver.resolveProjectVersions( repositorySession, repositoryId, groupId, artifactId ) );
         }
         Collections.sort( projectVersions, VersionComparator.getInstance() );
-        return projectVersions.indexOf( version ) + 1;
+        int cudfVersion = projectVersions.indexOf( version ) + 1;
+        if ( optionalWriter != null )
+        {
+            try
+            {
+                writer.append( outputArtifactInCUDFInline( groupId, artifactId ) ).append( " " ).append(
+                    version ).append( " => " ).append( Integer.toString( cudfVersion ) );
+            }
+            catch ( IOException e )
+            {
+                // nothing
+            }
+        }
+        return cudfVersion;
     }
 
     private String extractPackaging( ProjectVersionMetadata projectVersionMetadata )

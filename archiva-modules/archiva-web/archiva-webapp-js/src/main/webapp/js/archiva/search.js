@@ -1753,18 +1753,14 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
       $('#extract-CUDF').remove();
   }
 
-  CUDFJob=function(id,location,cronExpression,allRepositories,repositoryGroup){
+  CUDFJob=function(id,location,cronExpression,allRepositories,repositoryGroup, debug){
     var self = this;
-
     this.id=ko.observable(id);
-
     this.location=ko.observable(location);
-
     this.cronExpression=ko.observable(cronExpression);
-
     this.allRepositories=ko.observable(allRepositories);
-
     this.repositoryGroup=ko.observable(repositoryGroup);
+    this.debug = ko.observable(debug);
   }
 
   CUDFJobViewModel=function(cudfJob,cudfJobsViewModel,update){
@@ -1950,7 +1946,9 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","choosen","knockout","kno
 
   mapCUDFJob=function(data){
     return data==null ? null :
-      new CUDFJob(data.id, data.location, data.cronExpression, data.allRepositories, data.repositoryGroup === null ? "" : data.repositoryGroup);
+      new CUDFJob(data.id, data.location, data.cronExpression, data.allRepositories,
+                  data.repositoryGroup === null ? "" : data.repositoryGroup, data.debug
+      );
   }
 
   mapAvailableRepositoryGroups=function(data){

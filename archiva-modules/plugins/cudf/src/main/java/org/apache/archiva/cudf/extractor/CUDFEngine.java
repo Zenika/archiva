@@ -38,6 +38,6 @@ public interface CUDFEngine
                                  List<String> repositories, Writer output )
         throws IOException;
 
-    public void computeCUDFUniverse( List<String> repositoryId, Writer writer )
+    public void computeCUDFUniverse( List<String> repositoryId, Writer writer, Writer debugWriter )
         throws IOException;
 }

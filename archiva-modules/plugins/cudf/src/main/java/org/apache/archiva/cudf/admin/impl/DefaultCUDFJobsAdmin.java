@@ -118,7 +118,7 @@ public class DefaultCUDFJobsAdmin
     {
         return new CUDFJob( cudfJobConfiguration.getId(), cudfJobConfiguration.getLocation(),
                             cudfJobConfiguration.getCronExpression(), cudfJobConfiguration.isAllRepositories(),
-                            cudfJobConfiguration.getRepositoryGroup() );
+                            cudfJobConfiguration.getRepositoryGroup(), cudfJobConfiguration.isDebug() );
     }
 
     private CUDFJobConfiguration createCUDFJobConfiguration( CUDFJob cudfJob )
@@ -129,6 +129,7 @@ public class DefaultCUDFJobsAdmin
         cudfJobConfiguration.setCronExpression( cudfJob.getCronExpression() );
         cudfJobConfiguration.setAllRepositories( cudfJob.isAllRepositories() );
         cudfJobConfiguration.setRepositoryGroup( cudfJob.getRepositoryGroup() );
+        cudfJobConfiguration.setDebug( cudfJob.isDebug() );
         return cudfJobConfiguration;
     }
 

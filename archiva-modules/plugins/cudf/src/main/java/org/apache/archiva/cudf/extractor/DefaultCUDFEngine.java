@@ -49,7 +49,7 @@ public class DefaultCUDFEngine
                                  List<String> repositories, Writer writer )
         throws IOException
     {
-        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
+        new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
                                                      repositorySessionFactory );
     }
 
@@ -57,11 +57,11 @@ public class DefaultCUDFEngine
                                  List<String> repositories, Writer writer )
         throws IOException
     {
-        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositories,
+        new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositories,
                                                      repositorySessionFactory );
     }
 
-    public void computeCUDFUniverse( List<String> repositoryIds, Writer writer )
+    public void computeCUDFUniverse( List<String> repositoryIds, Writer writer, Writer debugWriter )
         throws IOException
     {
         if ( !universeLoader.isLoaded() )
@@ -69,7 +69,7 @@ public class DefaultCUDFEngine
             universeLoader.loadUniverse( repositoryIds );
         }
         CUDFDescriptor descriptor = universeLoader.getDescriptor();
-        DefaultSerializer serializer = new DefaultSerializer( writer );
+        DefaultSerializer serializer = new DefaultSerializer( writer, debugWriter );
         try
         {
             serializer.serialize( descriptor );
@@ -77,6 +77,17 @@ public class DefaultCUDFEngine
         catch ( ParsingException e )
         {
             throw new RuntimeException( "Unable to serialize the CUDF document", e );
+        }
+        finally
+        {
+            if ( writer != null )
+            {
+                writer.close();
+            }
+            if ( debugWriter != null )
+            {
+                debugWriter.close();
+            }
         }
     }
     

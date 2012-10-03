@@ -40,6 +40,8 @@ public class CUDFTask
 
     private File resourceDestination;
 
+    private boolean debug;
+
     public CUDFTask()
     {
         this.allRepositories = false;
@@ -88,6 +90,16 @@ public class CUDFTask
     public long getMaxExecutionTime()
     {
         return 0;
+    }
+
+    public boolean isDebug()
+    {
+        return debug;
+    }
+
+    public void setDebug( boolean debug )
+    {
+        this.debug = debug;
     }
 
     @Override

@@ -1352,7 +1352,16 @@
         </field>
       </fields>
     </class>
-    <!-- CUDF -->
+
+    <!--
+        _____ _    _ _____  ______
+       / ____| |  | |  __ \|  ____|
+      | |    | |  | | |  | | |__
+      | |    | |  | | |  | |  __|
+      | |____| |__| | |__| | |
+       \_____|\____/|_____/|_|
+
+     -->
     <class>
       <name>CUDFConfiguration</name>
       <version>1.4.0+</version>
@@ -1425,6 +1434,12 @@
           <description>Repository group selected for the universe generation</description>
           <version>1.4.0+</version>
           <type>String</type>
+        </field>
+        <field>
+          <name>debug</name>
+          <description>The job should run gives the cudf version conversion table</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
         </field>
       </fields>
     </class>

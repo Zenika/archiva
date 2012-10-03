@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -90,8 +91,14 @@ public class ArchivaCUDFTaskExecutor
             {
                 repositoriesId = cudfTask.getRepositoriesId();
             }
+            FileWriter debugWriter = null;
+            if ( cudfTask.isDebug() )
+            {
+                debugWriter = new FileWriter( new File( cudfTask.getResourceDestination(), fileName + ".debug" ) );
+            }
             cudfEngine.computeCUDFUniverse( repositoriesId,
-                                            new FileWriter( new File( cudfTask.getResourceDestination(), fileName ) ) );
+                                            new FileWriter( new File( cudfTask.getResourceDestination(), fileName ) ),
+                                            debugWriter );
 
             log.info( "Finished CUDF Task. Saved in " + cudfTask.getResourceDestination().getAbsolutePath() +
                           File.separator + fileName );

@@ -785,6 +785,7 @@
         {{each(i, columnDefinition) columns}}
         <th>${ columnDefinition.headerText }</th>
         {{/each}}
+        <th>${$.i18n.prop('cudf.job.table.header.debug')}</th>
         <th>${$.i18n.prop('cudf.job.table.header.edit')}</th>
         <th>${$.i18n.prop('cudf.job.table.header.delete')}</th>
         <th>${$.i18n.prop('cudf.job.table.header.launch')}</th>
@@ -799,6 +800,13 @@
             ${val}
         </td>
         {{/each}}
+        <td>
+          {{if cudfJob.debug()==true }}
+            Debug mode
+          {{else}}
+            Production mode
+          {{/if}}
+        </td>
         <td><a class="btn btn-primary" data-bind="click: function(){editCUDFJob(cudfJob)}"><i class="icon-pencil icon-white"/></a></td>
         <td><a class="btn btn-danger" data-bind="click: function(){deleteCUDFJob(cudfJob)}"><i class="icon-trash icon-white"/></a></td>
         <td><a class="btn btn-warning" data-bind="click: function(){launchCUDFJob(cudfJob)}"><i class="icon-play-circle  icon-white"/></a></td>
@@ -827,6 +835,13 @@
         <label class="control-label" for="cronExpression">${$.i18n.prop('cudf.job.form.cronExpression')}</label>
         <div class="controls">
           <input id="cronExpression" type="text" class="input-large required" name="cronExpression" data-bind="value: cudfJob.cronExpression"/>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="debug">${$.i18n.prop('cudf.job.form.debug')}</label>
+        <div class="controls">
+          <input id="debug" type="checkbox" name="debug" data-bind="checked: cudfJob.debug"/>
+          <p class="help-block">${$.i18n.prop('cudf.job.form.debug.explanations')}</p>
         </div>
       </div>
       <div class="control-group">

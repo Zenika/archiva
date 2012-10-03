@@ -40,17 +40,21 @@ public class CUDFJob
 
     private String repositoryGroup;
 
+    private boolean debug;
+
     public CUDFJob()
     {
     }
 
-    public CUDFJob( String id, String location, String cronExpression, boolean allRepositories, String repositoryGroup )
+    public CUDFJob( String id, String location, String cronExpression, boolean allRepositories, String repositoryGroup,
+                    boolean debug )
     {
         this.id = id;
         this.location = location;
         this.cronExpression = cronExpression;
         this.allRepositories = allRepositories;
         this.repositoryGroup = repositoryGroup;
+        this.debug = debug;
     }
 
     public String getId()
@@ -103,6 +107,16 @@ public class CUDFJob
         this.repositoryGroup = repositoryGroup;
     }
 
+    public boolean isDebug()
+    {
+        return debug;
+    }
+
+    public void setDebug( boolean debug )
+    {
+        this.debug = debug;
+    }
+
     @Override
     public String toString()
     {
@@ -113,6 +127,7 @@ public class CUDFJob
         sb.append( ", cronExpression='" ).append( cronExpression ).append( '\'' );
         sb.append( ", allRepositories=" ).append( allRepositories );
         sb.append( ", repositoryGroup='" ).append( repositoryGroup ).append( '\'' );
+        sb.append( ", debug='" ).append( debug ).append( '\'' );
         sb.append( '}' );
         return sb.toString();
     }

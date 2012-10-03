@@ -167,7 +167,7 @@ public class DefaultCUDFService
         try
         {
             output = servletResponse.getWriter();
-            cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), output );
+            cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), output, null );
         }
         catch ( IOException e )
         {
@@ -204,7 +204,7 @@ public class DefaultCUDFService
             try
             {
                 fos = new FileWriter( output );
-                cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), fos );
+                cudfEngine.computeCUDFUniverse( getSelectedRepos( repositoryId ), fos, null );
             }
             finally
             {
@@ -257,6 +257,7 @@ public class DefaultCUDFService
         CUDFTask cudfTask = new CUDFTask();
         cudfTask.setId( cudfJob.getId() );
         cudfTask.setResourceDestination( new File( cudfJob.getLocation() ) );
+        cudfTask.setDebug( cudfJob.isDebug() );
         if ( cudfJob.isAllRepositories() )
         {
             cudfTask.setAllRepositories( true );
