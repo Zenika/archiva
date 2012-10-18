@@ -71,7 +71,7 @@ public class CUDFEngineTest
         throws IOException
     {
         StringWriter writer = new StringWriter();
-        CUDFExtractor extractor = new CUDFExtractor( writer );
+        CUDFExtractor extractor = new CUDFExtractor( writer, null );
         extractor.computeCUDFCone( "commons-lang", "commons-lang", "2.1", "jar", TEST_REPO, getRepositoriesList(),
                                    factory );
         String result = writer.toString();
@@ -87,7 +87,7 @@ public class CUDFEngineTest
         throws IOException
     {
         StringWriter writer = new StringWriter();
-        CUDFExtractor extractor = new CUDFExtractor( writer );
+        CUDFExtractor extractor = new CUDFExtractor( writer, null );
         extractor.computeCUDFCone( "com.zenika", "cudf", "1.0", "jar", TEST_REPO, getRepositoriesList(), factory );
         String result = writer.toString();
         assertTrue( result.contains( "package: com.zenika%3acudf" ) );
@@ -101,7 +101,7 @@ public class CUDFEngineTest
         throws IOException
     {
         StringWriter writer = new StringWriter();
-        CUDFExtractor extractor = new CUDFExtractor( writer );
+        CUDFExtractor extractor = new CUDFExtractor( writer, null );
         extractor.computeCUDFCone( "com.zenika", "cudf-version", "1.3-RELEASE", "jar", TEST_REPO, getRepositoriesList(),
                                    factory );
         String result = writer.toString();
@@ -113,7 +113,7 @@ public class CUDFEngineTest
         throws IOException
     {
         StringWriter writer = new StringWriter();
-        CUDFExtractor extractor = new CUDFExtractor( writer );
+        CUDFExtractor extractor = new CUDFExtractor( writer, null );
         extractor.computeCUDFUniverse( getRepositoriesList(), factory );
         String result = writer.toString();
         System.out.println( result );
@@ -124,7 +124,7 @@ public class CUDFEngineTest
     @Test
     public void charToHexaConverto()
     {
-        CUDFExtractor extractor = new CUDFExtractor( null );
+        CUDFExtractor extractor = new CUDFExtractor( null, null );
         assertTrue( "%3a".equalsIgnoreCase( extractor.encodingString( ":" ) ) );
         assertTrue( "%5f".equalsIgnoreCase( extractor.encodingString( "_" ) ) );
     }
