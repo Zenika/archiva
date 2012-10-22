@@ -62,16 +62,16 @@ public class DefaultCUDFEngine
                                  List<String> repositories, Writer writer )
         throws IOException
     {
-//        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
-//                                                     repositorySessionFactory );
+        new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
+                                                     repositorySessionFactory );
     }
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type,
                                  List<String> repositories, Writer writer )
         throws IOException
     {
-//        new CUDFExtractor( writer ).computeCUDFCone( groupId, artifactId, version, type, repositories,
-//                                                     repositorySessionFactory );
+        new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositories,
+                                                     repositorySessionFactory );
     }
 
     public void computeCUDFUniverse( List<String> repositoryIds, Writer writer, Writer debugWriter )
