@@ -34,7 +34,7 @@
 
     <property name="diskPersistent" value="true"/>
     <property name="overflowToDisk" value="true"/>
-    <property name="diskStorePath" value="${appserver.base}/data/cudf/cache"/>
+    <property name="diskStorePath" value="target/data/cudf/cache"/>
     <property name="eternal" value="true"/>
     <property name="maxElementsInMemory" value="100000"/>
     <property name="name" value="cudfCache"/>
