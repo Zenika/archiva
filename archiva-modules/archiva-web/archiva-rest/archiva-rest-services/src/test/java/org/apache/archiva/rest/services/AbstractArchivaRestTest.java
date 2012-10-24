@@ -27,8 +27,10 @@ import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.rest.api.services.CommonServices;
 import org.apache.archiva.rest.api.services.ManagedRepositoriesService;
+import org.apache.archiva.rest.api.services.MergeRepositoriesService;
 import org.apache.archiva.rest.api.services.NetworkProxyService;
 import org.apache.archiva.rest.api.services.PingService;
+import org.apache.archiva.rest.api.services.ProxyConnectorRuleService;
 import org.apache.archiva.rest.api.services.ProxyConnectorService;
 import org.apache.archiva.rest.api.services.RemoteRepositoriesService;
 import org.apache.archiva.rest.api.services.RepositoriesService;
@@ -55,7 +57,7 @@ import java.util.Date;
 /**
  * @author Olivier Lamy
  */
-@RunWith (ArchivaBlockJUnit4ClassRunner.class)
+@RunWith ( ArchivaBlockJUnit4ClassRunner.class )
 public abstract class AbstractArchivaRestTest
     extends AbstractRestServicesTest
 {
@@ -123,13 +125,10 @@ public abstract class AbstractArchivaRestTest
         return getRepositoriesService( null );
     }
 
-
-    protected RepositoriesService getRepositoriesService( String authzHeader )
+    protected <T> T getService( Class<T> clazz, String authzHeader )
     {
-        RepositoriesService service =
-            JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
-                                       RepositoriesService.class,
-                                       Collections.singletonList( new JacksonJaxbJsonProvider() ) );
+        T service = JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/", clazz,
+                                               Collections.singletonList( new JacksonJaxbJsonProvider() ) );
 
         if ( authzHeader != null )
         {
@@ -139,39 +138,37 @@ public abstract class AbstractArchivaRestTest
         WebClient.client( service ).accept( MediaType.APPLICATION_JSON_TYPE );
         WebClient.client( service ).type( MediaType.APPLICATION_JSON_TYPE );
         return service;
+    }
+
+    protected ProxyConnectorRuleService getProxyConnectorRuleService( String authzHeader )
+    {
+        return getService( ProxyConnectorRuleService.class, authzHeader );
+    }
+
+    protected MergeRepositoriesService getMergeRepositoriesService( String authzHeader )
+    {
+        return getService( MergeRepositoriesService.class, authzHeader );
+    }
+
+    protected RepositoriesService getRepositoriesService( String authzHeader )
+    {
+        return getService( RepositoriesService.class, authzHeader );
 
     }
 
     protected ManagedRepositoriesService getManagedRepositoriesService( String authzHeader )
     {
-        ManagedRepositoriesService service =
-            JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
-                                       ManagedRepositoriesService.class,
-                                       Collections.singletonList( new JacksonJaxbJsonProvider() ) );
-
-        if ( authzHeader != null )
-        {
-            WebClient.client( service ).header( "Authorization", authzHeader );
-        }
-        WebClient.getConfig( service ).getHttpConduit().getClient().setReceiveTimeout( 100000000 );
-        WebClient.client( service ).accept( MediaType.APPLICATION_JSON_TYPE );
-        WebClient.client( service ).type( MediaType.APPLICATION_JSON_TYPE );
-        return service;
-
+        return getService( ManagedRepositoriesService.class, authzHeader );
     }
 
     protected PingService getPingService()
     {
-        return JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
-                                          PingService.class,
-                                          Collections.singletonList( new JacksonJaxbJsonProvider() ) );
+        return getService( PingService.class, null );
     }
 
     protected RemoteRepositoriesService getRemoteRepositoriesService()
     {
-        return JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
-                                          RemoteRepositoriesService.class,
-                                          Collections.singletonList( new JacksonJaxbJsonProvider() ) );
+        return getService( RemoteRepositoriesService.class, null );
 
 
     }
@@ -406,6 +403,12 @@ public abstract class AbstractArchivaRestTest
     protected void createAndIndexRepo( String testRepoId, String repoPath, boolean scan )
         throws Exception
     {
+        createAndIndexRepo( testRepoId, repoPath, scan, false );
+    }
+
+    protected void createAndIndexRepo( String testRepoId, String repoPath, boolean scan, boolean stageNeeded )
+        throws Exception
+    {
         if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( testRepoId ) != null )
         {
             getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( testRepoId, false );
@@ -425,6 +428,9 @@ public abstract class AbstractArchivaRestTest
         managedRepository.setIndexDirectory(
             System.getProperty( "java.io.tmpdir" ) + "/target/.index-" + Long.toString( new Date().getTime() ) );
 
+        managedRepository.setStageRepoNeeded( stageNeeded );
+        managedRepository.setSnapshots( true );
+
         ManagedRepositoriesService service = getManagedRepositoriesService( authorizationHeader );
         service.addManagedRepository( managedRepository );
 
@@ -443,17 +449,37 @@ public abstract class AbstractArchivaRestTest
     protected void createAndIndexRepo( String testRepoId, String repoPath )
         throws Exception
     {
-        createAndIndexRepo( testRepoId, repoPath, true );
+        createAndIndexRepo( testRepoId, repoPath, true, false );
     }
+
+    protected void createStagedNeededRepo( String testRepoId, String repoPath, boolean scan )
+        throws Exception
+    {
+        createAndIndexRepo( testRepoId, repoPath, scan, true );
+        RepositoriesService repositoriesService = getRepositoriesService( authorizationHeader );
+        repositoriesService.scanRepositoryDirectoriesNow( testRepoId );
+        if ( scan )
+        {
+            repositoriesService.scanRepositoryNow( testRepoId + "-stage", true );
+            repositoriesService.scanRepositoryDirectoriesNow( testRepoId + "-stage" );
+        }
+    }
+
 
     protected void deleteTestRepo( String id )
         throws Exception
     {
-        if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( id ) != null )
+        try
         {
-            getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( id, false );
+            if ( getManagedRepositoriesService( authorizationHeader ).getManagedRepository( id ) != null )
+            {
+                getManagedRepositoriesService( authorizationHeader ).deleteManagedRepository( id, false );
+            }
         }
-
+        catch ( Exception e )
+        {
+            log.warn( "skip error deleting repo {}", id, e );
+        }
     }
 
     public String getBasedir()

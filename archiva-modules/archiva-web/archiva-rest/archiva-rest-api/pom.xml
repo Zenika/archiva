@@ -17,16 +17,22 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>archiva-rest</artifactId>
     <groupId>org.apache.archiva</groupId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <artifactId>archiva-rest-api</artifactId>
-  <packaging>bundle</packaging>
+  <!-- DO NOT USE bundle packaging generated documentation is not included in the jar !!! -->
+  <packaging>jar</packaging>
   <name>Archiva Web :: REST support :: Api</name>
+
+  <properties>
+    <enunciate.docsDir>${project.build.outputDirectory}/rest-docs-archiva-rest-api</enunciate.docsDir>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -99,6 +105,7 @@
         </exclusion>
       </exclusions>
     </dependency>
+
   </dependencies>
 
   <build>
@@ -130,7 +137,17 @@
               org.apache.archiva.cudf.admin.bean
             </Import-Package>
           </instructions>
+
         </configuration>
+        <executions>
+          <execution>
+            <id>create-manifest</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -144,6 +161,17 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 

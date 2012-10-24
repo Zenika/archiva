@@ -62,6 +62,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -365,6 +366,35 @@ public class JcrMetadataRepository
         {
             throw new MetadataRepositoryException( e.getMessage(), e );
         }
+    }
+
+    public void removeProject( String repositoryId, String namespace, String projectId )
+        throws MetadataRepositoryException
+    {
+        try
+        {
+            Node root = getJcrSession().getRootNode();
+            String namespacePath = getNamespacePath( repositoryId, namespace );
+
+            if ( root.hasNode( namespacePath ) )
+            {
+                Iterator<Node> nodeIterator = JcrUtils.getChildNodes( root.getNode( namespacePath ) ).iterator();
+                while ( nodeIterator.hasNext() )
+                {
+                    Node node = nodeIterator.next();
+                    if ( node.isNodeType( PROJECT_NODE_TYPE ) && projectId.equals( node.getName() ) )
+                    {
+                        node.remove();
+                    }
+                }
+
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
+
     }
 
     public List<String> getMetadataFacets( String repositoryId, String facetId )
@@ -1045,6 +1075,33 @@ public class JcrMetadataRepository
         }
 
 
+    }
+
+
+    public void removeProjectVersion( String repoId, String namespace, String projectId, String projectVersion )
+        throws MetadataRepositoryException
+    {
+        try
+        {
+
+            String path = getProjectPath( repoId, namespace, projectId );
+            Node root = getJcrSession().getRootNode();
+
+            Node nodeAtPath = root.getNode( path );
+
+            for ( Node node : JcrUtils.getChildNodes( nodeAtPath ) )
+            {
+                if ( node.isNodeType( PROJECT_VERSION_NODE_TYPE ) && StringUtils.equals( projectVersion,
+                                                                                         node.getName() ) )
+                {
+                    node.remove();
+                }
+            }
+        }
+        catch ( RepositoryException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
     }
 
     public void removeArtifact( String repositoryId, String namespace, String projectId, String projectVersion,

@@ -10,8 +10,16 @@
 //  ... etc
 
 
-define("knockout.simpleGrid",["jquery","utils","i18n","knockout"], function() {
-(function (ko, $) {
+
+  (function(factory) {
+      if (typeof define === "function" && define.amd) {
+          // AMD anonymous module
+          define("knockout.simpleGrid",["jquery","knockout","utils","i18n"], factory);
+      } else {
+          // No module loader (plain <script> tag) - put directly in global namespace
+          factory(window.ko, jQuery);
+      }
+  })(function ($,ko,utils,i18n) {
 
 
       ko.simpleGrid = {
@@ -35,6 +43,7 @@ define("knockout.simpleGrid",["jquery","utils","i18n","knockout"], function() {
           };
           this.gridUpdateCallBack = configuration.gridUpdateCallBack;
           this.pageLinksUpdateCallBack = configuration.pageLinksUpdateCallBack;
+
         }
       };
 
@@ -66,11 +75,12 @@ define("knockout.simpleGrid",["jquery","utils","i18n","knockout"], function() {
 
             // Render the page links
             var pageLinksContainer = $("#"+allBindings.pageLinksId).get(0);
-            ko.renderTemplate(pageLinksTemplateName, viewModel, { templateEngine: templateEngine }, pageLinksContainer, "replaceNode")
-              .subscribe(viewModel.pageLinksUpdateCallBack?viewModel.pageLinksUpdateCallBack:function(){});
+            var renderedTemplate = ko.renderTemplate(pageLinksTemplateName, viewModel, { templateEngine: templateEngine }, pageLinksContainer, "replaceNode");
+            if (renderedTemplate.subscribe){
+              renderedTemplate.subscribe(viewModel.pageLinksUpdateCallBack?viewModel.pageLinksUpdateCallBack:function(){});
+            }
             if (viewModel.pageLinksUpdateCallBack) viewModel.pageLinksUpdateCallBack();
           }
       };
-})(ko, jQuery);
-
 })
+

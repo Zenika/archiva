@@ -20,9 +20,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>archiva-rest</artifactId>
     <groupId>org.apache.archiva</groupId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <artifactId>archiva-rest</artifactId>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <artifactId>archiva-rest-services</artifactId>
   <packaging>bundle</packaging>
@@ -69,10 +69,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.archiva</groupId>
-      <artifactId>archiva-scheduler-cudf</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.archiva</groupId>
       <artifactId>audit</artifactId>
     </dependency>
     <dependency>
@@ -102,9 +98,20 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.7.1</version>
+    </dependency>
+
+    <dependency>
         <groupId>org.apache.archiva</groupId>
         <artifactId>cudf</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-scheduler-cudf</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.archiva.redback</groupId>
       <artifactId>redback-authorization-api</artifactId>
@@ -146,6 +153,10 @@
     <dependency>
       <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-proxy</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>stage-repository-merge</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.archiva.redback</groupId>
@@ -273,13 +284,13 @@
 
 
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j12-api</artifactId>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>slf4j-impl</artifactId>
       <scope>test</scope>
     </dependency>
@@ -291,7 +302,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j-jcl</artifactId>
       <scope>test</scope>
     </dependency>
@@ -400,6 +411,11 @@
       <version>${tomcat7Version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-metadata-consumer</artifactId>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 
@@ -412,10 +428,9 @@
           <configuration>
             <excludes>
               <exclude>src/test/repo-with-osgi/**</exclude>
+              <exclude>src/test/repo-with-osgi-stage/**</exclude>
               <exclude>src/test/repo-with-classifier-only/**</exclude>
               <exclude>src/test/repo-with-snapshots/**</exclude>
-              <exclude>src/test/repo-cudf-1/**</exclude>
-              <exclude>src/test/repo-cudf-2/**</exclude>
             </excludes>
           </configuration>
         </plugin>
@@ -437,7 +452,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xmx512m -Xms512m -server</argLine>
+          <argLine>-Xmx512m -Xms512m -server -XX:MaxPermSize=256m</argLine>
           <systemPropertyVariables>
             <appserver.base>${project.build.directory}/appserver-base</appserver.base>
             <plexus.home>${project.build.directory}/appserver-base</plexus.home>
@@ -447,6 +462,7 @@
             <redback.jdbc.url>${redbackTestJdbcUrl}</redback.jdbc.url>
             <redback.jdbc.driver.name>${redbackTestJdbcDriver}</redback.jdbc.driver.name>
             <basedir>${basedir}</basedir>
+            <builddir>${project.build.directory}</builddir>
             <org.apache.jackrabbit.maxCacheMemory>1</org.apache.jackrabbit.maxCacheMemory>
             <org.apache.jackrabbit.maxMemoryPerCache>1</org.apache.jackrabbit.maxMemoryPerCache>
             <!--org.apache.jackrabbit.minMemoryPerCache>1</org.apache.jackrabbit.minMemoryPerCache-->

@@ -31,6 +31,7 @@ import org.apache.archiva.metadata.repository.MetadataRepository;
 import org.apache.archiva.metadata.repository.MetadataRepositoryException;
 import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.rss.RssFeedGenerator;
+import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,9 +44,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
 
-@RunWith( ArchivaBlockJUnit4ClassRunner.class )
+@RunWith (ArchivaBlockJUnit4ClassRunner.class)
 public class NewArtifactsRssFeedProcessorTest
     extends TestCase
 {
@@ -67,7 +67,7 @@ public class NewArtifactsRssFeedProcessorTest
         metadataRepository = new MetadataRepositoryMock();
     }
 
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings ("unchecked")
     @Test
     public void testProcess()
         throws Exception
@@ -99,15 +99,15 @@ public class NewArtifactsRssFeedProcessorTest
         assertEquals( TEST_REPO, metadataRepository.getRepoId() );
 
         assertTrue( feed.getTitle().equals( "New Artifacts in Repository 'test-repo'" ) );
-        assertTrue( feed.getDescription().equals(
-            "New artifacts found in repository 'test-repo' during repository scan." ) );
+        assertTrue(
+            feed.getDescription().equals( "New artifacts found in repository 'test-repo' during repository scan." ) );
         assertTrue( feed.getLanguage().equals( "en-us" ) );
         assertTrue( feed.getPublishedDate().equals( whenGathered ) );
 
         List<SyndEntry> entries = feed.getEntries();
         assertEquals( entries.size(), 1 );
-        assertTrue( entries.get( 0 ).getTitle().equals(
-            "New Artifacts in Repository 'test-repo' as of " + whenGathered ) );
+        assertTrue(
+            entries.get( 0 ).getTitle().equals( "New Artifacts in Repository 'test-repo' as of " + whenGathered ) );
         assertTrue( entries.get( 0 ).getPublishedDate().equals( whenGathered ) );
     }
 
@@ -286,6 +286,12 @@ public class NewArtifactsRssFeedProcessorTest
             throw new UnsupportedOperationException();
         }
 
+        public void removeProject( String repositoryId, String namespace, String projectId )
+            throws MetadataRepositoryException
+        {
+            throw new UnsupportedOperationException();
+        }
+
         public void setFrom( Date from )
         {
             this.from = from;
@@ -333,6 +339,12 @@ public class NewArtifactsRssFeedProcessorTest
         }
 
         public void removeNamespace( String repositoryId, String namespace )
+            throws MetadataRepositoryException
+        {
+
+        }
+
+        public void removeProjectVersion( String repoId, String namespace, String projectId, String projectVersion )
             throws MetadataRepositoryException
         {
 

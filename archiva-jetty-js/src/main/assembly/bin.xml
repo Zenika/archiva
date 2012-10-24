@@ -104,6 +104,10 @@
         <include>LICENSE</include>
       </includes>
     </fileSet>
+    <fileSet>
+      <directory>src/main/contexts</directory>
+      <outputDirectory>contexts</outputDirectory>
+    </fileSet>
   </fileSets>
   <dependencySets>
     <dependencySet>

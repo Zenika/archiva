@@ -17,7 +17,7 @@
  * under the License.
  */
 
-require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
+require(["jquery","jquery.tmpl","i18n","knockout"], function(jquery,jqueryTmpl,i18n,ko) {
 
   loadi18n=function(loadCallback){
     $.log("loadi18n");
@@ -114,6 +114,13 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
     return matches ? matches[1] : null;
   }
 
+  refreshContent=function(){
+    var currentHash=getUrlHash();
+    $.log("getUrlHash:"+currentHash);
+    window.sammyArchivaApplication.runRoute('get',currentHash);
+
+  }
+
   /**
    * clear #main-content and call clearUserMessages
     */
@@ -123,6 +130,10 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
     mainContent.removeAttr("data-bind");
     $("#body_content" ).find(".popover" ).hide();
     clearUserMessages();
+    if(window.archivaModel.adminExists==false){
+      displayErrorMessage($.i18n.prop("admin.creation.mandatory"));
+    }
+
   }
 
   /**
@@ -151,14 +162,15 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
   /**
    * open a confirm dialog based on bootstrap modal
    * @param okFn callback function to call on ok confirm
-   * @param okMessage
-   * @param cancelMessage
-   * @param title
+   * @param okMessage message in the ok button
+   * @param cancelMessage message in the cancel button
+   * @param title title of the modal box
+   * @param bodyText html content of the modal box
    */
   openDialogConfirm=function(okFn, okMessage, cancelMessage, title,bodyText){
     var dialogCancel=$("#dialog-confirm-modal-cancel");
     if (window.modalConfirmDialog==null) {
-      window.modalConfirmDialog = $("#dialog-confirm-modal").modal();//{backdrop:'static',show:false}
+      window.modalConfirmDialog = $("#dialog-confirm-modal").modal();
       window.modalConfirmDialog.bind('hidden', function () {
         $("#dialog-confirm-modal-header-title").html("");
         $("#dialog-confirm-modal-body-text").html("");
@@ -201,7 +213,12 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
   }
 
   removeMediumSpinnerImg=function(selector){
-    $(selector ).find("#medium-spinner").remove();
+    if (typeof selector == 'string') {
+      $(selector).find("#medium-spinner").remove();
+    } else {
+      selector.find("#medium-spinner").remove();
+    }
+
   }
 
   mediumSpinnerImg=function(){
@@ -210,35 +227,6 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
 
   closeDialogConfirm=function(){
     window.modalConfirmDialog.modal('hide');
-  }
-
-  closeDialogConfirmui=function(){
-    $("#dialog-confirm" ).dialog("close");
-  }
-
-  /**
-   * open a confirm dialog with jqueryui
-   * @param okFn callback function to call on ok confirm
-   * @param okMessage
-   * @param cancelMessage
-   * @param title
-   */
-  openDialogConfirmui=function(okFn, okMessage, cancelMessage, title){
-    $("#dialog-confirm" ).dialog({
-      resizable: false,
-      title: title,
-      modal: true,
-      show: 'slide',
-      buttons: [{
-        text: okMessage,
-        click: okFn},
-        {
-        text: cancelMessage,
-        click:function() {
-          $(this).dialog( "close" );
-        }
-      }]
-    });
   }
 
   mapStringArray=function(data){
@@ -282,6 +270,10 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
    */
   displayRestError=function(data,idToAppend){
     $.log("displayRestError");
+    // maybe data is just the response so test if if we have a responseText and transform it to json
+    if(data.responseText){
+      data= $.parseJSON(data.responseText);
+    }
     if (data.redbackRestError){
       displayRedbackError(archivaRestError,idToAppend)
     }
@@ -307,6 +299,10 @@ require(["jquery","jquery.tmpl","i18n"], function(jquery,jqueryTmpl,i18n) {
 
     if (data.errorKey && data.errorKey.length>0){
       displayErrorMessage($.i18n.prop( data.errorKey ),idToAppend);
+    } else if (data.errorMessages){
+      $.each(data.errorMessages, function(index, value) {
+        displayErrorMessage( $.i18n.prop(data.errorMessages[index].errorKey,data.errorMessages[index].args?data.errorMessages[index].args:null),idToAppend);
+      });
     } else {
       $.log("print data.errorMessage:"+data.errorMessage);
       displayErrorMessage(data.errorMessage,idToAppend);

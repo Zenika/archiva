@@ -69,7 +69,7 @@ $.ajax({
                     "choosen": "chosen.jquery-0.9.8",
                     "jquery.validate": "jquery.validate-1.9.0",
                     "jquery.json": "jquery.json-2.3.min",
-                    "knockout": "knockout-2.0.0.debug",
+                    "knockout": "knockout-2.2.0rc.debug",
                     "knockout.simpleGrid": "knockout.simpleGrid",
                     "knockout.sortable": "knockout-sortable",
                     "jquery.iframe.transport": "jquery.iframe-transport-1.4",
@@ -93,6 +93,8 @@ $.ajax({
                     "archiva.repository-groups": "archiva/repository-groups",
                     "archiva.artifacts-management": "archiva/artifacts-management",
                     "archiva.search": "archiva/search",
+                    "archiva.proxy-connectors-rules": "archiva/proxy-connectors-rules",
+                    "archiva.docs": "archiva/docs",
                     "archiva.main": "archiva/main"
                 }
             });

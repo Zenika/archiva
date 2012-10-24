@@ -26,13 +26,12 @@ import org.apache.archiva.metadata.repository.filter.Filter;
 
 import java.util.Collection;
 
-// FIXME: we should drop the repoId parameters and attach this to an instance of a repository storage
+// FIXME: we should drop the repositoryId parameters and attach this to an instance of a repository storage
 public interface RepositoryStorage
 {
     ProjectMetadata readProjectMetadata( String repoId, String namespace, String projectId );
 
-    ProjectVersionMetadata readProjectVersionMetadata( String repoId, String namespace, String projectId,
-                                                       String projectVersion )
+    ProjectVersionMetadata readProjectVersionMetadata( ReadMetadataRequest readMetadataRequest )
         throws RepositoryStorageMetadataInvalidException, RepositoryStorageMetadataNotFoundException,
         RepositoryStorageRuntimeException;
 
@@ -48,8 +47,7 @@ public interface RepositoryStorage
     Collection<String> listProjectVersions( String repoId, String namespace, String projectId, Filter<String> filter )
         throws RepositoryStorageRuntimeException;
 
-    Collection<ArtifactMetadata> readArtifactsMetadata( String repoId, String namespace, String projectId,
-                                                        String projectVersion, Filter<String> filter )
+    Collection<ArtifactMetadata> readArtifactsMetadata( ReadMetadataRequest readMetadataRequest )
         throws RepositoryStorageRuntimeException;
 
     // FIXME: reconsider this API, do we want to expose storage format in the form of a path?

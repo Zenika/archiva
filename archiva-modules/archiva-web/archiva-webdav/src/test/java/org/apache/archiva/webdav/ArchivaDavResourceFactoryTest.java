@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.admin.model.beans.RepositoryGroup;
+import org.apache.archiva.admin.model.remote.RemoteRepositoryAdmin;
 import org.apache.archiva.admin.repository.DefaultRepositoryCommonValidator;
 import org.apache.archiva.admin.repository.group.DefaultRepositoryGroupAdmin;
 import org.apache.archiva.admin.repository.managed.DefaultManagedRepositoryAdmin;
@@ -37,6 +38,7 @@ import org.apache.archiva.repository.RepositoryContentFactory;
 import org.apache.archiva.repository.content.LegacyPathParser;
 import org.apache.archiva.repository.content.ManagedDefaultRepositoryContent;
 import org.apache.archiva.repository.content.RepositoryRequest;
+import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
@@ -56,7 +58,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 
 /**
  * ArchivaDavResourceFactoryTest
@@ -108,6 +109,10 @@ public class ArchivaDavResourceFactoryTest
 
     @Inject
     DefaultManagedRepositoryAdmin defaultManagedRepositoryAdmin;
+
+    @Inject
+    RemoteRepositoryAdmin remoteRepositoryAdmin;
+
 
     @Inject
     DefaultRepositoryGroupAdmin defaultRepositoryGroupAdmin;
@@ -174,6 +179,7 @@ public class ArchivaDavResourceFactoryTest
         resourceFactory.setRepositoryFactory( repoFactory );
         resourceFactory.setRepositoryRequest( repoRequest );
         resourceFactory.setConnectors( new OverridingRepositoryProxyConnectors() );
+        resourceFactory.setRemoteRepositoryAdmin( remoteRepositoryAdmin );
     }
 
     private ManagedRepository createManagedRepository( String id, String location, String layout )

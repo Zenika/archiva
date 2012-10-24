@@ -17,13 +17,12 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva-web</artifactId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <artifactId>archiva-webapp-js</artifactId>
   <packaging>war</packaging>
@@ -41,6 +40,7 @@
     <archiva.baseRestUrl />
     <rest.admin.pwd />
     <test.useTomcat>false</test.useTomcat>
+
   </properties>
 
   <dependencies>
@@ -132,6 +132,10 @@
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>jcl-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-dbcp</groupId>
+          <artifactId>commons-dbcp</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -418,7 +422,6 @@
     </dependency>
 
     <dependency>
-
       <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-rest-services</artifactId>
       <exclusions>
@@ -539,6 +542,11 @@
     </dependency>
 
     <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>jpox</groupId>
       <artifactId>jpox</artifactId>
       <exclusions>
@@ -656,17 +664,17 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j12-api</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>slf4j-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j-jcl</artifactId>
       <scope>runtime</scope>
     </dependency>
@@ -750,6 +758,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+    </dependency>
+
+
+    <dependency>
       <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-test-mocks</artifactId>
       <scope>test</scope>
@@ -760,31 +774,6 @@
       <artifactId>redback-rest-services</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-core</artifactId>
-      <version>${tomcat7Version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-juli</artifactId>
-      <version>${tomcat7Version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-logging-juli</artifactId>
-      <version>${tomcat7Version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-servlet-api</artifactId>
-      <version>${tomcat7Version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -807,9 +796,7 @@
           <artifactId>spring-test</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-
+    </dependency>  
   </dependencies>
 
   <build>
@@ -1000,7 +987,7 @@
             </goals>
             <configuration>
               <target>
-                <mkdir dir="${project.build.directory}/appserver-base/conf"/>
+                <mkdir dir="${project.build.directory}/appserver-base/conf" />
               </target>
             </configuration>
           </execution>
@@ -1020,8 +1007,6 @@
             <test.useTomcat>${test.useTomcat}</test.useTomcat>
             <redback.jdbc.url>${redbackTestJdbcUrl}</redback.jdbc.url>
             <redback.jdbc.driver.name>${redbackTestJdbcDriver}</redback.jdbc.driver.name>
-            <expectedVersion>${project.version}</expectedVersion>
-            <archiva.logMissingI18n>true</archiva.logMissingI18n>
           </systemPropertyVariables>
         </configuration>
       </plugin>

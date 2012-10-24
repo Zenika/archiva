@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva</artifactId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>archiva-cli</artifactId>
@@ -85,12 +85,12 @@
       <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j-jcl</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j12-api</artifactId>
       <scope>compile</scope>
     </dependency>

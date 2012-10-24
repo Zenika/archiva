@@ -17,11 +17,14 @@
  * under the License.
  */
 define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jquery.validate","knockout"
-  ,"knockout.simpleGrid","knockout.sortable"], function() {
+  ,"knockout.simpleGrid","knockout.sortable"],
+  function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,ko) {
 
   ProxyConnector=function(sourceRepoId,targetRepoId,proxyId,blackListPatterns,whiteListPatterns,policiesEntries,propertiesEntries,
                           disabled,order){
     var self=this;
+
+    this.modified=ko.observable(false);
 
     //private String sourceRepoId;
     this.sourceRepoId=ko.observable(sourceRepoId);
@@ -83,7 +86,7 @@ define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jq
       self.modified(true);
     });
 
-    this.modified=ko.observable(false);
+
 
     this.updatePolicyEntry=function(key,value){
       $.log("updatePolicyEntry:"+key+":"+value);
@@ -201,6 +204,8 @@ define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jq
     this.save=function(){
       //FIXME data controls !!!
       clearUserMessages();
+      $("#user-messages" ).html(mediumSpinnerImg());
+      $("#proxy-connector-btn-save" ).button("loading");
       // update is delete then add
       if (this.update){
         $.ajax("restServices/archivaServices/proxyConnectorService/updateProxyConnector",
@@ -217,6 +222,10 @@ define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jq
             error: function(data) {
               var res = $.parseJSON(data.responseText);
               displayRestError(res);
+            },
+            complete: function(){
+              removeMediumSpinnerImg("#user-messages");
+              $("#proxy-connector-btn-save" ).button("reset");
             }
           }
         );
@@ -237,6 +246,10 @@ define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jq
             error: function(data) {
               var res = $.parseJSON(data.responseText);
               displayRestError(res);
+            },
+            complete: function(){
+              removeMediumSpinnerImg("#user-messages");
+              $("#proxy-connector-btn-save" ).button("reset");
             }
           }
         );
@@ -275,7 +288,7 @@ define("archiva.proxy-connectors",["jquery","i18n","jquery.tmpl","bootstrap","jq
     var self=this;
     this.proxyConnectors=ko.observableArray([]);
     this.proxyConnectors.subscribe(function(newValue){
-      $.log("ProxyConnectorsViewModel#proxyConnectors modified")
+      $.log("ProxyConnectorsViewModel#proxyConnectors modified");
       self.proxyConnectors().sort(function(a,b){
         if ( a.sourceRepoId()== b.sourceRepoId()) return a.order() - b.order();
         return (a.sourceRepoId() > b.sourceRepoId())? -1:1;

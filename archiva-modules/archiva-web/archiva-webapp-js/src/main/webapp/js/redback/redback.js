@@ -17,7 +17,7 @@
  * under the License.
  */
 define("redback",["jquery","utils","jquery.validate","jquery.json","knockout",
-  "knockout.simpleGrid","redback.roles","redback.user","redback.users"], function() {
+  "knockout.simpleGrid","redback.roles","redback.user","redback.users"], function(jquery,utils,jqueryValidate,jqueryJson,ko) {
 
   // define a container object with various datas
   window.redbackModel = {userOperationNames:null,key:null,i18n:$.i18n.map};
@@ -44,8 +44,9 @@ define("redback",["jquery","utils","jquery.validate","jquery.json","knockout",
       type: "GET",
       success: function(data) {
         userLogged = data;
+        $.log("userLogged:"+userLogged);
         if (successFn){
-          successFn(userLogged == false ? null : jQuery.parseJSON($.cookie('redback_login')));
+          successFn(userLogged ? getUserFromLoginCookie():null);
         }
       }
     });
@@ -137,50 +138,50 @@ define("redback",["jquery","utils","jquery.validate","jquery.json","knockout",
 
     $('#modal-register-footer').append(smallSpinnerImg());
 
-    $.ajax({
-        url: "restServices/archivaServices/archivaAdministrationService/applicationUrl",
-        type: "GET",
-        dataType: 'text',
-        success: function(data){
-          $.log("applicationUrl ok:"+data);
+      $.ajax({
+          url: "restServices/archivaServices/archivaAdministrationService/applicationUrl",
+          type: "GET",
+          dataType: 'text',
+          success: function(data){
+            $.log("applicationUrl ok:"+data);
 
-          var user = {
-            username: $("#user-register-form-username").val(),
-            fullName: $("#user-register-form-fullname").val(),
-            email: $("#user-register-form-email").val()
-          };
+            var user = {
+              username: $("#user-register-form-username").val(),
+              fullName: $("#user-register-form-fullname").val(),
+              email: $("#user-register-form-email").val()
+            };
 
-          var userRegistrationRequest=new UserRegistrationRequest(user,data);
-          $.ajax({
-            url:  'restServices/redbackServices/userService/registerUser',
-            data:  JSON.stringify(userRegistrationRequest),
-            type: 'POST',
-            contentType: "application/json",
-            success: function(result){
-              var registered = false;
-              if (result == "-1") {
-                registered = false;
-              } else {
-                registered = true;
-              }
+            var userRegistrationRequest=new UserRegistrationRequest(user,data);
+            $.ajax({
+              url:  'restServices/redbackServices/userService/registerUser',
+              data:  JSON.stringify(userRegistrationRequest),
+              type: 'POST',
+              contentType: "application/json",
+              success: function(result){
+                var registered = false;
+                if (result == "-1") {
+                  registered = false;
+                } else {
+                  registered = true;
+                }
 
-              if (registered == true) {
+                if (registered == true) {
+                  window.modalRegisterWindow.modal('hide');
+                  $("#register-link").hide();
+                  // FIXME i18n
+                  displaySuccessMessage("registered your key has been sent");
+                }
+              },
+              complete: function(){
+                $("#modal-register-ok").removeAttr("disabled");
+                removeSmallSpinnerImg();
+              },
+              error: function(result) {
                 window.modalRegisterWindow.modal('hide');
-                $("#register-link").hide();
-                // FIXME i18n
-                displaySuccessMessage("registered your key has been sent");
               }
-            },
-            complete: function(){
-              $("#modal-register-ok").removeAttr("disabled");
-              removeSmallSpinnerImg();
-            },
-            error: function(result) {
-              window.modalRegisterWindow.modal('hide');
-            }
-          });
-        }
-    });
+            });
+          }
+      });
 
   }
 

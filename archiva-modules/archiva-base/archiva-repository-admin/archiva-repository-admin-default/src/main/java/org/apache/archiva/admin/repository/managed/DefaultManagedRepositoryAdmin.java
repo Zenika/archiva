@@ -60,19 +60,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * FIXME remove all generic Exception to have usefull ones
  * FIXME review the staging mechanism to have a per user session one
  *
  * @author Olivier Lamy
  */
-@Service ("managedRepositoryAdmin#default")
+@Service ( "managedRepositoryAdmin#default" )
 public class DefaultManagedRepositoryAdmin
     extends AbstractRepositoryAdmin
     implements ManagedRepositoryAdmin
@@ -83,7 +81,7 @@ public class DefaultManagedRepositoryAdmin
     public static final String STAGE_REPO_ID_END = "-stage";
 
     @Inject
-    @Named (value = "archivaTaskScheduler#repository")
+    @Named ( value = "archivaTaskScheduler#repository" )
     private RepositoryArchivaTaskScheduler repositoryTaskScheduler;
 
     @Inject
@@ -163,13 +161,13 @@ public class DefaultManagedRepositoryAdmin
 
         for ( ManagedRepositoryConfiguration repoConfig : managedRepoConfigs )
         {
-            // TODO add staging repo information back too
             ManagedRepository repo =
                 new ManagedRepository( repoConfig.getId(), repoConfig.getName(), repoConfig.getLocation(),
                                        repoConfig.getLayout(), repoConfig.isSnapshots(), repoConfig.isReleases(),
                                        repoConfig.isBlockRedeployments(), repoConfig.getRefreshCronExpression(),
                                        repoConfig.getIndexDir(), repoConfig.isScanned(), repoConfig.getDaysOlder(),
-                                       repoConfig.getRetentionCount(), repoConfig.isDeleteReleasedSnapshots(), false );
+                                       repoConfig.getRetentionCount(), repoConfig.isDeleteReleasedSnapshots(),
+                                       repoConfig.isStageRepoNeeded() );
             repo.setDescription( repoConfig.getDescription() );
             repo.setSkipPackedIndexCreation( repoConfig.isSkipPackedIndexCreation() );
             managedRepos.add( repo );
@@ -220,8 +218,8 @@ public class DefaultManagedRepositoryAdmin
                                   managedRepository.getCronExpression(), managedRepository.getIndexDirectory(),
                                   managedRepository.getDaysOlder(), managedRepository.getRetentionCount(),
                                   managedRepository.isDeleteReleasedSnapshots(), managedRepository.getDescription(),
-                                  managedRepository.isSkipPackedIndexCreation(), auditInformation,
-                                  getArchivaConfiguration().getConfiguration() ) != null;
+                                  managedRepository.isSkipPackedIndexCreation(), managedRepository.isScanned(),
+                                  auditInformation, getArchivaConfiguration().getConfiguration() ) != null;
 
         createIndexContext( managedRepository );
         return res;
@@ -234,7 +232,7 @@ public class DefaultManagedRepositoryAdmin
                                                                  boolean stageRepoNeeded, String cronExpression,
                                                                  String indexDir, int daysOlder, int retentionCount,
                                                                  boolean deteleReleasedSnapshots, String description,
-                                                                 boolean skipPackedIndexCreation,
+                                                                 boolean skipPackedIndexCreation, boolean scanned,
                                                                  AuditInformation auditInformation,
                                                                  Configuration config )
         throws RepositoryAdminException
@@ -246,6 +244,7 @@ public class DefaultManagedRepositoryAdmin
         repository.setBlockRedeployments( blockRedeployments );
         repository.setReleases( releasesIncluded );
         repository.setSnapshots( snapshotsIncluded );
+        repository.setScanned( scanned );
         repository.setName( name );
         repository.setLocation( getRepositoryCommonValidator().removeExpressions( location ) );
         repository.setLayout( layout );
@@ -257,6 +256,7 @@ public class DefaultManagedRepositoryAdmin
         repository.setIndexDir( indexDir );
         repository.setDescription( description );
         repository.setSkipPackedIndexCreation( skipPackedIndexCreation );
+        repository.setStageRepoNeeded( stageRepoNeeded );
 
         try
         {
@@ -286,14 +286,17 @@ public class DefaultManagedRepositoryAdmin
         //scan repository when adding of repository is successful
         try
         {
-            scanRepository( repoId, true );
-            // olamy no need of scanning staged repo
-            /*
-            if ( stageRepoNeeded )
+            if ( scanned )
+            {
+                scanRepository( repoId, true );
+            }
+
+            // TODO need a better to define scanning or not for staged repo
+            if ( stageRepoNeeded && scanned )
             {
                 ManagedRepositoryConfiguration stagingRepository = getStageRepoConfig( repository );
                 scanRepository( stagingRepository.getId(), true );
-            }*/
+            }
         }
         catch ( Exception e )
         {
@@ -452,8 +455,8 @@ public class DefaultManagedRepositoryAdmin
         throws RepositoryAdminException
     {
 
-        log.debug( "updateManagedConfiguration repo {} needStage {} resetStats {} ",
-                   Arrays.asList( managedRepository, needStageRepo, resetStats ).toArray() );
+        log.debug( "updateManagedConfiguration repo {} needStage {} resetStats {} ", managedRepository, needStageRepo,
+                   resetStats );
 
         // Ensure that the fields are valid.
 
@@ -486,8 +489,8 @@ public class DefaultManagedRepositoryAdmin
                                   managedRepository.getCronExpression(), managedRepository.getIndexDirectory(),
                                   managedRepository.getDaysOlder(), managedRepository.getRetentionCount(),
                                   managedRepository.isDeleteReleasedSnapshots(), managedRepository.getDescription(),
-                                  managedRepository.isSkipPackedIndexCreation(), auditInformation,
-                                  getArchivaConfiguration().getConfiguration() );
+                                  managedRepository.isSkipPackedIndexCreation(), managedRepository.isScanned(),
+                                  auditInformation, getArchivaConfiguration().getConfiguration() );
 
         // Save the repository configuration.
         RepositorySession repositorySession = getRepositorySessionFactory().createSession();
@@ -553,6 +556,22 @@ public class DefaultManagedRepositoryAdmin
     public IndexingContext createIndexContext( ManagedRepository repository )
         throws RepositoryAdminException
     {
+
+        // take care first about repository location as can be relative
+        File repositoryDirectory = new File( repository.getLocation() );
+
+        if ( !repositoryDirectory.isAbsolute() )
+        {
+            repositoryDirectory =
+                new File( getRegistry().getString( "appserver.base" ) + File.separatorChar + "repositories",
+                          repository.getLocation() );
+        }
+
+        if ( !repositoryDirectory.exists() )
+        {
+            repositoryDirectory.mkdirs();
+        }
+
         try
         {
 
@@ -582,10 +601,7 @@ public class DefaultManagedRepositoryAdmin
                 indexDirectory = new File( managedRepository, ".indexer" );
                 if ( !managedRepository.isAbsolute() )
                 {
-                    indexDirectory = new File(
-                        getRegistry().getString( "appserver.base" ) + File.separatorChar + "repositories"
-                            + File.separatorChar +
-                            repository.getLocation(), ".indexer" );
+                    indexDirectory = new File( repositoryDirectory, ".indexer" );
                     repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
                 }
             }
@@ -631,10 +647,24 @@ public class DefaultManagedRepositoryAdmin
         stagingRepository.setBlockRedeployments( repository.isBlockRedeployments() );
         stagingRepository.setDaysOlder( repository.getDaysOlder() );
         stagingRepository.setDeleteReleasedSnapshots( repository.isDeleteReleasedSnapshots() );
-        stagingRepository.setIndexDir( repository.getIndexDir() );
+
         String path = repository.getLocation();
         int lastIndex = path.replace( '\\', '/' ).lastIndexOf( '/' );
         stagingRepository.setLocation( path.substring( 0, lastIndex ) + "/" + stagingRepository.getId() );
+
+        if ( StringUtils.isNotBlank( repository.getIndexDir() ) )
+        {
+            File indexDir = new File( repository.getIndexDir() );
+            // in case of absolute dir do not use the same
+            if ( indexDir.isAbsolute() )
+            {
+                stagingRepository.setIndexDir( stagingRepository.getLocation() + "/.index" );
+            }
+            else
+            {
+                stagingRepository.setIndexDir( repository.getIndexDir() );
+            }
+        }
         stagingRepository.setRefreshCronExpression( repository.getRefreshCronExpression() );
         stagingRepository.setReleases( repository.isReleases() );
         stagingRepository.setRetentionCount( repository.getRetentionCount() );

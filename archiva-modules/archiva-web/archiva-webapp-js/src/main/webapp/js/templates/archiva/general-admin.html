@@ -311,7 +311,8 @@
           </div>
         </div>
       </fieldset>
-      <button id="network-configuration-btn-save" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+      <button id="network-configuration-btn-save" data-loading-text="${$.i18n.prop('common.loading')}"
+              data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
     </form>
 </script>
 
@@ -328,7 +329,7 @@
         <div class="control-group">
           <label class="control-label" for="maxTotal">${$.i18n.prop('ui-configuration.applicationUrl')}</label>
           <div class="controls">
-            <input type="text" class="input-xlarge required digits" id="applicationUrl" name="applicationUrl" size="8"
+            <input type="text" class="input-xxlarge required digits" id="applicationUrl" name="applicationUrl" size="8"
                    data-bind="value: uiConfiguration().applicationUrl"/>
           </div>
         </div>
@@ -341,7 +342,7 @@
         </div>
 
       </fieldset>
-      <button id="ui-configuration-btn-save" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+      <button id="ui-configuration-btn-save" data-bind="click: save" class="btn" data-loading-text="${$.i18n.prop('common.loading')}">${$.i18n.prop('save')}</button>
     </form>
 </script>
 
@@ -518,14 +519,14 @@
             <div class="control-group">
                 <label class="control-label" for="name">${$.i18n.prop('appearance-configuration.name-label')}</label>
                 <div class="controls">
-                    <input type="text" class="xlarge required" id="name" name="name" size="50"
+                    <input type="text" class="input-xlarge required" id="name" name="name" size="50"
                            data-bind="value: organisationInformation().name"/>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label" for="name">${$.i18n.prop('appearance-configuration.url-label')}</label>
                 <div class="controls">
-                    <input type="text" class="xlarge required" id="url" name="url" size="50"
+                    <input type="text" class="input-xlarge required" id="url" name="url" size="50"
                            data-bind="value: organisationInformation().url"/>
                 </div>
             </div>
@@ -533,12 +534,12 @@
                 <label class="control-label"
                        for="name">${$.i18n.prop('appearance-configuration.logoLocation-label')}</label>
                 <div class="controls">
-                    <input type="text" class="xlarge" id="logoLocation" name="logoLocation" size="50"
+                    <input type="text" class="input-xxlarge" id="logoLocation" name="logoLocation" size="50"
                            data-bind="value: organisationInformation().logoLocation"/>
                 </div>
             </div>
         </fieldset>
-        <button id="appearance-configuration-btn-save" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+        <button id="appearance-configuration-btn-save" data-loading-text="${$.i18n.prop('common.loading')}" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
     </form>
 </script>
 
@@ -638,7 +639,7 @@
     <div class="fileupload-loading"></div>
     <br>
     <table class="table table-striped">
-      <tbody class="files" data-toggle="modal-gallery" data-target="#modal-gallery"></tbody>
+      <tbody class="files" data-toggle="modal-gallery" data-target="#modal-gallery" id="uploaded-files-list"></tbody>
     </table>
 </form>
 
@@ -757,7 +758,8 @@
 
                           <a class="btn btn-warning btn-mini" id="rowcount-info-button"
                                   data-original-title="${$.i18n.prop('report.statistics.rowCount.explanations-title')}"
-                                  data-content="${$.i18n.prop('report.statistics.rowCount.explanations')}">
+                                  data-content="${$.i18n.prop('report.statistics.rowCount.explanations')}"
+                                  data-placement="left" data-toggle="button">
                               <i class="icon-question-sign icon-white"></i>
                           </a>
                       </div>

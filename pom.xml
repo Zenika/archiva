@@ -26,12 +26,12 @@
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva-parent</artifactId>
-    <version>9-SNAPSHOT</version>
-    <relativePath></relativePath>
+    <version>10-SNAPSHOT</version>
+    <relativePath />
   </parent>
 
   <artifactId>archiva</artifactId>
-  <version>1.4-M3-SNAPSHOT</version>
+  <version>1.4-M4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Archiva</name>
@@ -41,7 +41,6 @@
     <module>archiva-cli</module>
     <module>archiva-modules</module>
     <module>archiva-docs</module>
-    <module>archiva-jetty</module>
     <module>archiva-jetty-js</module>
     <!--module>archiva-tomcat-js</module-->
   </modules>
@@ -58,24 +57,24 @@
     <commons-codec.version>1.6</commons-codec.version>
     <commons-collections.version>3.2.1</commons-collections.version>
     <commons-fileupload.version>1.2.2</commons-fileupload.version>
-    <commons-io.version>2.2</commons-io.version>
+    <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>2.6</commons-lang.version>
-    <struts.version>2.2.3.1</struts.version>
+
     <maven3x.version>3.0.4</maven3x.version>
     <maven.version>2.0.8</maven.version>
     <aether.version>1.13.1</aether.version>
 
     <maven-model-converter.version>2.1</maven-model-converter.version>
-    <maven.indexer.version>5.0.0-SNAPSHOT</maven.indexer.version>
+    <maven.indexer.version>5.0.0</maven.indexer.version>
     <wagon.version>2.2</wagon.version>
-    <redback.version>2.0-SNAPSHOT</redback.version>
-    <redback.cache.version>2.0-SNAPSHOT</redback.cache.version>
-    <redback.quartz.version>2.0-SNAPSHOT</redback.quartz.version>
-    <redback.registry.version>2.0-SNAPSHOT</redback.registry.version>
-    <redback.spring-utils.version>2.0-SNAPSHOT</redback.spring-utils.version>
-    <redback.taskqueue.version>2.0-SNAPSHOT</redback.taskqueue.version>
-    <slf4j.version>1.7.0</slf4j.version>
-    <log4j.version>2.0-alpha2</log4j.version>
+    <redback.version>2.1-SNAPSHOT</redback.version>
+    <redback.cache.version>2.0</redback.cache.version>
+    <redback.quartz.version>2.0</redback.quartz.version>
+    <redback.registry.version>2.0</redback.registry.version>
+    <redback.spring-utils.version>2.0</redback.spring-utils.version>
+    <redback.taskqueue.version>2.0</redback.taskqueue.version>
+    <slf4j.version>1.7.1</slf4j.version>
+    <log4j.version>2.0-beta2</log4j.version>
 
     <spring.version>3.1.2.RELEASE</spring.version>
 
@@ -84,25 +83,27 @@
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
 
     <lucene.version>3.6.1</lucene.version>
-    <jackrabbit.version>2.5.1</jackrabbit.version>
+    <jackrabbit.version>2.5.2</jackrabbit.version>
 
-    <cxfVersion>2.6.1</cxfVersion>
-    <derbyVersion>10.8.2.2</derbyVersion>
-    <httpclient.version>4.1.3</httpclient.version>
-    <httpclient.core.version>4.1.4</httpclient.core.version>
+    <cxfVersion>2.6.3</cxfVersion>
+    <derbyVersion>10.9.1.0</derbyVersion>
+    <httpclient.version>4.2.1</httpclient.version>
+    <httpclient.core.version>4.2.2</httpclient.core.version>
     <javaxMailVersion>1.4</javaxMailVersion>
-    <jettyVersion>7.4.5.v20110725</jettyVersion>
-    <jacksonVersion>1.9.7</jacksonVersion>
+    <jettyVersion>8.1.7.v20120910</jettyVersion>
+
     <!-- restore when we will be able to use a derby in memory database -->
     <redbackTestJdbcUrl>jdbc:derby:memory:users-test;create=true</redbackTestJdbcUrl>
     <redbackTestJdbcDriver>org.apache.derby.jdbc.EmbeddedDriver</redbackTestJdbcDriver>
-    <sisu-inject-plexus.version>2.3.0</sisu-inject-plexus.version>
-    <sisu-guice.version>3.1.0</sisu-guice.version>
+    <sisu-inject-plexus.version>2.3.1</sisu-inject-plexus.version>
+    <sisu-guice.version>3.1.2</sisu-guice.version>
     <plexus-digest.version>1.1</plexus-digest.version>
-    <plexus-expression-evaluator.version>2.0-SNAPSHOT</plexus-expression-evaluator.version>
-    <plexus-utils.version>1.5.5</plexus-utils.version>
-    <asfTomcatMavenPluginVersion>2.0-SNAPSHOT</asfTomcatMavenPluginVersion>
-    <tomcat7Version>7.0.30</tomcat7Version>
+    <plexus-expression-evaluator.version>2.0</plexus-expression-evaluator.version>
+    <plexus-utils.version>3.0.7</plexus-utils.version>
+    <asfTomcatMavenPluginVersion>2.0</asfTomcatMavenPluginVersion>
+    <tomcat7Version>7.0.32</tomcat7Version>
+
+    <release.preparationGoals>clean install</release.preparationGoals>
   </properties>
 
   <dependencyManagement>
@@ -376,11 +377,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.archiva</groupId>
-        <artifactId>archiva-scheduler-cudf</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.archiva</groupId>
         <artifactId>archiva-security</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -405,12 +401,6 @@
         <version>${project.version}</version>
         <type>zip</type>
         <classifier>docs</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.archiva</groupId>
-        <artifactId>archiva-webapp</artifactId>
-        <version>${project.version}</version>
-        <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.apache.archiva</groupId>
@@ -444,11 +434,18 @@
         <artifactId>stage-repository-merge</artifactId>
         <version>${project.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.archiva</groupId>
+        <artifactId>archiva-scheduler-cudf</artifactId>
+        <version>${project.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.archiva</groupId>
         <artifactId>cudf</artifactId>
         <version>${project.version}</version>
       </dependency>
+
       <dependency>
         <groupId>org.apache.archiva.redback.components</groupId>
         <artifactId>spring-utils</artifactId>
@@ -457,7 +454,7 @@
       <dependency>
         <groupId>org.apache.archiva.redback.components</groupId>
         <artifactId>spring-jdo2</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>2.0</version>
       </dependency>
 
       <!--
@@ -566,7 +563,7 @@
       <dependency>
         <groupId>commons-configuration</groupId>
         <artifactId>commons-configuration</artifactId>
-        <version>1.7</version>
+        <version>1.9</version>
         <exclusions>
           <exclusion>
             <groupId>commons-beanutils</groupId>
@@ -642,6 +639,11 @@
         <artifactId>commons-pool</artifactId>
         <version>1.6</version>
         <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat</groupId>
+        <artifactId>tomcat-jdbc</artifactId>
+        <version>${tomcat7Version}</version>
       </dependency>
       <dependency>
         <groupId>commons-dbcp</groupId>
@@ -1032,45 +1034,7 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>
-        <groupId>org.apache.archiva.redback</groupId>
-        <artifactId>redback-struts2-content</artifactId>
-        <version>${redback.version}</version>
-        <type>war</type>
-        <exclusions>
-          <exclusion>
-            <groupId>classworlds</groupId>
-            <artifactId>classworlds</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.archiva.redback</groupId>
-        <artifactId>redback-struts2-integration</artifactId>
-        <version>${redback.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>classworlds</groupId>
-            <artifactId>classworlds</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>plexus</groupId>
-            <artifactId>plexus-utils</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>velocity</groupId>
-            <artifactId>velocity-dep</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+
       <dependency>
         <groupId>org.apache.archiva.redback</groupId>
         <artifactId>redback-rest-api</artifactId>
@@ -1153,6 +1117,11 @@
         <version>2.5</version>
       </dependency>
       <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>3.0.1</version>
+      </dependency>
+      <dependency>
         <groupId>opensymphony</groupId>
         <artifactId>sitemesh</artifactId>
         <version>2.4.2</version>
@@ -1210,19 +1179,19 @@
         <scope>runtime</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
+        <groupId>org.apache.logging.log4j.adapters</groupId>
         <artifactId>slf4j-impl</artifactId>
         <version>${log4j.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
+        <groupId>org.apache.logging.log4j.adapters</groupId>
         <artifactId>log4j-jcl</artifactId>
         <version>${log4j.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
+        <groupId>org.apache.logging.log4j.adapters</groupId>
         <artifactId>log4j12-api</artifactId>
         <version>${log4j.version}</version>
         <scope>runtime</scope>
@@ -1281,28 +1250,8 @@
         <artifactId>wagon-provider-api</artifactId>
         <version>${wagon.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.apache.struts</groupId>
-        <artifactId>struts2-core</artifactId>
-        <version>${struts.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.struts</groupId>
-        <artifactId>struts2-spring-plugin</artifactId>
-        <version>${struts.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
+
+
       <dependency>
         <groupId>xmlunit</groupId>
         <artifactId>xmlunit</artifactId>
@@ -1450,6 +1399,11 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>cglib</groupId>
+        <artifactId>cglib</artifactId>
+        <version>2.2.2</version>
+      </dependency>
+      <dependency>
         <groupId>jdom</groupId>
         <artifactId>jdom</artifactId>
         <version>1.0</version>
@@ -1469,7 +1423,7 @@
       <dependency>
         <groupId>net.sf.ehcache</groupId>
         <artifactId>ehcache-core</artifactId>
-        <version>2.5.4</version>
+        <version>2.5.5</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -1480,14 +1434,19 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-all</artifactId>
-        <version>1.8.3</version>
+        <version>1.8.5</version>
         <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>1.8.3</version>
+        <version>1.8.5</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.7.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -1499,15 +1458,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>easymock</groupId>
+      <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
-      <version>1.2_Java1.3</version>
+      <version>2.5.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>easymock</groupId>
+      <groupId>org.easymock</groupId>
       <artifactId>easymockclassextension</artifactId>
-      <version>1.2</version>
+      <version>2.5</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -1719,6 +1678,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.3</version>
           <configuration>
             <useJvmChmod>true</useJvmChmod>
           </configuration>
@@ -1727,6 +1687,13 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>appassembler-maven-plugin</artifactId>
           <version>1.3</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.plexus</groupId>
+              <artifactId>plexus-utils</artifactId>
+              <version>${plexusUtilsPluginsVersion}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -1789,7 +1756,7 @@
             <useReleaseProfile>false</useReleaseProfile>
             <autoVersionSubmodules>true</autoVersionSubmodules>
             <goals>deploy</goals>
-            <preparationGoals>clean install</preparationGoals>
+            <preparationGoals>${release.preparationGoals}</preparationGoals>
             <arguments>-Prelease</arguments>
           </configuration>
         </plugin>
@@ -1864,14 +1831,6 @@
       </build>
     </profile>
 
-
-    <profile>
-      <!-- profile to run struts webapp it test -->
-      <id>it</id>
-      <modules>
-        <module>archiva-modules/archiva-web/archiva-webapp-test</module>
-      </modules>
-    </profile>
     <profile>
       <!-- profile to run javascript webapp and it tests -->
       <id>it-js</id>
@@ -1928,6 +1887,7 @@
         <enabled>true</enabled>
       </snapshots>
     </pluginRepository>
+    <!--
     <pluginRepository>
       <id>codehaus.snapshots</id>
       <url>https://nexus.codehaus.org/content/groups/snapshots-group/</url>
@@ -1938,6 +1898,7 @@
         <enabled>true</enabled>
       </snapshots>
     </pluginRepository>
+    -->
   </pluginRepositories>
 
 </project>

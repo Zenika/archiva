@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva-web</artifactId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
 
   <artifactId>archiva-webdav</artifactId>
@@ -117,7 +117,7 @@
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

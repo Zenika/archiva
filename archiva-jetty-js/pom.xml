@@ -23,12 +23,13 @@
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva</artifactId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <artifactId>archiva-jetty-js</artifactId>
   <packaging>pom</packaging>
   <!-- This is filtered into the scripts, so should be set to Apache Archiva -->
   <name>Apache Archiva Javascript</name>
+
   <dependencies>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -81,13 +82,8 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-jdbc</artifactId>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
@@ -156,10 +152,13 @@
                     <include>linux-x86-32</include>
                     <include>linux-x86-64</include>
                     <include>macosx-x86-universal-32</include>
+                    <!-- not available -->
+                    <include>macosx-x86-universal-64</include>
                     <include>solaris-x86-32</include>
                     <include>solaris-sparc-32</include>
                     <include>solaris-sparc-64</include>
                     <include>windows-x86-32</include>
+                    <include>windows-x86-64</include>
                   </includes>
                 </generatorConfiguration>
               </generatorConfigurations>

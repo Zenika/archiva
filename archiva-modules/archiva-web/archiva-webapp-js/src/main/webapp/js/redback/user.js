@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","knockout.simpleGrid"], function() {
+define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","knockout.simpleGrid"],
+function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
 
   /**
    * object model for user with some function to create/update/delete users
@@ -75,6 +76,10 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
 
     this.modified=ko.observable(false);
 
+    this.rememberme=false;
+
+    this.logged=false;
+
     this.remove = function() {
       if (ownerViewModel) {
         ownerViewModel.users.destroy(this);
@@ -117,7 +122,7 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
         });
     };
 
-    this.createAdmin = function() {
+    this.createAdmin = function(succesCallbackFn,errorCallbackFn) {
       $.log("user.js#createAdmin");
       var valid = $("#user-create").valid();
       $.log("create admin");
@@ -136,14 +141,23 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
               displaySuccessMessage( $.i18n.prop("user.admin.created"));
               var onSuccessCall=function(){
                 reccordLoginCookie(currentAdminUser);
+                window.archivaModel.adminExists=true;
                 screenChange();
                 checkCreateAdminLink();
                 checkSecurityLinks();
               }
-              loginCall(currentAdminUser.username(), currentAdminUser.password(),onSuccessCall);
+              loginCall(currentAdminUser.username(), currentAdminUser.password(),false,onSuccessCall);
+              if(succesCallbackFn){
+                succesCallbackFn();
+              }
               return this;
             } else {
               displayErrorMessage("admin user not created");
+            }
+          },
+          error: function(data){
+            if(errorCallbackFn){
+              errorCallbackFn();
             }
           }
         });
@@ -260,9 +274,11 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
       if(! $("#user-create" ).valid() ) {
         return;
       }
-      self.user.createAdmin();
-      // go to search when admin created
-      window.sammyArchivaApplication.setLocation("#search");
+      self.user.createAdmin(function(){
+          // go to search when admin created
+          window.sammyArchivaApplication.setLocation("#search");
+        }
+      );
     }
   }
 
@@ -277,6 +293,7 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
       dataType: 'json',
       success: function(data) {
         var adminExists = data;
+        window.archivaModel.adminExists=adminExists;
         if (adminExists == false) {
 
           window.redbackModel.createUser=true;
@@ -331,6 +348,18 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
       });
     }
 
+    var user=getUserFromLoginCookie();
+    if(user){
+      $.log("found user in cookie rememberme:"+(user.rememberme));
+      if(user.rememberme){
+        $("#user-login-form-username" ).val(user.username);
+        $("#user-login-form-password" ).val(user.password);
+        $("#user-login-form-rememberme" ).attr("checked","true");
+      }
+    } else {
+      $.log("user not in cookie");
+    }
+
     var userLoginForm = $("#user-login-form");
 
     userLoginForm.validate({
@@ -369,6 +398,7 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
     }
     if (logged == true) {
       var user = mapUser(result);
+
       if (user.passwordChangeRequired()==true){
         changePasswordBox(true,false,user);
         return;
@@ -376,10 +406,16 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
       // not really needed as an exception is returned but "ceintures et bretelles" as we said in French :-)
       if (user.locked()==true){
         $.log("user locked");
-        displayErrorMessage($.i18n.prop("accout.locked"));
+        displayErrorMessage($.i18n.prop("account.locked"));
         return
       }
+
       // FIXME check validated
+      user.rememberme=window.redbackModel.rememberme;
+      if(user.rememberme){
+        user.password(window.redbackModel.password);
+      }
+      $.log("user.rememberme:"+(user.rememberme));
       reccordLoginCookie(user);
       $("#login-link").hide();
       $("#logout-link").show();
@@ -413,7 +449,7 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
    * @param result
    */
   var completeLoginCallbackFn=function(){
-    $("#modal-login-ok").removeAttr("disabled");
+    $("#modal-login-ok").button("reset");
     $("#small-spinner").remove();
     // force current screen reload to consider user karma
     window.sammyArchivaApplication.refresh();
@@ -499,18 +535,24 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
    */
   login=function(){
     $.log("user.js#login");
+
     $("#modal-login-err-message").html("");
 
     var valid = $("#user-login-form").valid();
     if (!valid) {
         return;
     }
-    $("#modal-login-ok").attr("disabled","disabled");
+    $("#modal-login-ok").button("loading");
 
     //#modal-login-footer
     $('#modal-login-footer').append(smallSpinnerImg());
 
-    loginCall($("#user-login-form-username").val(),$("#user-login-form-password").val()
+    var rememberme=($("#user-login-form-rememberme" ).attr('checked')=='checked');
+    $.log("rememberme:"+rememberme);
+    window.redbackModel.rememberme=rememberme;
+    window.redbackModel.password=$("#user-login-form-password").val();
+
+    loginCall($("#user-login-form-username").val(),window.redbackModel.password,rememberme
         ,successLoginCallbackFn,errorLoginCallbackFn,completeLoginCallbackFn);
 
   }
@@ -519,11 +561,12 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
    * call REST method for login
    * @param username
    * @param password
+   * @param rememberme
    * @param successCallbackFn
    * @param errorCallbackFn
    * @param completeCallbackFn
    */
-  loginCall=function(username,password,successCallbackFn, errorCallbackFn, completeCallbackFn) {
+  loginCall=function(username,password,rememberme,successCallbackFn, errorCallbackFn, completeCallbackFn) {
     var url = 'restServices/redbackServices/loginService/logIn';
 
     $.ajax({
@@ -544,6 +587,7 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
    * @param registration are we in registration mode ?
    */
   changePasswordBox=function(previousPassword,registration,user,okFn){
+    $.log("changePasswordBox");
     screenChange();
     $.log("changePasswordBox previousPassword:"+previousPassword+",registration:"+registration+",user:"+user);
     if (previousPassword==true){
@@ -703,7 +747,15 @@ define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","kno
           if (registration==true) {
             $.log("changePassword#sucess,registration:"+registration);
             displaySuccessMessage($.i18n.prop('change.password.success.section.title'))
-            loginCall(user.username(), $("#passwordChangeFormNewPassword").val(),successLoginCallbackFn);
+            loginCall(user.username(), $("#passwordChangeFormNewPassword").val(),true,successLoginCallbackFn,
+                function(data){
+                  displayRestError(data,"modal-password-change-content");
+                }
+                ,function(){
+                  window.modalChangePasswordBox.modal('hide');
+                  window.location=window.location.toString().substringBeforeFirst("?");
+                  window.sammyArchivaApplication.setLocation("#search");
+                });
           } else {
             displaySuccessMessage($.i18n.prop('change.password.success.section.title'));
           }

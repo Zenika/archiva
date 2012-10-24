@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("redback.roles",["jquery","utils","i18n","jquery.validate","knockout","knockout.simpleGrid"], function() {
+define("redback.roles",["jquery","utils","i18n","jquery.validate","knockout","knockout.simpleGrid"],
+function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
 
   Role = function(name,description,assignable,childRoleNames,parentRoleNames,users,parentsRolesUsers,permissions,otherUsers){
 
@@ -222,7 +223,7 @@ define("redback.roles",["jquery","utils","i18n","jquery.validate","knockout","kn
           ko.applyBindings(rolesViewModel,mainContent.find("#roles-view").get(0));
           mainContent.find("#roles-view-tabs #roles-view-tabs-a-roles-grid").tab("show");
           activateRolesGridTab();
-          removeMediumSpinnerImg();
+          removeMediumSpinnerImg(mainContent);
         }
       }
     );

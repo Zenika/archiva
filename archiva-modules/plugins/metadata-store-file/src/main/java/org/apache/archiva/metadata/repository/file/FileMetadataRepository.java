@@ -703,7 +703,6 @@ public class FileMetadataRepository
      * @param namespace
      * @param project
      * @param projectVersion
-     * @param projectId
      * @param metadataFacet  will remove artifacts which have this {@link MetadataFacet} using equals
      * @throws MetadataRepositoryException
      */
@@ -1161,6 +1160,40 @@ public class FileMetadataRepository
             }
         }
         return projectVersions;
+    }
+
+    public void removeProject( String repositoryId, String namespace, String projectId )
+        throws MetadataRepositoryException
+    {
+        File directory = new File( getDirectory( repositoryId ), namespace + "/" + projectId );
+        try
+        {
+            if ( directory.exists() )
+            {
+                FileUtils.deleteDirectory( directory );
+            }
+        }
+        catch ( IOException e )
+        {
+            throw new MetadataRepositoryException( e.getMessage(), e );
+        }
+    }
+
+    public void removeProjectVersion( String repoId, String namespace, String projectId, String projectVersion )
+        throws MetadataRepositoryException
+    {
+        File directory = new File( getDirectory( repoId ), namespace + "/" + projectId + "/" + projectVersion );
+        if ( directory.exists() )
+        {
+            try
+            {
+                FileUtils.deleteDirectory( directory );
+            }
+            catch ( IOException e )
+            {
+                throw new MetadataRepositoryException( e.getMessage(), e );
+            }
+        }
     }
 
     private void writeProperties( Properties properties, File directory, String propertiesKey )

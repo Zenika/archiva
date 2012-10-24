@@ -17,7 +17,7 @@
  * under the License.
  */
 define("archiva.network-proxies",["jquery","i18n","jquery.tmpl","bootstrap","jquery.validate","knockout"
-  ,"knockout.simpleGrid"], function() {
+  ,"knockout.simpleGrid"], function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,ko) {
 
 
   NetworkProxy=function(id,protocol,host,port,username,password,useNtlm){
@@ -47,7 +47,7 @@ define("archiva.network-proxies",["jquery","i18n","jquery.tmpl","bootstrap","jqu
     this.password.subscribe(function(newValue){self.modified(true)});
 
     //use NTLM proxy
-    this.useNtlm=ko.observable(useNtlm);
+    this.useNtlm=ko.observable(useNtlm?useNtlm:false);
     this.useNtlm.subscribe(function(newValue){self.modified(true)});
 
     this.modified=ko.observable(false);

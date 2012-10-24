@@ -18,7 +18,10 @@
   ~ under the License.
   -->
 
-<project>
+<project xmlns="http://maven.apache.org/DECORATION/1.3.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd"
+  name="Archiva Documentation">
   <bannerLeft>
     <name>Apache Archiva</name>
     <src>http://archiva.apache.org/images/archiva.png</src>
@@ -52,7 +55,7 @@
 
   <body>
     <breadcrumbs>
-      <item name="${project.version}" href="/index.html" />
+      <item name="Apache Archiva" href="http://archiva.apache.org/index.html"/>
     </breadcrumbs>
 
     <menu name="Introduction">
@@ -65,13 +68,15 @@
     <menu name="Users Guide">
       <item name="Browsing"                  href="/userguide/browsing.html" />
       <item name="Searching"                 href="/userguide/searching.html" />
-      <item name="Identifying an Artifact"   href="/userguide/find-artifact.html" />
+      <!-- not yet in new UI -->
+      <!--item name="Identifying an Artifact"   href="/userguide/find-artifact.html" /-->
       <item name="Deleting an Artifact"      href="/userguide/delete-artifact.html" />
       <item name="Using as a repository"     href="/userguide/using-repository.html" />
       <item name="Deploying to repository"   href="/userguide/deploy.html" />
       <item name="Configuring Virtual Repositories"   href="/userguide/virtual-repositories.html" />
       <item name="Rss Feeds in Archiva"      href="/userguide/rss.html"/>
-      <item name="Audit Log Report"      href="/userguide/auditlog-report.html"/>
+      <!-- not yet in new UI -->
+      <!--item name="Audit Log Report"      href="/userguide/auditlog-report.html"/-->
     </menu>
 
     <menu name="Administrators Guide">
@@ -86,6 +91,7 @@
       <item name="Databases"                    href="/adminguide/databases.html" />
       <item name="Repositories Content Storage" href="/adminguide/repositories-content-storage.html"/>
       <item name="Security"                     href="/adminguide/security.html" collapse="true">
+        <item name="Users"                      href="/adminguide/users.html" />
         <item name="Roles"                      href="/adminguide/roles.html" />
         <item name="Customising"                href="/adminguide/customising-security.html" />
 <!-- TODO: for a future version
@@ -95,15 +101,17 @@
       <item name="Runtime Configuration"      href="/adminguide/configuration.html" collapse="true">
         <item name="Repositories"             href="/adminguide/repositories.html" />
         <item name="Proxy Connectors"         href="/adminguide/proxy-connectors.html" />
+        <item name="Proxy Connectors Rules"   href="/adminguide/proxy-connector-rules.html"/>
         <item name="Network Proxies"          href="/adminguide/network-proxies.html" />
         <item name="Network Configuration"    href="/adminguide/network-configuration.html" />
         <item name="Legacy (Maven 1) Support" href="/adminguide/legacy.html" />
         <item name="Consumers"                href="/adminguide/consumers.html" />
         <item name="Staging Repositories"     href="/adminguide/staging-repositories.html"/>
+        <item name="Appearance Configuration" href="/adminguide/appearance-configuration.html"/>
+        <item name="UI Configuration"         href="/adminguide/ui-configuration.html"/>
       </item>
-      <item name="Web Services"              href="/adminguide/web-services.html" collapse="true">
-        <item name="REST"                    href="/adminguide/webservices/rest.html"/>
-      </item>
+      <item name="REST Apis"                    href="/adminguide/webservices/rest.html"/>
+
       <item name="Configuration Files"       href="/adminguide/configuration-files.html" />
       <item name="Log Files"                 href="/adminguide/logging.html" collapse="true">
         <item name="Archiva Logs"            href="/adminguide/archiva-logs.html" />
@@ -127,6 +135,13 @@
       <item name="Sponsoring Apache" href="http://www.apache.org/foundation/sponsorship.html"/>
       <item name="Thanks" href="http://www.apache.org/foundation/thanks.html"/>
     </menu>
+
+    <footer>
+      <div class="row span12">Apache ${project.name}, ${project.name}, Apache, the Apache feather logo, and the Apache ${project.name} project logos are trademarks of The Apache Software Foundation.</div>
+      <div class="row span12">
+        <a href="${project.url}privacy-policy.html">Privacy Policy</a>
+      </div>
+    </footer>
 
   </body>
 </project>

@@ -70,7 +70,6 @@ import org.apache.archiva.scheduler.indexing.ArchivaIndexingTaskExecutor;
 import org.apache.archiva.scheduler.indexing.ArtifactIndexingTask;
 import org.apache.archiva.scheduler.indexing.DownloadRemoteIndexException;
 import org.apache.archiva.scheduler.indexing.DownloadRemoteIndexScheduler;
-import org.apache.archiva.scheduler.repository.RepositoryArchivaTaskScheduler;
 import org.apache.archiva.scheduler.repository.RepositoryTask;
 import org.apache.archiva.security.ArchivaSecurityException;
 import org.apache.archiva.security.common.ArchivaRoleConstants;
@@ -113,10 +112,6 @@ public class DefaultRepositoriesService
     private Logger log = LoggerFactory.getLogger( getClass() );
 
     @Inject
-    @Named ( value = "archivaTaskScheduler#repository" )
-    private RepositoryArchivaTaskScheduler repositoryTaskScheduler;
-
-    @Inject
     @Named ( value = "taskExecutor#indexing" )
     private ArchivaIndexingTaskExecutor archivaIndexingTaskExecutor;
 
@@ -156,24 +151,7 @@ public class DefaultRepositoriesService
 
     public Boolean scanRepository( String repositoryId, boolean fullScan )
     {
-        if ( repositoryTaskScheduler.isProcessingRepositoryTask( repositoryId ) )
-        {
-            log.info( "scanning of repository with id {} already scheduled", repositoryId );
-            return Boolean.FALSE;
-        }
-        RepositoryTask task = new RepositoryTask();
-        task.setRepositoryId( repositoryId );
-        task.setScanAll( fullScan );
-        try
-        {
-            repositoryTaskScheduler.queueTask( task );
-        }
-        catch ( TaskQueueException e )
-        {
-            log.error( "failed to schedule scanning of repo with id {}", repositoryId, e );
-            return false;
-        }
-        return true;
+        return doScanRepository( repositoryId, fullScan );
     }
 
     public Boolean alreadyScanning( String repositoryId )
@@ -622,6 +600,109 @@ public class DefaultRepositoriesService
         }
     }
 
+    public Boolean removeProjectVersion( String repositoryId, String namespace, String projectId, String version )
+        throws ArchivaRestServiceException
+    {
+        // if not a generic we can use the standard way to delete artifact
+        if ( !VersionUtil.isGenericSnapshot( version ) )
+        {
+            Artifact artifact = new Artifact( namespace, projectId, version );
+            return deleteArtifact( artifact );
+        }
+
+        if ( StringUtils.isEmpty( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "repositoryId cannot be null", 400, null );
+        }
+
+        if ( !isAuthorizedToDeleteArtifacts( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "not authorized to delete artifacts", 403, null );
+        }
+
+        if ( StringUtils.isEmpty( namespace ) )
+        {
+            throw new ArchivaRestServiceException( "groupId cannot be null", 400, null );
+        }
+
+        if ( StringUtils.isEmpty( projectId ) )
+        {
+            throw new ArchivaRestServiceException( "artifactId cannot be null", 400, null );
+        }
+
+        if ( StringUtils.isEmpty( version ) )
+        {
+            throw new ArchivaRestServiceException( "version cannot be null", 400, null );
+        }
+
+        RepositorySession repositorySession = repositorySessionFactory.createSession();
+
+        try
+        {
+            ManagedRepositoryContent repository = repositoryFactory.getManagedRepositoryContent( repositoryId );
+
+            VersionedReference ref = new VersionedReference();
+            ref.setArtifactId( projectId );
+            ref.setGroupId( namespace );
+            ref.setVersion( version );
+
+            repository.deleteVersion( ref );
+
+            /*
+            ProjectReference projectReference = new ProjectReference();
+            projectReference.setGroupId( namespace );
+            projectReference.setArtifactId( projectId );
+
+            repository.getVersions(  )
+            */
+
+            ArtifactReference artifactReference = new ArtifactReference();
+            artifactReference.setGroupId( namespace );
+            artifactReference.setArtifactId( projectId );
+            artifactReference.setVersion( version );
+
+            MetadataRepository metadataRepository = repositorySession.getRepository();
+
+            Set<ArtifactReference> related = repository.getRelatedArtifacts( artifactReference );
+            log.debug( "related: {}", related );
+            for ( ArtifactReference artifactRef : related )
+            {
+                repository.deleteArtifact( artifactRef );
+            }
+
+            Collection<ArtifactMetadata> artifacts =
+                metadataRepository.getArtifacts( repositoryId, namespace, projectId, version );
+
+            for ( ArtifactMetadata artifactMetadata : artifacts )
+            {
+                metadataRepository.removeArtifact( artifactMetadata, version );
+            }
+
+            metadataRepository.removeProjectVersion( repositoryId, namespace, projectId, version );
+        }
+        catch ( MetadataRepositoryException e )
+        {
+            throw new ArchivaRestServiceException( "Repository exception: " + e.getMessage(), 500, e );
+        }
+        catch ( MetadataResolutionException e )
+        {
+            throw new ArchivaRestServiceException( "Repository exception: " + e.getMessage(), 500, e );
+        }
+        catch ( RepositoryException e )
+        {
+            throw new ArchivaRestServiceException( "Repository exception: " + e.getMessage(), 500, e );
+        }
+        finally
+        {
+
+            repositorySession.save();
+
+            repositorySession.close();
+        }
+
+        return Boolean.TRUE;
+    }
+
     public Boolean deleteArtifact( Artifact artifact )
         throws ArchivaRestServiceException
     {
@@ -654,7 +735,8 @@ public class DefaultRepositoriesService
 
         // TODO more control on artifact fields
 
-        boolean snapshotVersion = VersionUtil.isSnapshot( artifact.getVersion() );
+        boolean snapshotVersion =
+            VersionUtil.isSnapshot( artifact.getVersion() ) | VersionUtil.isGenericSnapshot( artifact.getVersion() );
 
         RepositorySession repositorySession = repositorySessionFactory.createSession();
         try
@@ -704,8 +786,9 @@ public class DefaultRepositoriesService
 
                 if ( !targetPath.exists() )
                 {
-                    throw new ContentNotFoundException(
-                        artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion() );
+                    //throw new ContentNotFoundException(
+                    //    artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion() );
+                    log.warn( "targetPath {} not found skip file deletion", targetPath );
                 }
 
                 // TODO: this should be in the storage mechanism so that it is all tied together
@@ -746,6 +829,25 @@ public class DefaultRepositoriesService
 
             log.debug( "artifacts: {}", artifacts );
 
+            if ( artifacts.isEmpty() )
+            {
+                if ( !snapshotVersion )
+                {
+                    // verify metata repository doesn't contains anymore the version
+                    Collection<String> projectVersions =
+                        metadataRepository.getProjectVersions( repositoryId, artifact.getGroupId(),
+                                                               artifact.getArtifactId() );
+
+                    if ( projectVersions.contains( artifact.getVersion() ) )
+                    {
+                        log.warn( "artifact not found when deleted but version still here ! so force cleanup" );
+                        metadataRepository.removeProjectVersion( repositoryId, artifact.getGroupId(),
+                                                                 artifact.getArtifactId(), artifact.getVersion() );
+                    }
+
+                }
+            }
+
             for ( ArtifactMetadata artifactMetadata : artifacts )
             {
 
@@ -768,9 +870,6 @@ public class DefaultRepositoriesService
                             artifactMetadata.removeFacet( MavenArtifactFacet.FACET_ID );
                             String groupId = artifact.getGroupId(), artifactId = artifact.getArtifactId(), version =
                                 artifact.getVersion();
-                            //metadataRepository.updateArtifact( repositoryId, groupId, artifactId, version,
-                            //                                   artifactMetadata );
-                            // String repositoryId, String namespace, String project, String version, String projectId, MetadataFacet metadataFacet
                             MavenArtifactFacet mavenArtifactFacetToCompare = new MavenArtifactFacet();
                             mavenArtifactFacetToCompare.setClassifier( artifact.getClassifier() );
                             metadataRepository.removeArtifact( repositoryId, groupId, artifactId, version,
@@ -806,8 +905,6 @@ public class DefaultRepositoriesService
                     triggerAuditEvent( repositoryId, path, AuditEvent.REMOVE_FILE );
                 }
             }
-
-
         }
         catch ( ContentNotFoundException e )
         {
@@ -858,7 +955,7 @@ public class DefaultRepositoriesService
 
         if ( StringUtils.isEmpty( groupId ) )
         {
-            throw new ArchivaRestServiceException( "artifact.groupId cannot be null", 400, null );
+            throw new ArchivaRestServiceException( "groupId cannot be null", 400, null );
         }
 
         RepositorySession repositorySession = repositorySessionFactory.createSession();
@@ -891,6 +988,70 @@ public class DefaultRepositoriesService
             repositorySession.close();
         }
         return true;
+    }
+
+    public Boolean deleteProject( String groupId, String projectId, String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        if ( StringUtils.isEmpty( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "repositoryId cannot be null", 400, null );
+        }
+
+        if ( !isAuthorizedToDeleteArtifacts( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "not authorized to delete artifacts", 403, null );
+        }
+
+        if ( StringUtils.isEmpty( groupId ) )
+        {
+            throw new ArchivaRestServiceException( "groupId cannot be null", 400, null );
+        }
+
+        if ( StringUtils.isEmpty( projectId ) )
+        {
+            throw new ArchivaRestServiceException( "artifactId cannot be null", 400, null );
+        }
+
+        RepositorySession repositorySession = repositorySessionFactory.createSession();
+
+        try
+        {
+            ManagedRepositoryContent repository = repositoryFactory.getManagedRepositoryContent( repositoryId );
+
+            repository.deleteProject( groupId, projectId );
+        }
+        catch ( ContentNotFoundException e )
+        {
+            log.warn( "skip ContentNotFoundException: {}", e.getMessage() );
+        }
+        catch ( RepositoryException e )
+        {
+            log.error( e.getMessage(), e );
+            throw new ArchivaRestServiceException( "Repository exception: " + e.getMessage(), 500, e );
+        }
+
+        try
+        {
+
+            MetadataRepository metadataRepository = repositorySession.getRepository();
+
+            metadataRepository.removeProject( repositoryId, groupId, projectId );
+
+            metadataRepository.save();
+        }
+        catch ( MetadataRepositoryException e )
+        {
+            log.error( e.getMessage(), e );
+            throw new ArchivaRestServiceException( "Repository exception: " + e.getMessage(), 500, e );
+        }
+        finally
+        {
+
+            repositorySession.close();
+        }
+        return true;
+
     }
 
     public Boolean isAuthorizedToDeleteArtifacts( String repoId )

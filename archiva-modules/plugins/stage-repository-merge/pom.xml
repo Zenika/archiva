@@ -22,7 +22,7 @@
   <parent>
     <artifactId>plugins</artifactId>
     <groupId>org.apache.archiva</groupId>
-    <version>1.4-M3-SNAPSHOT</version>
+    <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <groupId>org.apache.archiva</groupId>
   <artifactId>stage-repository-merge</artifactId>
@@ -76,12 +76,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>log4j12-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
+      <groupId>org.apache.logging.log4j.adapters</groupId>
       <artifactId>slf4j-impl</artifactId>
       <scope>test</scope>
     </dependency>

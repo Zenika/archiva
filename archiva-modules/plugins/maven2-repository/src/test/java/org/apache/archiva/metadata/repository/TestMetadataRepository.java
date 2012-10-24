@@ -217,4 +217,17 @@ public class TestMetadataRepository
     {
 
     }
+
+    public void removeProjectVersion( String repoId, String namespace, String projectId, String projectVersion )
+        throws MetadataRepositoryException
+    {
+
+    }
+
+    public void removeProject( String repositoryId, String namespace, String projectId )
+        throws MetadataRepositoryException
+    {
+        throw new UnsupportedOperationException();
+    }
+
 }

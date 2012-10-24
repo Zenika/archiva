@@ -86,14 +86,15 @@
         {{/each}}
         <th>Releases</th>
         <th>Snapshots</th>
-        <th title="${$.i18n.prop('managedrepository.scan.index')}">${$.i18n.prop('managedrepository.scan.grid.header')}</th>
+        <!--th title="${$.i18n.prop('managedrepository.scan.index')}">${$.i18n.prop('managedrepository.scan.grid.header')}</th-->
+        <th>${$.i18n.prop('managedrepository.actions')}</th>
         <th>${$.i18n.prop('edit')}</th>
         <th>${$.i18n.prop('delete')}</th>
         <th>${$.i18n.prop('modified')}</th>
-        <th>${$.i18n.prop('description')}</th>
-        <th>${$.i18n.prop('managedrepository.pomsnippet')}</th>
+        <!--th>${$.i18n.prop('description')}</th-->
+        <th>${$.i18n.prop('managed.repository.rss.header')}</th>
         <th title="${$.i18n.prop('managedrepository.stats')}">${$.i18n.prop('managedrepository.stats.grid.header')}</th>
-        <th title="${$.i18n.prop('managedrepository.scan.directories')}">${$.i18n.prop('managedrepository.scan.directories.grid.header')}</th>
+        <!--th title="${$.i18n.prop('managedrepository.scan.directories')}">${$.i18n.prop('managedrepository.scan.directories.grid.header')}</th-->
       </tr>
   </thead>
   <tbody>
@@ -117,13 +118,51 @@
                 <img src="images/dialog-error-22-22.png" title="${$.i18n.prop('snapshots.notincluded')}"/>
               {{/if}}
             </td>
-            <td>
-              <a href="#" data-bind="click: function(){ scanNow(row) }">
-                <span class="btn btn-success">
-                  <i class="icon-refresh icon-white"/>
-                </span>
-              </a>
-            </td>
+              <td>
+                <div class="btn-group">
+                  <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Actions<span class="caret"></span> </a>
+                  <ul class="dropdown-menu">
+                    <li>
+                        <a href="#" data-bind="click: function(){ scanNow(row) }">
+                          <span class="btn btn-success">
+                            <i class="icon-refresh icon-white"></i>
+                          </span>
+                          ${$.i18n.prop('managedrepository.scan.grid.header')}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-bind="click: function(){directoriesScan(row)}">
+                          <span class="btn btn-warning">
+                            <i class="icon-wrench icon-white"></i>
+                          </span>
+                          ${$.i18n.prop('managedrepository.scan.directories.grid.header')}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-bind="click: function(){ showPomSnippet(row) }">
+                            <span class="btn btn-info">
+                              <i class="icon-user icon-white"></i>
+                            </span>
+                            ${$.i18n.prop('managedrepository.pomsnippet')}
+                        </a>
+                    </li>
+                    <li>
+                      {{if row.stageRepoNeeded()}}
+                        stage
+                      {{/if}}
+                    </li>
+                    <li>
+                        <!-- todo check archiva-merge-repository operation -->
+                        <a href="#" data-bind="click: function(){ mergeRepo(row) }">
+                            <span class="btn btn-info">
+                              <i class="icon-share icon-white"></i>
+                            </span>
+                            ${$.i18n.prop('managedrepository.mergerepo')}
+                        </a>
+                    </li>
+                  </ul>
+                </div>
+              </td>
             <td>
               <a href="#" data-bind="click: function(){ editManagedRepository(row) }">
                 <span class="btn btn-primary">
@@ -146,26 +185,21 @@
               <td></td>
             {{/if}}
             <td>
+               <a href="${row.feedsUrl}"><img src="images/atom.gif" alt="" title="${$.i18n.prop('managedrepository.feeds')} ${row.name()}"/></a>
+            </td>
+            <!--td>
                 {{if row.description()}}
                 <a class="btn btn-warning btn-mini popover-doc" id="managedrepo-description-help"
-                   data-content="${row.description()}" data-title="${$.i18n.prop('description')}">
+                   data-content="${row.description()}" data-title="${$.i18n.prop('description')}"
+                   data-placement="left">
                     <i class="icon-question-sign icon-white"></i>
                 </a>
                 {{/if}}
-            </td>
-            <td><a href="#" data-bind="click: function(){ showPomSnippet(row) }">${$.i18n.prop('managedrepository.pomsnippet')}</a></td>
+            </td-->
             <td id="managedrepository-stats-${row.id()}">
               <img src="images/utilities-system-monitor-22-22.png" data-original-title="${$.i18n.prop('managedrepository.stats')}"
                    data-bind="event: { mouseover: function(){ showStats(row) }, mouseout: function(){ hideStats(row) },}"
                    id="managedrepository-stats-img-${row.id()}"/>
-            </td>
-            <td>
-              <a href="#" data-bind="click: function(){directoriesScan(row)}">
-                <span class="btn btn-warning">
-                  <i class="icon-repeat icon-white"/>
-                </span>
-              </a>
-
             </td>
           </tr>
       {{/each}}
@@ -182,28 +216,48 @@
             {{if update}}
               <span class="uneditable-input">${$data.managedRepository.id}</span>
             {{else}}
-              <input type="text" class="xlarge required" id="id" name="id" size="50"
+              <input type="text" class="input-xlarge required" id="id" name="id" size="50"
                      data-bind="value: managedRepository.id,css:{'uneditable-input': update},readonly:update"/>
             {{/if}}
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-id-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.id.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.id.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="name">${$.i18n.prop('name')}</label>
           <div class="controls">
-            <input type="text" class="xlarge required" id="name" name="name" size="50"
+            <input type="text" class="input-xlarge required" id="name" name="name" size="50"
                    data-bind="value: managedRepository.name"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-name-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.name.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.name.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="location">${$.i18n.prop('directory')}</label>
           <div class="controls">
-            <input type="text" class="xlarge required" id="location" name="location" size="50" data-bind="value: managedRepository.location"/>
+            <input type="text" class="input-xxlarge required" id="location" name="location" size="50" data-bind="value: managedRepository.location"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-location-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.location.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.location.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="indexDirectory">${$.i18n.prop('index.directory')}</label>
           <div class="controls">
-            <input type="text" class="xlarge" id="indexDirectory" name="indexDirectory" size="50" data-bind="value: managedRepository.indexDirectory"/>
+            <input type="text" class="input-xxlarge" id="indexDirectory" name="indexDirectory" size="50" data-bind="value: managedRepository.indexDirectory"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-indexDirectory-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.indexDirectory.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.indexDirectory.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
@@ -227,42 +281,77 @@
           <label class="control-label" for="daysOlder">${$.i18n.prop('daysOlder')}</label>
           <div class="controls">
             <input type="text" id="daysOlder" class="digits" name="daysOlder" size="5" data-bind="value: managedRepository.daysOlder"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-daysOlder-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.daysOlder.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.daysOlder.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="retentionCount">${$.i18n.prop('retentionCount')}</label>
           <div class="controls">
             <input type="text" id="retentionCount" name="retentionCount" size="5" data-bind="value: managedRepository.retentionCount"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-retentionCount-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.retentionCount.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.retentionCount.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
-          <label class="control-label" for="daysOlder">${$.i18n.prop('description')}</label>
+          <label class="control-label" for="description">${$.i18n.prop('description')}</label>
           <div class="controls">
             <textarea rows="3" id="description" name="description" data-bind="value: managedRepository.description"></textarea>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-description-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.description.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.description.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="releases">${$.i18n.prop('releases')}</label>
           <div class="controls">
             <input type="checkbox" id="releases" name="releases" size="5" data-bind="checked: managedRepository.releases"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-release-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.release.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.release.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="snapshots">${$.i18n.prop('snapshots')}</label>
           <div class="controls">
             <input type="checkbox" id="snapshots" name="snapshots" size="5" data-bind="checked: managedRepository.snapshots"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-snapshots-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.snapshots.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.snapshots.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="blockRedeployments">${$.i18n.prop('blockRedeployments')}</label>
           <div class="controls">
             <input type="checkbox" id="blockRedeployments" name="blockRedeployments" size="5" data-bind="checked: managedRepository.blockRedeployments"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-blockRedeployments-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.blockRedeployments.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.blockRedeployments.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="scanned">${$.i18n.prop('scanned')}</label>
           <div class="controls">
             <input type="checkbox" id="scanned" name="scanned" size="5" data-bind="checked: managedRepository.scanned"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-scanned-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.scanned.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.scanned.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
@@ -270,6 +359,11 @@
           <div class="controls">
             <input type="checkbox" id="deleteReleasedSnapshots" name="deleteReleasedSnapshots" size="5"
                    data-bind="checked: managedRepository.deleteReleasedSnapshots"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-deleteReleasedSnapshots-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.deleteReleasedSnapshots.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.deleteReleasedSnapshots.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
@@ -277,6 +371,11 @@
           <div class="controls">
             <input type="checkbox" id="stageRepoNeeded" name="stageRepoNeeded" size="5"
                    data-bind="checked: managedRepository.stageRepoNeeded"/>
+              <a class="btn btn-warning btn-mini popover-doc" id="managedRepository-stageRepoNeeded-info-button"
+                 data-original-title="${$.i18n.prop('managedRepository.stageRepoNeeded.help.title')}"
+                 data-content="${$.i18n.prop('managedRepository.stageRepoNeeded.help.content')}">
+                  <i class="icon-question-sign icon-white"></i>
+              </a>
           </div>
         </div>
         <div class="control-group">
@@ -292,10 +391,8 @@
           </div>
         </div>
 
-
-
       </fieldset>
-      <button data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+      <button data-bind="click: save" class="btn" id="managed-repository-save-button">${$.i18n.prop('save')}</button>
       <button data-bind="click: displayGrid" class="btn">${$.i18n.prop('cancel')}</button>
     </form>
 </script>
@@ -347,7 +444,7 @@
   <div class="page-header">
     <h2>POM Snippet</h2></div>
   </div>
-  <div><a href="#" onclick="$('#managed-repositories-pom-snippet').effect('blind')">${$.i18n.prop('hide')}</a></div>
+  <div><a onclick="$('#managed-repositories-pom-snippet').effect('blind')">${$.i18n.prop('hide')}</a></div>
   <pre>${$data}</pre>
 </script>
 
@@ -362,6 +459,7 @@
         <th>${$.i18n.prop('edit')}</th>
         <th>${$.i18n.prop('delete')}</th>
         <th>${$.i18n.prop('modified')}</th>
+        <th>${$.i18n.prop('description')}</th>
         <th>${$.i18n.prop('remoterepository.downloadremoteindex')}</th>
       </tr>
   </thead>
@@ -423,7 +521,7 @@
             {{if update}}
               <span class="uneditable-input">${$data.remoteRepository.id}</span>
             {{else}}
-              <input type="text" class="xlarge required" id="id" name="id" size="50"
+              <input type="text" class="input-xlarge required" id="id" name="id" size="50"
                      data-bind="value: remoteRepository.id,css:{'uneditable-input': update},readonly:update"/>
             {{/if}}
           </div>
@@ -431,26 +529,26 @@
         <div class="control-group">
           <label class="control-label" for="name">${$.i18n.prop('name')}</label>
           <div class="controls">
-            <input type="text" class="xlarge required" id="name" name="name" size="50"
+            <input type="text" class="input-xlarge required" id="name" name="name" size="50"
                    data-bind="value: remoteRepository.name"/>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="url">${$.i18n.prop('url')}</label>
           <div class="controls">
-            <input type="text" class="xlarge required" id="url" name="location" size="50" data-bind="value: remoteRepository.url"/>
+            <input type="text" class="input-xxlarge required" id="url" name="location" size="50" data-bind="value: remoteRepository.url"/>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="userName">${$.i18n.prop('username')}</label>
           <div class="controls">
-            <input type="text" class="xlarge" id="userName" name="userName" size="50" data-bind="value: remoteRepository.indexDirectory"/>
+            <input type="text" class="input-xlarge" id="userName" name="userName" size="50" data-bind="value: remoteRepository.userName"/>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="password">${$.i18n.prop('password')}</label>
            <div class="controls">
-             <input type="password" class="xlarge" id="password" name="password" size="50" data-bind="value: remoteRepository.password"/>
+             <input type="password" class="input-xlarge" id="password" name="password" size="50" data-bind="value: remoteRepository.password"/>
           </div>
         </div>
         <div class="control-group">
@@ -476,19 +574,24 @@
         <div class="control-group">
           <label class="control-label" for="remoteIndexUrl">${$.i18n.prop('remoteIndexUrl')}</label>
           <div class="controls">
-            <input type="text" id="remoteIndexUrl" name="remoteIndexUrl" size="5" data-bind="value: remoteRepository.remoteIndexUrl"/>
+            <input type="text" class="input-xxlarge" id="remoteIndexUrl" name="remoteIndexUrl" size="5" data-bind="value: remoteRepository.remoteIndexUrl"/>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="cronExpression">${$.i18n.prop('cronExpression')}</label>
           <div class="controls">
             <input type="text" id="cronExpression" name="cronExpression" size="40" data-bind="value: remoteRepository.cronExpression"/>
+            <a class="btn btn-warning btn-mini popover-doc" id="cronExpression-info-button"
+               data-original-title="${$.i18n.prop('cronExpression.help.title')}"
+               data-content="${$.i18n.prop('cronExpression.help.content')}">
+                <i class="icon-question-sign icon-white"></i>
+            </a>
           </div>
         </div>
         <div class="control-group">
           <label class="control-label" for="indexDirectory">${$.i18n.prop('index.directory')}</label>
           <div class="controls">
-            <input type="text" class="xlarge" id="indexDirectory" name="indexDirectory" size="50" data-bind="value: remoteRepository.indexDirectory"/>
+            <input type="text" class="input-xlarge" id="indexDirectory" name="indexDirectory" size="50" data-bind="value: remoteRepository.indexDirectory"/>
           </div>
         </div>
         <div class="control-group">
@@ -522,7 +625,7 @@
         </div>
 
       </fieldset>
-      <button data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+      <button data-bind="click: save" data-loading-text="${$.i18n.prop('common.loading')}" id="remote-repository-save-button" class="btn">${$.i18n.prop('save')}</button>
       <button data-bind="click: displayGrid" class="btn">${$.i18n.prop('cancel')}</button>
     </form>
 </script>
@@ -935,7 +1038,7 @@
         </div>
       </fieldset>
 
-      <button id="proxy-connector-btn-save" data-bind="click: save" class="btn">${$.i18n.prop('save')}</button>
+      <button id="proxy-connector-btn-save" data-bind="click: save" data-loading-text="${$.i18n.prop('common.loading')}" class="btn">${$.i18n.prop('save')}</button>
       {{if modified()}}
        ${("#network-proxy-btn-save").button('reset')}
       {{/if}}
@@ -1028,14 +1131,14 @@
         </div>
         <div id="repository-groups-edit" class="tab-pane">
               <div class="row-fluid">
-                <div class="span5 dotted">
+                <div class="span6 dotted">
                   <div id="repository-groups-edit-div" data-bind='template:{name:"repository-group-edit-tmpl"}'></div>
                   <div id="repository-groups-edit-order-div" style="min-height: 80px"
                      data-bind="sortable: { template: 'repository-group-edit-order-tmpl',data:repositoryGroup.managedRepositories,afterMove:repositoryMoved}">
                   </div>
                 </div>
 
-                <div class="span5 dotted">
+                <div class="span6 dotted">
                   <h5>${$.i18n.prop('repository.groups.available.repositories')}</h5>
                   <br/>
                   <div id="repository-groups-edit-available-repositories" style="min-height: 80px"
@@ -1106,7 +1209,7 @@
         ${repositoryGroup.id}
         <br/>
         <a href="${window.archivaRuntimeInfo.baseUrl}/repository/${repositoryGroup.id()}" target="_blank">
-          ${window.archivaRuntimeInfo.baseUrl}/repository/${repositoryGroup.id()}
+          ${applicationUrl}/repository/${repositoryGroup.id()}
         </a>
       </blockquote>
     </div>
@@ -1117,7 +1220,7 @@
           <div class="control-group">
             <label class="control-label" for="id">${$.i18n.prop('id')}</label>
             <div class="controls">
-              <input type="text" class="xlarge required" id="id" name="id" size="15"
+              <input type="text" class="input-medium required" id="id" name="id" size="15"
                    data-bind="value: repositoryGroup.id,css:{'uneditable-input': update},readonly:update"/>
             </div>
           </div>
@@ -1127,7 +1230,7 @@
   {{/if}}
   {{if repositoryGroup.modified()}}
     <div class="span3">
-      <a href="#" class="btn btn-warning" data-bind="click: function(){saveRepositoryGroup(repositoryGroup)}">${$.i18n.prop('save')}</a>
+      <a href="#" class="btn btn-warning" data-loading-text="${$.i18n.prop('common.loading')}" id="repository-group-save" data-bind="click: function(){saveRepositoryGroup(repositoryGroup)}">${$.i18n.prop('save')}</a>
     </div>
     <br/>
   {{/if}}
@@ -1141,8 +1244,8 @@
       <br/>
       ${$data.name()}
       <br/>
-      <a href="${window.archivaRuntimeInfo.baseUrl}/repository/${$data.id()}" target="_blank">
-        ${window.archivaRuntimeInfo.baseUrl}/repository/${$data.id()}
+      <a href="${$data.url}" target="_blank">
+        ${$data.url}
       </a>
       <br/>
     </blockquote>
@@ -1153,5 +1256,190 @@
 <script id="repository-group-delete-warning-tmpl" type='text/html'>
     <div>
       <span class="label label-warning">${$.i18n.prop('warning.not.undone.operation')}</span>
+    </div>
+</script>
+
+
+<script id="merge-repo-dialog-content" type="text/html">
+    <div class="btn-group btn-group-vertical">
+      {{each(i, repository) repositories}}
+        <button class="btn" type="button" onclick="mergeRepositories(encodeURIComponent('${sourceRepoId}'),encodeURIComponent('${repository.id()}'))">${repository.name()}</button>
+      {{/each}}
+    </div>
+</script>
+
+<script id="merge-repo-skip-conflicts"  type="text/html">
+  <div>
+    <ul>
+      {{each(i, artifact) artifacts}}
+        <li>${artifact.groupId}:${artifact.artifactId}:${artifact.version}</li>
+      {{/each}}
+    </ul>
+  </div>
+  <div>
+    <button class="btn btn-success" onclick="doMerge(encodeURIComponent('${sourceRepository}'),encodeURIComponent('${targetRepository}'),false);" type="button">${$.i18n.prop('managedrepository.merge.domerge')}</button>
+    {{if artifacts.length > 0}}
+      <button class="btn btn-warning" onclick="doMerge(encodeURIComponent('${sourceRepository}'),encodeURIComponent('${targetRepository}'),true);" type="button">${$.i18n.prop('managedrepository.merge.domerge.skipconflicts')}</button>
+    {{/if}}
+  </div>
+</script>
+
+
+<script id="proxyConnectorsRulesMain" type="text/html">
+    <div class="page-header">
+      <h2>${$.i18n.prop('proxy-connector-rules.list')}</h2>
+    </div>
+
+    <ul id="proxy-connectors-rules-view-tabs" class="nav nav-tabs">
+      <li id="proxy-connectors-rules-view-tabs-li-grid" class="active">
+        <a data-toggle="tab" href="#proxy-connector-rules-view" id="proxy-connectors-rules-view-tabs-a-grid">${$.i18n.prop('proxy-connectors-rules.grid.tab.title')}</a>
+      </li>
+      <li id="proxy-connectors-rules-view-tabs-li-edit">
+        <a data-toggle="tab" href="#proxy-connector-rules-edit" id="proxy-connectors-rules-view-tabs-a-edit">${$.i18n.prop('add')}</a>
+      </li>
+    </ul>
+    <div id="proxy-connectors-rules-view-tabs-content" class="tab-content">
+      <div id="proxy-connector-rules-view" class="tab-pane active">
+        <div id="proxy-connectors-rules-view-tabs-bulk-save-btn" data-bind='template:{name:"proxy-connectors-rules-view-tabs-bulk-save-tmpl"}'></div>
+        <table class="table table-striped table-bordered" id="proxy-connectors-rules-view-tabsTable"
+               data-bind="simpleGrid: gridViewModel,simpleGridTemplate:'ko-proxy-connectors-rules-grid',pageLinksId:'proxy-connectors-rules-pagination'">
+        </table>
+        <div id="proxy-connectors-rules-view-tabs-pagination"></div>
+      </div>
+      <div id="proxy-connector-rules-edit" class="tab-pane">
+          <div class="row-fluid">
+            <div class="span6 dotted">
+              <div id="proxy-connectors-rules-edit-div" data-bind='template:{name:"proxy-connectors-rules-edit-tmpl"}'></div>
+              <div id="proxy-connectors-rules-edit-order-div" style="min-height: 80px"
+                 data-bind="sortable: { template: 'proxy-connectors-rules-edit-proxy-connectors-tmpl',data:proxyConnectorRule.proxyConnectors,afterMove:proxyConnectorMoved}">
+              </div>
+            </div>
+
+            <div class="span6 dotted">
+              <h5>${$.i18n.prop('proxy-connector-rules.available.proxyConnectors')}</h5>
+              <br/>
+              <div id="proxy-connectors-rules-available-repositories" style="min-height: 80px"
+                   data-bind="sortable: { template: 'proxy-connectors-rules-edit-proxy-connectors-tmpl',data:availableProxyConnectors,afterMove:proxyConnectorMoved}">
+
+              </div>
+            </div>
+
+          </div>
+      </div>
+
+    </div>
+
+</script>
+
+<script id='ko-proxy-connectors-rules-grid' type='text/html'>
+    <thead>
+      <tr>
+        <th title="${$.i18n.prop('proxy-connector-rules.grid.pattern.title')}">
+          ${$.i18n.prop('proxy-connector-rules.grid.pattern.header')}
+        </th>
+        <th title="${$.i18n.prop('proxy-connector-rules.grid.type.title')}">
+          ${$.i18n.prop('proxy-connector-rules.grid.type.header')}
+        </th>
+        <th>${$.i18n.prop('proxy-connector-rules.grid.proxy-connectors.header')}</th>
+        <th>${$.i18n.prop('edit')}</th>
+        <th>${$.i18n.prop('delete')}</th>
+        <th>${$.i18n.prop('save')}</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{each(i, row) itemsOnCurrentPage()}}
+        <tr data-bind="css:{ 'modified': row.modified()}">
+          <td>${row.pattern()}</td>
+          <td><img src="${row.ruleType.image}" title="${row.ruleType.label}"></img></td>
+          <td>
+            <ul>
+            {{each(j,proxyConnector) row.proxyConnectors()}}
+              <li>${proxyConnector.sourceRepoId()} <-> ${proxyConnector.targetRepoId()}</li>
+            {{/each}}
+            </ul>
+          </td>
+          <td>
+              <a href="#" data-bind="click: function(){ editProxyConnectorRule(row) }">
+                <span class="btn btn-primary" data-loading-text="${$.i18n.prop('common.loading')}">
+                  <i class="icon-pencil icon-white"/>
+                </span>
+              </a>
+          </td>
+          <td>
+              <a data-bind="click: function(){ removeProxyConnectorRule(row) }" data-loading-text="${$.i18n.prop('common.loading')}">
+                <span class="btn btn-danger" data-loading-text="${$.i18n.prop('common.loading')}">
+                  <i class="icon-trash icon-white"/>
+                </span>
+              </a>
+          </td>
+          <td>
+            {{if row.modified()}}
+              <a href="#" id="proxy-connector-rule-update-btn" class="btn btn-warning" data-loading-text="${$.i18n.prop('common.loading')}"
+                 data-bind="click: function(){ updateProxyConnectorRule(row) }">${$.i18n.prop('save')}</a>
+            {{/if}}
+          </td>
+        </tr>
+    {{/each}}
+    </tbody>
+</script>
+
+<script id="proxy-connectors-rules-view-tabs-bulk-save-tmpl" type="text/html">
+
+</script>
+
+<script id="proxy-connectors-rules-edit-tmpl" type="text/html">
+    <div class="row-fluid">
+    {{if update}}
+      <div class="dotted span8">
+        <blockquote>
+          ${proxyConnectorRule.pattern()}
+          <br/>
+          ${proxyConnectorRule.ruleType.label}
+        </blockquote>
+      </div>
+    {{else}}
+      <div class="dotted span8">
+        <form id="proxy-connector-rule-edit-form" class="well">
+          <fieldset id="proxy-connector-rule-edit-fieldset">
+            <div class="control-group">
+              <label class="control-label" for="id">${$.i18n.prop('proxy-connector-rule.pattern')}</label>
+              <div class="controls">
+                <input type="text" class="input-large required" id="pattern" name="pattern" size="15"
+                     data-bind="value:proxyConnectorRule.pattern,css:{'uneditable-input': update},readonly:update"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="layout">${$.i18n.prop('type')}</label>
+              <div class="controls">
+                <select id="proxy-connector-rule-pattern-type"
+                        data-bind="options: proxyConnectorRulesViewModel.ruleTypes,optionsText: 'label',optionsValue:'type',value: proxyConnectorRule.proxyConnectorRuleType"/>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    {{/if}}
+
+      <div class="span3" data-bind="visible: proxyConnectorRule.modified()">
+          {{if update && proxyConnectorRule.modified()}}
+            <a href="#" class="btn btn-warning" data-loading-text="${$.i18n.prop('common.loading')}"
+             id="proxy-connector-rule-update-btn" data-bind="click: function(){updateProxyConnectorRule(proxyConnectorRule)}">${$.i18n.prop('update')}</a>
+          {{else}}
+            <a href="#" class="btn btn-warning" data-loading-text="${$.i18n.prop('common.loading')}"
+               id="proxy-connector-rule-add-btn" data-bind="click: function(){addProxyConnectorRule(proxyConnectorRule)}">${$.i18n.prop('add')}</a>
+          {{/if}}
+      </div>
+
+      <br/>
+
+    </div>
+</script>
+
+<script id="proxy-connectors-rules-edit-proxy-connectors-tmpl" type="text/html">
+    <div class="well draggable-item">
+      <blockquote>
+        ${$data.sourceRepoId()} <-> ${$data.targetRepoId()}
+      </blockquote>
+
     </div>
 </script>

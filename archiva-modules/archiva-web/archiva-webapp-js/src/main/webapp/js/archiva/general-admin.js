@@ -18,7 +18,7 @@
  */
 define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout","knockout.simpleGrid",
   "knockout.sortable","jquery.validate","bootstrap"]
-    , function() {
+    , function(jquery,i18n,utils,jqueryTmpl,ko) {
 
   //-------------------------
   // legacy path part
@@ -521,10 +521,12 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     this.networkConfiguration=ko.observable(networkConfiguration);
 
     save=function(){
+      $("#user-messages" ).html(mediumSpinnerImg());
+      var mainContent=$("#main-content");
       if (!$("#main-content" ).find("#network-configuration-edit-form").valid()){
         return;
       }
-      clearUserMessages();
+      mainContent.find("#network-configuration-btn-save" ).button('loading');
       $.ajax("restServices/archivaServices/archivaAdministrationService/setNetworkConfiguration", {
         type: "POST",
         contentType: 'application/json',
@@ -532,6 +534,10 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         dataType: 'json',
         success: function(data){
           displaySuccessMessage( $.i18n.prop("network-configuration.updated"));
+        },
+        complete: function(){
+          removeMediumSpinnerImg("#user-messages");
+          mainContent.find("#network-configuration-btn-save" ).button('reset');
         }
       });
     }
@@ -598,6 +604,9 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     this.uiConfiguration=ko.observable(uiConfiguration);
     var self=this;
     save=function(){
+      var mainContent=$("#main-content" );
+      $("#user-messages").html( mediumSpinnerImg());
+      mainContent.find("#ui-configuration-btn-save" ).button('loading');
       $.ajax("restServices/archivaServices/archivaAdministrationService/setUiConfiguration", {
         type: "POST",
         contentType: 'application/json',
@@ -605,6 +614,10 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         dataType: 'json',
         success: function(data){
           displaySuccessMessage( $.i18n.prop("ui-configuration.updated"));
+        },
+        complete: function(){
+          removeMediumSpinnerImg("#user-messages");
+          mainContent.find("#ui-configuration-btn-save" ).button('reset');
         }
       });
     }
@@ -838,10 +851,13 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     this.organisationInformation=ko.observable(organisationInformation);
 
     this.save=function(){
-      if (!$("#main-content" ).find("#appearance-configuration-form-id").valid()) {
+      var mainContent=$("#main-content" );
+      if (!mainContent.find("#appearance-configuration-form-id").valid()) {
           return;
       }
       clearUserMessages();
+      $("#user-messages" ).html(mediumSpinnerImg());
+      mainContent.find("#appearance-configuration-btn-save" ).button('loading');
       $.ajax("restServices/archivaServices/archivaAdministrationService/setOrganisationInformation", {
         type: "POST",
         contentType: "application/json",
@@ -853,6 +869,10 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         },
         error: function(data){
           displayErrorMessage($.i18n.prop('appearance-configuration.updating-error'));
+        },
+        complete: function(){
+          removeMediumSpinnerImg("#user-messages");
+          mainContent.find("#appearance-configuration-btn-save" ).button('reset');
         }
       });
     }
@@ -974,6 +994,7 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
   }
   ReportStatisticsResultViewModel=function(report){
     this.reports = ko.observableArray( report );
+    var self = this;
 
     this.tableReportViewModel = new ko.simpleGrid.viewModel({
       data: this.reports,
@@ -986,13 +1007,13 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
         { headerText: "Group Count", rowText: "totalGroupCount" },
         { headerText: "Project Count", rowText: "totalProjectCount" },
-        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom != null ? item.totalCountForType.pom : "0"} },
-        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar != null ? item.totalCountForType.jar : "0" } },
-        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war != null ? item.totalCountForType.war : "0" } },
-        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear != null ? item.totalCountForType.ear : "0" } },
-        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe != null ? item.totalCountForType.exe : "0" } },
-        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll != null ? item.totalCountForType.dll : "0" } },
-        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip != null ? item.totalCountForType.zip : "0" } }
+        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom === "" ? item.totalCountForType.pom : "0"} },
+        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar === "" ? item.totalCountForType.jar : "0" } },
+        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war === "" ? item.totalCountForType.war : "0" } },
+        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear === "" ? item.totalCountForType.ear : "0" } },
+        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe === "" ? item.totalCountForType.exe : "0" } },
+        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll === "" ? item.totalCountForType.dll : "0" } },
+        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip === "" ? item.totalCountForType.zip : "0" } }
       ],
       pageSize: 10
     });

@@ -18,7 +18,7 @@
  */
 define("archiva.artifacts-management",["jquery","i18n","utils","jquery.tmpl","knockout",
   "knockout.simpleGrid","jquery.validate","bootstrap","jquery.fileupload","jquery.fileupload.ui"]
-    , function() {
+    , function(jquery,i18n,utils,jqueryTmpl,ko) {
 
   ArtifactUpload=function(classifier,pomFile){
     this.classifier=classifier;
@@ -56,6 +56,10 @@ define("archiva.artifacts-management",["jquery","i18n","utils","jquery.tmpl","kn
           dataType: 'json',
           success: function(data) {
             displaySuccessMessage($.i18n.prop("fileupload.artifacts.saved"));
+            self.artifactUploads=[];
+            $("#main-content" ).find("#uploaded-files-list" ).html('');
+            $.ajax("restServices/archivaUiServices/fileUploadService/clearUploadedFiles", {type: "GET", dataType: 'json'});
+            clearForm("#main-content #fileupload");
           },
           error: function(data) {
             var res = $.parseJSON(data.responseText);

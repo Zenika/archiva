@@ -19,27 +19,35 @@
 define("archiva.main",["jquery","jquery.ui","sammy","jquery.tmpl",'i18n',"jquery.cookie","bootstrap","archiva.search",
          "jquery.validate","jquery.json","knockout","redback.templates","archiva.templates",
           "redback.roles","redback","archiva.general-admin","archiva.repositories",
-          "archiva.network-proxies","archiva.proxy-connectors","archiva.repository-groups","archiva.artifacts-management"],
-function(jquery,ui,sammy,tmpl) {
+          "archiva.network-proxies","archiva.proxy-connectors","archiva.repository-groups","archiva.artifacts-management",
+          "archiva.proxy-connectors-rules","archiva.docs"],
+function(jquery,ui,sammy,tmpl,i18n,jqueryCookie,bootstrap,archivaSearch,jqueryValidate,jqueryJson,ko) {
 
   /**
    * reccord a cookie for session with the logged user
    * @param user see user.js
    */
   reccordLoginCookie=function(user) {
-    $.cookie('redback_login', ko.toJSON(user));
+    $.cookie('archiva_login', ko.toJSON(user));
   };
 
   getUserFromLoginCookie=function(){
-    return $.parseJSON($.cookie('redback_login'));
+    var cookieContent=$.cookie('archiva_login');
+    $.log("archiva_login cookie content:"+cookieContent);
+    return $.parseJSON(cookieContent);
   };
 
   deleteLoginCookie=function(){
-    $.cookie('redback_login', null);
+    $.cookie('archiva_login', null);
   };
 
   logout=function(doScreenChange){
-    deleteLoginCookie();
+    //deleteLoginCookie();
+    var user = getUserFromLoginCookie();
+    if(user){
+      user.logged=false;
+      reccordLoginCookie(user);
+    }
     $("#login-link").show();
     $("#register-link").show();
     $("#logout-link").hide();
@@ -52,8 +60,7 @@ function(jquery,ui,sammy,tmpl) {
       url: 'restServices/redbackServices/loginService/logout',
       complete: function(){
         // go to welcome on logout
-        window.sammyArchivaApplication.runRoute('get', '#search')
-        window.sammyArchivaApplication.setLocation("#welcome");
+        window.sammyArchivaApplication.setLocation("#search");
       }
 
     });
@@ -127,15 +134,16 @@ function(jquery,ui,sammy,tmpl) {
       dataType: 'json',
       success: function(data) {
         //var disableRegistration=data.disableRegistration;
+        var topbarMenu=$("#topbar-menu");
         if( data){
           $.log("disableRegistration");
-          $("#topbar-menu").find("#register-link" ).hide();
+          topbarMenu.find("#register-link" ).hide();
         }
         $.ajax("restServices/archivaServices/archivaAdministrationService/getOrganisationInformation", {
             type: "GET",
             dataType: 'json',
             success: function(data) {
-              var organisationLogo=$("#main-content").find("#organisation-logo");
+              var organisationLogo=topbarMenu.find("#organisation-logo");
               if(data.url){
                 var url = data.url.startsWith("http://") || data.url.startsWith("https://") ? data.url : "http://"+data.url;
                 var link="<a href='"+url+"' class='brand'>";
@@ -167,39 +175,47 @@ function(jquery,ui,sammy,tmpl) {
   MainMenuViewModel=function() {
 
       var self = this;
-      this.artifactMenuItems = [
-              {  text : $.i18n.prop('menu.artifacts') , id: null},
-              {  text : $.i18n.prop('menu.artifacts.search') , id: "menu-find-search-a", href: "#search" , func: function(){displaySearch(this)}},
-              {  text : $.i18n.prop('menu.artifacts.browse') , id: "menu-find-browse-a", href: "#browse" , func: function(){displayBrowse(true)}},
-              {  text : $.i18n.prop('menu.artifacts.upload') , id: "menu-find-upload-a", href: "#upload" , redback: "{permissions: ['archiva-upload-repository']}", func: function(){displayUploadArtifact(true)}}
-      ];
-      this.cudfMenuItems = [
-              {  text : $.i18n.prop('cudf.title') , id: null },
-              {  text : $.i18n.prop('menu.cudf.universe.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFUniverse()}},
-              {  text : $.i18n.prop('menu.cudf.job.text') , id: "menu-cudf-jobs" , href: "#cudfJobs" , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayCUDFJobs()}}
-      ];
-      this.administrationMenuItems = [
-              {  text : $.i18n.prop('menu.administration') , id: null},
-              {  text : $.i18n.prop('menu.repository.groups')        , id: "menu-repository-groups-list-a"     , href: "#repositorygroup"  , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoryGroups()}},
-              {  text : $.i18n.prop('menu.repositories')             , id: "menu-repositories-list-a"           , href: "#repositorylist"   , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoriesGrid()}},
-              {  text : $.i18n.prop('menu.proxy-connectors')         , id: "menu-proxy-connectors-list-a"       , href: "#proxyconnectors"  , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayProxyConnectors()}},
-              {  text : $.i18n.prop('menu.network-proxies')          , id: "menu-network-proxies-list-a"        , href: "#networkproxies"   , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayNetworkProxies()}},
-              {  text : $.i18n.prop('menu.legacy-artifact-support')  , id: "menu-legacy-support-list-a"         , href: "#legacy"           , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayLegacyArtifactPathSupport()}},
-              {  text : $.i18n.prop('menu.repository-scanning')      , id: "menu-repository-scanning-list-a"    , href: "#scanningList"     , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoryScanning()}},
-              {  text : $.i18n.prop('menu.network-configuration')    , id: "menu-network-configuration-list-a"  , href: "#network"          , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayNetworkConfiguration()}},
-              {  text : $.i18n.prop('menu.system-status')            , id: "menu-system-status-list-a"          , href: "#status"           , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displaySystemStatus()}},
-              {  text : $.i18n.prop('menu.appearance-configuration') , id: "menu-appearance-list-a"             , href: "#appearance"       , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayAppearanceConfiguration()}},
-              {  text : $.i18n.prop('menu.ui-configuration')         , id: "menu-ui-configuration-list-a"       , href: "#uiconfig"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayUiConfiguration()}},
-              {  text : $.i18n.prop('menu.reports')                  , id: "menu-report-list-a"                 , href: "#reports"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayReportsPage()}}
-      ];
+      this.artifactMenuItems = ko.observableArray([
+        {  text : $.i18n.prop('menu.artifacts') , id: null},
+        {  text : $.i18n.prop('menu.artifacts.search') , id: "menu-find-search-a", href: "#search" , func: function(){displaySearch(this)}},
+        {  text : $.i18n.prop('menu.artifacts.browse') , id: "menu-find-browse-a", href: "#browse" , func: function(){displayBrowse(true)}},
+        {  text : $.i18n.prop('menu.artifacts.upload') , id: "menu-find-upload-a", href: "#upload" , redback: "{permissions: ['archiva-upload-repository']}", func: function(){displayUploadArtifact(true)}}
+      ]);
+      this.cudfMenuItems = ko.observableArray([
+          {  text : $.i18n.prop('cudf.title') , id: null },
+          {  text : $.i18n.prop('menu.cudf.universe.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFUniverse()}},
+          {  text : $.i18n.prop('menu.cudf.job.text') , id: "menu-cudf-jobs" , href: "#cudfJobs" , redback: "{permissions: ['archiva-manage-configuration']}" , func: function(){displayCUDFJobs()}}
+      ]);
+      this.administrationMenuItems = ko.observableArray([
+        {  text : $.i18n.prop('menu.administration') , id: null},
+        {  text : $.i18n.prop('menu.repository.groups')        , id: "menu-repository-groups-list-a"     , href: "#repositorygroup"  , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoryGroups()}},
+        {  text : $.i18n.prop('menu.repositories')             , id: "menu-repositories-list-a"           , href: "#repositorylist"   , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoriesGrid()}},
+        {  text : $.i18n.prop('menu.proxy-connectors')         , id: "menu-proxy-connectors-list-a"       , href: "#proxyconnectors"  , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayProxyConnectors()}},
+        {  text : $.i18n.prop('menu.proxy-connectors-rules')   , id: "menu.proxy-connectors-rules-list-a" , href: "#proxyconnectorsrules" , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayProxyConnectorsRules()}},
+        {  text : $.i18n.prop('menu.network-proxies')          , id: "menu-network-proxies-list-a"        , href: "#networkproxies"   , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayNetworkProxies()}},
+        {  text : $.i18n.prop('menu.legacy-artifact-support')  , id: "menu-legacy-support-list-a"         , href: "#legacy"           , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayLegacyArtifactPathSupport()}},
+        {  text : $.i18n.prop('menu.repository-scanning')      , id: "menu-repository-scanning-list-a"    , href: "#scanningList"     , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoryScanning()}},
+        {  text : $.i18n.prop('menu.network-configuration')    , id: "menu-network-configuration-list-a"  , href: "#network"          , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayNetworkConfiguration()}},
+        {  text : $.i18n.prop('menu.system-status')            , id: "menu-system-status-list-a"          , href: "#status"           , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displaySystemStatus()}},
+        {  text : $.i18n.prop('menu.appearance-configuration') , id: "menu-appearance-list-a"             , href: "#appearance"       , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayAppearanceConfiguration()}},
+        {  text : $.i18n.prop('menu.ui-configuration')         , id: "menu-ui-configuration-list-a"       , href: "#uiconfig"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayUiConfiguration()}},
+        {  text : $.i18n.prop('menu.reports')                  , id: "menu-report-list-a"                 , href: "#reports"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayReportsPage()}}
+      ]);
+      
+      this.usersMenuItems = ko.observableArray([
+        {  text : $.i18n.prop('menu.users') , id: null},
+        {  text : $.i18n.prop('menu.users.manage')    , id: "menu-users-list-a", href: "#users" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayUsersGrid()}},
+        {  text : $.i18n.prop('menu.users.roles')     , id: "menu-roles-list-a", href: "#roles" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayRolesGrid()}}
+      ]);
 
-      this.usersMenuItems = [
-              {  text : $.i18n.prop('menu.users') , id: null},
-              {  text : $.i18n.prop('menu.users.manage')    , id: "menu-users-list-a", href: "#users" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayUsersGrid()}},
-              {  text : $.i18n.prop('menu.users.roles')     , id: "menu-roles-list-a", href: "#roles" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayRolesGrid()}}
-      ];
+      this.docsMenuItems = ko.observableArray([
+        {  text : $.i18n.prop('menu.docs') , id: null},
+        {  text : $.i18n.prop('menu.docs.rest')    , id: "menu-docs-rest-list-a", href: "#docs-rest", target: "", func: function(){displayRestDocs()}},
+        {  text : $.i18n.prop('menu.docs.users')   , id: "menu-docs-users-list-a", href: "http://archiva.apache.org/docs/"+window.archivaRuntimeInfo.version, target: "_blank", func: function(){displayUsersDocs()}}
+      ]);
+
       this.activeMenuId = ko.observable();
-
+          
       window.sammyArchivaApplication = Sammy(function () {
 
         this.get('#quicksearch~:artifactId',function(){
@@ -332,6 +348,9 @@ function(jquery,ui,sammy,tmpl) {
         var checkArtifactDetailContent=function(groupId,artifactId,version,repositoryId,tabToActivate,idContentToCheck,contentDisplayFn){
           // no need to recalculate all stuff just activate the tab
           var htmlId = idContentToCheck?idContentToCheck:"browse_artifact_detail";
+          // olamy: cause some issues when browsing so desactivate this fix until more check
+          // navigating from dependencies list or dependency or used by of an artifact to fix in search.js
+          /*
           var htmlIdSelect = $("#main-content").find("#"+htmlId );
           if(htmlIdSelect.html()!=null){
             if( $.trim(htmlIdSelect.html().length)>0){
@@ -340,7 +359,7 @@ function(jquery,ui,sammy,tmpl) {
               return;
             }
           }
-
+          */
 
           var artifactAvailableUrl="restServices/archivaServices/browseService/artifactAvailable/"+encodeURIComponent(groupId)+"/"+encodeURIComponent(artifactId);
           artifactAvailableUrl+="/"+encodeURIComponent(version);
@@ -500,24 +519,39 @@ function(jquery,ui,sammy,tmpl) {
 
         var calculateUsedBy=function(groupId,artifactId,version){
           var dependeesContentDiv=$("#main-content" ).find("#artifact-details-used-by-content" );
-          if( $.trim(dependeesContentDiv.html()).length<1){
-            dependeesContentDiv.html(mediumSpinnerImg());
-            var dependeesUrl="restServices/archivaServices/browseService/dependees/"+encodeURIComponent(groupId);
-            dependeesUrl+="/"+encodeURIComponent(artifactId);
-            dependeesUrl+="/"+encodeURIComponent(version);
-            var selectedRepo=getSelectedBrowsingRepository();
-            if (selectedRepo){
-              dependeesUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
-            }
-            $.ajax(dependeesUrl, {
-              type: "GET",
-              dataType: 'json',
-              success: function(data) {
-                var artifacts=mapArtifacts(data);
-                dependeesContentDiv.html($("#dependees_tmpl").tmpl({artifacts: artifacts}));
-              }
-            });
+          var dependeesTable=dependeesContentDiv.find("#artifact-usedby-table");
+
+          dependeesContentDiv.append(mediumSpinnerImg());
+          var dependeesUrl="restServices/archivaServices/browseService/dependees/"+encodeURIComponent(groupId);
+          dependeesUrl+="/"+encodeURIComponent(artifactId);
+          dependeesUrl+="/"+encodeURIComponent(version);
+          var selectedRepo=getSelectedBrowsingRepository();
+          if (selectedRepo){
+            dependeesUrl+="?repositoryId="+encodeURIComponent(selectedRepo);
           }
+          $.ajax(dependeesUrl, {
+            type: "GET",
+            dataType: 'json',
+            success: function(data) {
+              var artifacts=mapArtifacts(data);
+              var gridViewModel = new ko.simpleGrid.viewModel({
+                data: artifacts,
+                columns: [],
+                pageSize: 7,
+                gridUpdateCallBack: function(){
+                  // no op
+                }
+              });
+              $.log("artifacts:"+artifacts.length);
+              dependeesTable.attr("data-bind",
+                                       "simpleGrid: gridViewModel,simpleGridTemplate:'dependees_tmpl',pageLinksId:'usedbyPagination',data:'artifacts'");
+              ko.applyBindings({artifacts:artifacts,gridViewModel:gridViewModel},dependeesContentDiv.get(0));
+            },
+            complete: function(){
+              removeMediumSpinnerImg(dependeesContentDiv);
+            }
+          });
+
         };
 
         this.get('#artifact-used-by/:groupId/:artifactId/:version',function(context){
@@ -605,17 +639,49 @@ function(jquery,ui,sammy,tmpl) {
           $.log("repositoryId:"+repositoryId);
           displayBrowse(true,repositoryId);
         });
+
+        this.get('#welcome', function () {
+          $.log("#welcome hash");
+          checkCreateAdminLink(function(){window.sammyArchivaApplication.setLocation("#search")});
+
+        });
+
         this.get('#:folder', function () {
           var folder = this.params.folder;
           self.activeMenuId(folder);
-          var baseItems = self.artifactMenuItems?self.artifactMenuItems:[];
-          ko.utils.arrayFirst(baseItems.concat(self.usersMenuItems, self.cudfMenuItems, self.administrationMenuItems), function(p) {
+          var baseItems = self.artifactMenuItems()?self.artifactMenuItems():[];
+          ko.utils.arrayFirst(baseItems.concat(self.usersMenuItems(),self.cudfMenuItems(),self.administrationMenuItems(),self.docsMenuItems()), function(p) {
             if ( p.href == "#"+self.activeMenuId()) {
+              screenChange();
               p.func();
             }
           });
         });
-        this.get('#welcome', function () { this.app.runRoute('get', '#search') });
+
+        this.get("#rest-docs-archiva-rest-api/:target",function(){
+          var target=this.params.target;
+          $.log("archiva-rest-docs, target:"+target);
+          goToArchivaRestDoc(target);
+        });
+
+        this.get("#rest-docs-archiva-ui/:target",function(){
+          var target=this.params.target;
+          $.log("archiva-rest-docs-ui, target:"+target);
+          goToArchivaRestUiDoc(target);
+        });
+
+        this.get("#rest-docs-redback-rest-api/:target",function(){
+          var target=this.params.target;
+          $.log("redback-rest-docs, target:"+target);
+          goToRedbackRestDoc(target);
+        });
+
+        this.get("#managedrepositoryedit/:repositoryId",function(){
+          var repositoryId=this.params.repositoryId;
+          $.log("edit managed repository:"+repositoryId);
+          displayRepositoriesGrid(function(managedRepositoriesViewModel){managedRepositoriesViewModel.editManagedRepositoryWithId(repositoryId)});
+        });
+
       });
   };
 
@@ -648,6 +714,7 @@ function(jquery,ui,sammy,tmpl) {
       dataType: 'json',
       success: function(data) {
         var adminExists = data;
+        window.archivaModel.adminExists=adminExists;
         var createAdminLink=$("#create-admin-link");
         if (adminExists == false) {
           createAdminLink.show();
@@ -680,7 +747,7 @@ function(jquery,ui,sammy,tmpl) {
     var matches = window.location.toString().match(/^[^#]*(#.+)$/);
     var hash = matches ? matches[1] : '';
     $.log("location:"+window.sammyArchivaApplication.getLocation()+",hash:"+hash);
-    // by default display search screen
+    // by default display welcome screen
     if(!hash){
       window.sammyArchivaApplication.setLocation("#welcome");
     }

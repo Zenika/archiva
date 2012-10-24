@@ -18,12 +18,12 @@
  */
 
 define("startup",["jquery","sammy","utils"],
-function() {
+function(jquery,sammy,utils) {
 
   // define a container object with various datas
   window.archivaModel = {};
 
-  $.log("devMode:"+window.archivaDevMode);
+  //$.log("devMode:"+window.archivaDevMode);
 
   // no cache for ajax queries as we get datas from servers so preventing caching !!
   jQuery.ajaxSetup( {
@@ -35,13 +35,17 @@ function() {
         removeMediumSpinnerImg("#main-content");
         clearUserMessages();
         displayErrorMessage($.i18n.prop('authz.karma.needed'));
+
+        userLogged(function(user){
+          userLoggedCallbackFn(user);
+        });
       },
       500: function(data){
+        $.log("error 500:"+data.responseText);
         removeSmallSpinnerImg();
         removeMediumSpinnerImg("#main-content");
         clearUserMessages();
         displayRestError($.parseJSON(data.responseText));
-        //displayErrorMessage($.i18n.prop('error.500'));
       }
     }
   });

@@ -48,11 +48,11 @@ import org.apache.archiva.rest.api.model.ArtifactContentEntry;
 import org.apache.archiva.rest.api.model.BrowseResult;
 import org.apache.archiva.rest.api.model.BrowseResultEntry;
 import org.apache.archiva.rest.api.model.Entry;
+import org.apache.archiva.rest.api.model.MetadataAddRequest;
 import org.apache.archiva.rest.api.model.VersionsList;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.services.utils.ArtifactContentEntryComparator;
-import org.apache.archiva.rest.services.utils.ArtifactDownloadInfoBuilder;
 import org.apache.archiva.security.ArchivaSecurityException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -83,7 +83,7 @@ import java.util.zip.ZipEntry;
  * @author Olivier Lamy
  * @since 1.4-M3
  */
-@Service ( "browseService#rest" )
+@Service( "browseService#rest" )
 public class DefaultBrowseService
     extends AbstractRestService
     implements BrowseService
@@ -96,7 +96,7 @@ public class DefaultBrowseService
     private RepositoryContentFactory repositoryContentFactory;
 
     @Inject
-    @Named ( value = "repositoryProxyConnectors#default" )
+    @Named( value = "repositoryProxyConnectors#default" )
     private RepositoryProxyConnectors connectors;
 
     public BrowseResult getRootGroups( String repositoryId )
@@ -685,26 +685,11 @@ public class DefaultBrowseService
                 List<ArtifactMetadata> artifacts = new ArrayList<ArtifactMetadata>(
                     metadataResolver.resolveArtifacts( session, repoId, groupId, artifactId, version ) );
                 Collections.sort( artifacts, ArtifactMetadataVersionComparator.INSTANCE );
-
-                for ( ArtifactMetadata artifact : artifacts )
+                if ( artifacts != null && !artifacts.isEmpty() )
                 {
-
-                    ArtifactDownloadInfoBuilder builder =
-                        new ArtifactDownloadInfoBuilder().forArtifactMetadata( artifact ).withManagedRepositoryContent(
-                            repositoryContentFactory.getManagedRepositoryContent( repoId ) );
-                    Artifact art = builder.build();
-
-                    art.setUrl( getArtifactUrl( art ) );
-                    artifactDownloadInfos.add( art );
+                    return buildArtifacts( artifacts, repoId );
                 }
-
             }
-        }
-        catch ( RepositoryException e )
-        {
-            log.error( e.getMessage(), e );
-            throw new ArchivaRestServiceException( e.getMessage(),
-                                                   Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e );
         }
         catch ( MetadataResolutionException e )
         {
@@ -844,6 +829,42 @@ public class DefaultBrowseService
         }
 
         return false;
+    }
+
+    public List<Artifact> getArtifacts( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        RepositorySession repositorySession = repositorySessionFactory.createSession();
+        try
+        {
+            List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifacts( repositoryId );
+            return buildArtifacts( artifactMetadatas, repositoryId );
+        }
+        catch ( MetadataRepositoryException e )
+        {
+            throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
+        finally
+        {
+            repositorySession.close();
+        }
+    }
+
+    public Boolean importMetadata( MetadataAddRequest metadataAddRequest, String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        boolean result = true;
+        for ( Map.Entry<String, String> metadata : metadataAddRequest.getMetadatas().entrySet() )
+        {
+            result = addMetadata( metadataAddRequest.getGroupId(), metadataAddRequest.getArtifactId(),
+                                  metadataAddRequest.getVersion(), metadata.getKey(), metadata.getValue(),
+                                  repositoryId );
+            if ( !result )
+            {
+                break;
+            }
+        }
+        return result;
     }
 
     //---------------------------
