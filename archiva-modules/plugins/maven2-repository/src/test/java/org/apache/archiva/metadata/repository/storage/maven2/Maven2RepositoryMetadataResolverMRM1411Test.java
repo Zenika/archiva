@@ -36,6 +36,7 @@ import org.apache.archiva.metadata.repository.filter.Filter;
 import org.apache.archiva.metadata.repository.storage.ReadMetadataRequest;
 import org.apache.archiva.metadata.repository.storage.RepositoryStorageRuntimeException;
 import org.apache.archiva.proxy.common.WagonFactory;
+import org.apache.archiva.proxy.common.WagonFactoryRequest;
 import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.wagon.Wagon;
@@ -50,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -63,7 +65,7 @@ public class Maven2RepositoryMetadataResolverMRM1411Test
     private static final Filter<String> ALL = new AllFilter<String>();
 
     @Inject
-    @Named ( value = "repositoryStorage#maven2" )
+    @Named (value = "repositoryStorage#maven2")
     private Maven2RepositoryStorage storage;
 
     private static final String TEST_REPO_ID = "test";
@@ -87,6 +89,7 @@ public class Maven2RepositoryMetadataResolverMRM1411Test
     private static final String EMPTY_SHA1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
     @Inject
+    @Named (value = "archivaConfiguration#default")
     private ArchivaConfiguration configuration;
 
     private WagonFactory wagonFactory;
@@ -134,7 +137,8 @@ public class Maven2RepositoryMetadataResolverMRM1411Test
         storage.setWagonFactory( wagonFactory );
 
         Wagon wagon = new MockWagon();
-        when( wagonFactory.getWagon( "wagon#http" ) ).thenReturn( wagon );
+        when( wagonFactory.getWagon(
+            new WagonFactoryRequest( "wagon#http", new HashMap<String, String>() ) ) ).thenReturn( wagon );
     }
 
     // Tests for MRM-1411 - START
@@ -243,8 +247,12 @@ public class Maven2RepositoryMetadataResolverMRM1411Test
     public void testGetProjectVersionMetadataWithParentSnapshotVersion()
         throws Exception
     {
+
         copyTestArtifactWithParent( "target/test-classes/com/example/test/test-snapshot-artifact-module-a",
                                     "target/test-repository/com/example/test/test-snapshot-artifact-module-a" );
+
+        //copyTestArtifactWithParent( "target/test-classes/com/example/test/test-snapshot-artifact-root",
+        //                            "target/test-repository/com/example/test/test-snapshot-artifact-root" );
 
         ProjectVersionMetadata metadata = storage.readProjectVersionMetadata(
             new ReadMetadataRequest( TEST_REPO_ID, "com.example.test", "test-snapshot-artifact-module-a",

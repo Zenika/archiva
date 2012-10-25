@@ -23,6 +23,7 @@ import com.google.common.io.Files;
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.admin.model.beans.NetworkProxy;
 import org.apache.archiva.admin.model.beans.ProxyConnectorRuleType;
+import org.apache.archiva.admin.model.beans.RemoteRepository;
 import org.apache.archiva.admin.model.networkproxy.NetworkProxyAdmin;
 import org.apache.archiva.configuration.ArchivaConfiguration;
 import org.apache.archiva.configuration.Configuration;
@@ -43,6 +44,9 @@ import org.apache.archiva.policies.ProxyDownloadException;
 import org.apache.archiva.policies.urlcache.UrlFailureCache;
 import org.apache.archiva.proxy.common.WagonFactory;
 import org.apache.archiva.proxy.common.WagonFactoryException;
+import org.apache.archiva.proxy.common.WagonFactoryRequest;
+import org.apache.archiva.proxy.model.ProxyConnector;
+import org.apache.archiva.proxy.model.RepositoryProxyConnectors;
 import org.apache.archiva.redback.components.registry.Registry;
 import org.apache.archiva.redback.components.registry.RegistryListener;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
@@ -54,7 +58,7 @@ import org.apache.archiva.repository.RepositoryNotFoundException;
 import org.apache.archiva.repository.metadata.MetadataTools;
 import org.apache.archiva.repository.metadata.RepositoryMetadataException;
 import org.apache.archiva.scheduler.ArchivaTaskScheduler;
-import org.apache.archiva.scheduler.repository.RepositoryTask;
+import org.apache.archiva.scheduler.repository.model.RepositoryTask;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -95,7 +99,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @todo exception handling needs work - "not modified" is not really an exceptional case, and it has more layers than
  * your average brown onion
  */
-@Service ("repositoryProxyConnectors#default")
+@Service ( "repositoryProxyConnectors#default" )
 public class DefaultRepositoryProxyConnectors
     implements RepositoryProxyConnectors, RegistryListener
 {
@@ -105,21 +109,21 @@ public class DefaultRepositoryProxyConnectors
      *
      */
     @Inject
-    @Named (value = "archivaConfiguration#default")
+    @Named ( value = "archivaConfiguration#default" )
     private ArchivaConfiguration archivaConfiguration;
 
     /**
      *
      */
     @Inject
-    @Named (value = "repositoryContentFactory#default")
+    @Named ( value = "repositoryContentFactory#default" )
     private RepositoryContentFactory repositoryFactory;
 
     /**
      *
      */
     @Inject
-    @Named (value = "metadataTools#default")
+    @Named ( value = "metadataTools#default" )
     private MetadataTools metadataTools;
 
     /**
@@ -160,7 +164,7 @@ public class DefaultRepositoryProxyConnectors
      *
      */
     @Inject
-    @Named (value = "archivaTaskScheduler#repository")
+    @Named ( value = "archivaTaskScheduler#repository" )
     private ArchivaTaskScheduler scheduler;
 
     @Inject
@@ -174,7 +178,7 @@ public class DefaultRepositoryProxyConnectors
 
     }
 
-    @SuppressWarnings ("unchecked")
+    @SuppressWarnings ( "unchecked" )
     private void initConnectorsAndNetworkProxies()
     {
 
@@ -703,8 +707,11 @@ public class DefaultRepositoryProxyConnectors
                     networkProxy = networkProxyAdmin.getNetworkProxy( connector.getProxyId() );
                 }
 
-                wagon = ( networkProxy != null && networkProxy.isUseNtlm() ) ? wagonFactory.getWagon(
-                    "wagon#" + protocol + "-ntlm" ) : wagonFactory.getWagon( "wagon#" + protocol );
+                wagon = ( networkProxy != null && networkProxy.isUseNtlm() )
+                    ? wagonFactory.getWagon( new WagonFactoryRequest( "wagon#" + protocol + "-ntlm",
+                                                                      remoteRepository.getRepository().getExtraHeaders() ) )
+                    : wagonFactory.getWagon( new WagonFactoryRequest( "wagon#" + protocol,
+                                                                      remoteRepository.getRepository().getExtraHeaders() ) );
                 if ( wagon == null )
                 {
                     throw new ProxyException( "Unsupported target repository protocol: " + protocol );
@@ -917,7 +924,7 @@ public class DefaultRepositoryProxyConnectors
             if ( !origFile.exists() )
             {
                 log.debug( "Retrieving {} from {}", remotePath, remoteRepository.getRepository().getName() );
-                wagon.get( remotePath, destFile );
+                wagon.get( addParameters( remotePath, remoteRepository.getRepository() ), destFile );
                 success = true;
 
                 // You wouldn't get here on failure, a WagonException would have been thrown.
@@ -926,7 +933,8 @@ public class DefaultRepositoryProxyConnectors
             else
             {
                 log.debug( "Retrieving {} from {} if updated", remotePath, remoteRepository.getRepository().getName() );
-                success = wagon.getIfNewer( remotePath, destFile, origFile.lastModified() );
+                success = wagon.getIfNewer( addParameters( remotePath, remoteRepository.getRepository() ), destFile,
+                                            origFile.lastModified() );
                 if ( !success )
                 {
                     throw new NotModifiedException(
@@ -1244,6 +1252,29 @@ public class DefaultRepositoryProxyConnectors
             initConnectorsAndNetworkProxies();
         }
     }
+
+    protected String addParameters( String path, RemoteRepository remoteRepository )
+    {
+        if ( remoteRepository.getExtraParameters().isEmpty() )
+        {
+            return path;
+        }
+
+        boolean question = false;
+
+        StringBuilder res = new StringBuilder( path == null ? "" : path );
+
+        for ( Entry<String, String> entry : remoteRepository.getExtraParameters().entrySet() )
+        {
+            if ( !question )
+            {
+                res.append( '?' ).append( entry.getKey() ).append( '=' ).append( entry.getValue() );
+            }
+        }
+
+        return res.toString();
+    }
+
 
     public void beforeConfigurationChange( Registry registry, String propertyName, Object propertyValue )
     {

@@ -25,11 +25,12 @@
     <version>1.4-M4-SNAPSHOT</version>
   </parent>
   <artifactId>metadata</artifactId>
-  <name>Archiva Metadata</name>
+  <name>Archiva :: Metadata</name>
   <packaging>pom</packaging>
   <modules>
     <module>metadata-model</module>
     <module>metadata-repository-api</module>
+    <module>metadata-model-maven2</module>
     <module>test-repository</module>
   </modules>
 </project>

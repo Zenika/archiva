@@ -31,6 +31,7 @@ import org.apache.archiva.metadata.model.Dependency;
 import org.apache.archiva.metadata.model.License;
 import org.apache.archiva.metadata.model.MailingList;
 import org.apache.archiva.metadata.model.ProjectVersionMetadata;
+import org.apache.archiva.metadata.model.maven2.MavenArtifactFacet;
 import org.apache.archiva.metadata.repository.filter.AllFilter;
 import org.apache.archiva.metadata.repository.filter.ExcludesFilter;
 import org.apache.archiva.metadata.repository.filter.Filter;
@@ -38,6 +39,7 @@ import org.apache.archiva.metadata.repository.storage.ReadMetadataRequest;
 import org.apache.archiva.metadata.repository.storage.RepositoryStorageMetadataInvalidException;
 import org.apache.archiva.metadata.repository.storage.RepositoryStorageMetadataNotFoundException;
 import org.apache.archiva.proxy.common.WagonFactory;
+import org.apache.archiva.proxy.common.WagonFactoryRequest;
 import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 import org.apache.commons.io.FileUtils;
 import org.apache.maven.wagon.Wagon;
@@ -60,8 +62,8 @@ import java.util.List;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith (ArchivaSpringJUnit4ClassRunner.class)
-@ContextConfiguration (locations = { "classpath*:/META-INF/spring-context.xml", "classpath:/spring-context.xml" })
+@RunWith ( ArchivaSpringJUnit4ClassRunner.class )
+@ContextConfiguration ( locations = { "classpath*:/META-INF/spring-context.xml", "classpath:/spring-context.xml" } )
 public class Maven2RepositoryMetadataResolverTest
     extends TestCase
 {
@@ -92,7 +94,8 @@ public class Maven2RepositoryMetadataResolverTest
     private static final String EMPTY_SHA1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
 
     @Inject
-    private ArchivaConfiguration configuration;
+    @Named ( value = "archivaConfiguration#default" )
+    protected ArchivaConfiguration configuration;
 
     private WagonFactory wagonFactory;
 
@@ -139,7 +142,7 @@ public class Maven2RepositoryMetadataResolverTest
         storage.setWagonFactory( wagonFactory );
 
         Wagon wagon = new MockWagon();
-        when( wagonFactory.getWagon( "wagon#http" ) ).thenReturn( wagon );
+        when( wagonFactory.getWagon( new WagonFactoryRequest().protocol( "wagon#http" ) ) ).thenReturn( wagon );
     }
 
     @Test

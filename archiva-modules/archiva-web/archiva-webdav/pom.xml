@@ -38,6 +38,7 @@
     -->
     <redbackTestJdbcUrl>jdbc:hsqldb:mem:redback-test</redbackTestJdbcUrl>
     <redbackTestJdbcDriver>org.hsqldb.jdbcDriver</redbackTestJdbcDriver>
+    <webdav.argLine>-Xmx512m -Xms512m -client</webdav.argLine>
   </properties>
 
   <dependencies>
@@ -254,6 +255,8 @@
               org.apache.archiva.repository*;version=${project.version},
               org.apache.archiva.scheduler*;version=${project.version},
               org.apache.archiva.security;version=${project.version},
+              org.apache.archiva.proxy.model;version=${project.version},
+              org.apache.archiva.metadata.repository.storage;version=${project.version},
               org.apache.commons.io;version="[1.4,2)",
               org.apache.commons.lang;version="[2.4,3)",
               org.apache.jackrabbit.util;version="[1,3)",
@@ -276,7 +279,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <argLine>-Xmx512m -Xms512m -client</argLine>
+          <argLine>${webdav.argLine}</argLine>
           <systemPropertyVariables>
             <appserver.base>${project.build.directory}/appserver-base</appserver.base>
             <plexus.home>${project.build.directory}/appserver-base</plexus.home>

@@ -35,6 +35,10 @@
     </dependency>
     <dependency>
       <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-scheduler-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
       <artifactId>archiva-repository-layer</artifactId>
       <exclusions>
         <exclusion>
@@ -53,7 +57,15 @@
     </dependency>
     <dependency>
       <groupId>org.apache.archiva</groupId>
-      <artifactId>archiva-scheduler-repository</artifactId>
+      <artifactId>archiva-scheduler-repository-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>maven2-repository</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>archiva-proxy-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.archiva</groupId>
@@ -199,6 +211,7 @@
               org.apache.archiva.scheduler*;version=${project.version},
               org.apache.archiva.admin.model;version=${project.version},
               org.apache.archiva.admin.model.networkproxy;version=${project.version},
+              org.apache.archiva.proxy.model;version=${project.version},
               org.apache.commons.collections;version="[3.2,4)",
               org.apache.commons.io;version="[1.4,2)",
               org.apache.commons.lang;version="[2.4,3)",

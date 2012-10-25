@@ -21,12 +21,16 @@ package org.apache.archiva.admin.model.beans;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Olivier Lamy
  * @since 1.4-M1
  */
-@XmlRootElement ( name = "remoteRepository" )
+@XmlRootElement (name = "remoteRepository")
 public class RemoteRepository
     extends AbstractRepository
     implements Serializable
@@ -63,6 +67,34 @@ public class RemoteRepository
      * @since 1.4-M2
      */
     private boolean downloadRemoteIndexOnStartup = false;
+
+    /**
+     * extraParameters.
+     *
+     * @since 1.4-M4
+     */
+    private Map<String, String> extraParameters;
+
+    /**
+     * field to ease json mapping wrapper on <code>extraParameters</code> field
+     *
+     * @since 1.4-M4
+     */
+    private List<PropertyEntry> extraParametersEntries;
+
+    /**
+     * extraHeaders.
+     *
+     * @since 1.4-M4
+     */
+    private Map<String, String> extraHeaders;
+
+    /**
+     * field to ease json mapping wrapper on <code>extraHeaders</code> field
+     *
+     * @since 1.4-M4
+     */
+    private List<PropertyEntry> extraHeadersEntries;
 
 
     public RemoteRepository()
@@ -196,10 +228,98 @@ public class RemoteRepository
         this.downloadRemoteIndexOnStartup = downloadRemoteIndexOnStartup;
     }
 
+    public Map<String, String> getExtraParameters()
+    {
+        if ( this.extraParameters == null )
+        {
+            this.extraParameters = new HashMap<String, String>();
+        }
+        return extraParameters;
+    }
+
+    public void setExtraParameters( Map<String, String> extraParameters )
+    {
+        this.extraParameters = extraParameters;
+    }
+
+    public void addExtraParameter( String key, String value )
+    {
+        getExtraParameters().put( key, value );
+    }
+
+    public List<PropertyEntry> getExtraParametersEntries()
+    {
+        this.extraParametersEntries = new ArrayList<PropertyEntry>();
+        for ( Map.Entry<String, String> entry : getExtraParameters().entrySet() )
+        {
+            this.extraParametersEntries.add( new PropertyEntry( entry.getKey(), entry.getValue() ) );
+        }
+        return this.extraParametersEntries;
+    }
+
+    public void setExtraParametersEntries( List<PropertyEntry> extraParametersEntries )
+    {
+        if ( extraParametersEntries == null )
+        {
+            return;
+        }
+
+        this.extraParametersEntries = extraParametersEntries;
+        for ( PropertyEntry propertyEntry : extraParametersEntries )
+        {
+            this.addExtraParameter( propertyEntry.getKey(), propertyEntry.getValue() );
+        }
+    }
+
+    public Map<String, String> getExtraHeaders()
+    {
+        if ( this.extraHeaders == null )
+        {
+            this.extraHeaders = new HashMap<String, String>();
+        }
+        return extraHeaders;
+    }
+
+    public void setExtraHeaders( Map<String, String> extraHeaders )
+    {
+        this.extraHeaders = extraHeaders;
+    }
+
+    public void addExtraHeader( String key, String value )
+    {
+        getExtraHeaders().put( key, value );
+    }
+
+    public List<PropertyEntry> getExtraHeadersEntries()
+    {
+        this.extraHeadersEntries = new ArrayList<PropertyEntry>();
+        for ( Map.Entry<String, String> entry : getExtraHeaders().entrySet() )
+        {
+            this.extraHeadersEntries.add( new PropertyEntry( entry.getKey(), entry.getValue() ) );
+        }
+        return this.extraHeadersEntries;
+    }
+
+    public void setExtraHeadersEntries( List<PropertyEntry> extraHeadersEntries )
+    {
+        if ( extraHeadersEntries == null )
+        {
+            return;
+        }
+
+        this.extraHeadersEntries = extraHeadersEntries;
+        for ( PropertyEntry propertyEntry : extraHeadersEntries )
+        {
+            this.addExtraHeader( propertyEntry.getKey(), propertyEntry.getValue() );
+        }
+    }
+
+
     @Override
     public String toString()
     {
         final StringBuilder sb = new StringBuilder();
+        sb.append( super.toString() );
         sb.append( "RemoteRepository" );
         sb.append( "{url='" ).append( url ).append( '\'' );
         sb.append( ", userName='" ).append( userName ).append( '\'' );
@@ -211,6 +331,8 @@ public class RemoteRepository
         sb.append( ", cronExpression='" ).append( cronExpression ).append( '\'' );
         sb.append( ", remoteDownloadTimeout=" ).append( remoteDownloadTimeout );
         sb.append( ", downloadRemoteIndexOnStartup=" ).append( downloadRemoteIndexOnStartup );
+        sb.append( ", extraParameters=" ).append( extraParameters );
+        sb.append( ", extraHeaders=" ).append( extraHeaders );
         sb.append( '}' );
         return sb.toString();
     }

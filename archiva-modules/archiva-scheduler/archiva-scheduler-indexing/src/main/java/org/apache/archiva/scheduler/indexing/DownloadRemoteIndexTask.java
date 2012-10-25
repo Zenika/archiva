@@ -24,6 +24,7 @@ import org.apache.archiva.admin.model.beans.RemoteRepository;
 import org.apache.archiva.admin.model.remote.RemoteRepositoryAdmin;
 import org.apache.archiva.proxy.common.WagonFactory;
 import org.apache.archiva.proxy.common.WagonFactoryException;
+import org.apache.archiva.proxy.common.WagonFactoryRequest;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.maven.index.context.IndexingContext;
@@ -56,6 +57,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Olivier Lamy
@@ -134,7 +136,8 @@ public class DownloadRemoteIndexTask
                 new URL( this.remoteRepository.getUrl() ).getProtocol() + ( ( this.networkProxy != null
                     && this.networkProxy.isUseNtlm() ) ? "-ntlm" : "" );
 
-            final StreamWagon wagon = (StreamWagon) wagonFactory.getWagon( wagonProtocol );
+            final StreamWagon wagon = (StreamWagon) wagonFactory.getWagon(
+                new WagonFactoryRequest( wagonProtocol, this.remoteRepository.getExtraHeaders() ) );
             int timeoutInMilliseconds = remoteRepository.getTimeout() * 1000;
             // FIXME olamy having 2 config values
             wagon.setReadTimeout( timeoutInMilliseconds );
@@ -166,7 +169,8 @@ public class DownloadRemoteIndexTask
                 indexDirectory.mkdirs();
             }
 
-            ResourceFetcher resourceFetcher = new WagonResourceFetcher( log, tempIndexDirectory, wagon );
+            ResourceFetcher resourceFetcher =
+                new WagonResourceFetcher( log, tempIndexDirectory, wagon, remoteRepository );
             IndexUpdateRequest request = new IndexUpdateRequest( indexingContext, resourceFetcher );
             request.setForceFullUpdate( this.fullDownload );
             request.setLocalIndexCacheDir( indexCacheDirectory );
@@ -293,11 +297,15 @@ public class DownloadRemoteIndexTask
 
         Wagon wagon;
 
-        private WagonResourceFetcher( Logger log, File tempIndexDirectory, Wagon wagon )
+        RemoteRepository remoteRepository;
+
+        private WagonResourceFetcher( Logger log, File tempIndexDirectory, Wagon wagon,
+                                      RemoteRepository remoteRepository )
         {
             this.log = log;
             this.tempIndexDirectory = tempIndexDirectory;
             this.wagon = wagon;
+            this.remoteRepository = remoteRepository;
         }
 
         public void connect( String id, String url )
@@ -324,7 +332,7 @@ public class DownloadRemoteIndexTask
                     file.delete();
                 }
                 file.deleteOnExit();
-                wagon.get( name, file );
+                wagon.get( addParameters( name, this.remoteRepository ), file );
                 return new FileInputStream( file );
             }
             catch ( AuthorizationException e )
@@ -340,7 +348,33 @@ public class DownloadRemoteIndexTask
                 throw new FileNotFoundException( e.getMessage() );
             }
         }
+
+        // FIXME remove crappy copy/paste
+        protected String addParameters( String path, RemoteRepository remoteRepository )
+        {
+            if ( remoteRepository.getExtraParameters().isEmpty() )
+            {
+                return path;
+            }
+
+            boolean question = false;
+
+            StringBuilder res = new StringBuilder( path == null ? "" : path );
+
+            for ( Map.Entry<String, String> entry : remoteRepository.getExtraParameters().entrySet() )
+            {
+                if ( !question )
+                {
+                    res.append( '?' ).append( entry.getKey() ).append( '=' ).append( entry.getValue() );
+                }
+            }
+
+            return res.toString();
+        }
+
     }
+
+
 }
 
 

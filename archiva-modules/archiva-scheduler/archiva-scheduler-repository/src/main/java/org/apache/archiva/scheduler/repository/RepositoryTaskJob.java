@@ -22,6 +22,7 @@ package org.apache.archiva.scheduler.repository;
 import org.apache.archiva.redback.components.scheduler.AbstractJob;
 import org.apache.archiva.redback.components.taskqueue.TaskQueue;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
+import org.apache.archiva.scheduler.repository.model.RepositoryTask;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -44,9 +45,9 @@ public class RepositoryTaskJob
         JobDataMap dataMap = context.getJobDetail().getJobDataMap();
         setJobDataMap( dataMap );
 
-        TaskQueue taskQueue = (TaskQueue) dataMap.get( RepositoryArchivaTaskScheduler.TASK_QUEUE );
+        TaskQueue taskQueue = (TaskQueue) dataMap.get( DefaultRepositoryArchivaTaskScheduler.TASK_QUEUE );
 
-        String repositoryId = (String) dataMap.get( RepositoryArchivaTaskScheduler.TASK_REPOSITORY );
+        String repositoryId = (String) dataMap.get( DefaultRepositoryArchivaTaskScheduler.TASK_REPOSITORY );
         RepositoryTask task = new RepositoryTask();
         task.setRepositoryId( repositoryId );
 

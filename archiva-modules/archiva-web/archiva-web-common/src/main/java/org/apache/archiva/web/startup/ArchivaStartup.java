@@ -26,7 +26,7 @@ import org.apache.archiva.redback.components.cache.Cache;
 import org.apache.archiva.redback.components.cache.ehcache.EhcacheCache;
 import org.apache.archiva.redback.components.scheduler.DefaultScheduler;
 import org.apache.archiva.scheduler.cudf.CUDFArchivaTaskScheduler;
-import org.apache.archiva.scheduler.repository.RepositoryArchivaTaskScheduler;
+import org.apache.archiva.scheduler.repository.DefaultRepositoryArchivaTaskScheduler;
 import org.apache.maven.index.NexusIndexer;
 import org.apache.maven.index.context.IndexingContext;
 import org.apache.archiva.redback.components.taskqueue.Task;
@@ -58,9 +58,9 @@ public class ArchivaStartup
 
     private ThreadedTaskQueueExecutor tqeIndexing;
 
-    private ThreadedTaskQueueExecutor tqCudf;
+    private DefaultRepositoryArchivaTaskScheduler repositoryTaskScheduler;
 
-    private RepositoryArchivaTaskScheduler repositoryTaskScheduler;
+    private ThreadedTaskQueueExecutor tqCudf;
 
     private CUDFArchivaTaskScheduler cudfArchivaTaskScheduler;
 
@@ -76,7 +76,7 @@ public class ArchivaStartup
         SecuritySynchronization securitySync = wac.getBean( SecuritySynchronization.class );
 
         repositoryTaskScheduler =
-            wac.getBean( "archivaTaskScheduler#repository", RepositoryArchivaTaskScheduler.class );
+            wac.getBean( "archivaTaskScheduler#repository", DefaultRepositoryArchivaTaskScheduler.class );
 
         cudfArchivaTaskScheduler = wac.getBean( "archivaTaskScheduler#cudf", CUDFArchivaTaskScheduler.class );
 

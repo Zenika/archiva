@@ -30,6 +30,7 @@ import org.apache.archiva.model.ArchivaRepositoryMetadata;
 import org.apache.archiva.model.SnapshotVersion;
 import org.apache.archiva.proxy.common.WagonFactory;
 import org.apache.archiva.proxy.common.WagonFactoryException;
+import org.apache.archiva.proxy.common.WagonFactoryRequest;
 import org.apache.archiva.xml.XMLException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -236,9 +237,16 @@ public class RepositoryModelResolver
 
                 // if it's a ntlm proxy we have to lookup the wagon light which support thats
                 // wagon http client doesn't support that
-                wagon = ( networkProxy != null && networkProxy.isUseNtlm() ) ? wagonFactory.getWagon(
-                    "wagon#" + protocol + "-ntlm" ) : wagonFactory.getWagon( "wagon#" + protocol );
-                wagon = wagonFactory.getWagon( "wagon#" + protocol );
+                wagon = ( networkProxy != null && networkProxy.isUseNtlm() )
+                    ? wagonFactory.getWagon(
+                    new WagonFactoryRequest( "wagon#" + protocol + "-ntlm", remoteRepository.getExtraHeaders() ) )
+                    : wagonFactory.getWagon(
+                        new WagonFactoryRequest( "wagon#" + protocol, remoteRepository.getExtraHeaders() ) );
+                if ( wagon == null )
+                {
+                    wagon = wagonFactory.getWagon(
+                        new WagonFactoryRequest( "wagon#" + protocol, remoteRepository.getExtraHeaders() ) );
+                }
                 if ( wagon == null )
                 {
                     throw new RuntimeException( "Unsupported remote repository protocol: " + protocol );
@@ -257,7 +265,7 @@ public class RepositoryModelResolver
                         String metadataPath =
                             StringUtils.substringBeforeLast( artifactPath, "/" ) + "/" + METADATA_FILENAME;
 
-                        wagon.get( metadataPath, tmpMetadataResource );
+                        wagon.get( addParameters( metadataPath, remoteRepository ), tmpMetadataResource );
 
                         log.debug( "Successfully downloaded metadata." );
 
@@ -283,7 +291,7 @@ public class RepositoryModelResolver
 
                     log.info( "Retrieving {} from {}", artifactPath, remoteRepository.getName() );
 
-                    wagon.get( artifactPath, tmpResource );
+                    wagon.get( addParameters( artifactPath, remoteRepository ), tmpResource );
 
                     log.debug( "Downloaded successfully." );
 
@@ -421,7 +429,7 @@ public class RepositoryModelResolver
 
         log.info( "Retrieving {} from {}", remotePath, remoteRepository.getName() );
 
-        wagon.get( remotePath, destFile );
+        wagon.get( addParameters( remotePath, remoteRepository ), destFile );
 
         log.debug( "Downloaded successfully." );
 
@@ -479,5 +487,27 @@ public class RepositoryModelResolver
                 }
             }
         }
+    }
+
+    protected String addParameters( String path, RemoteRepository remoteRepository )
+    {
+        if ( remoteRepository.getExtraParameters().isEmpty() )
+        {
+            return path;
+        }
+
+        boolean question = false;
+
+        StringBuilder res = new StringBuilder( path == null ? "" : path );
+
+        for ( Map.Entry<String, String> entry : remoteRepository.getExtraParameters().entrySet() )
+        {
+            if ( !question )
+            {
+                res.append( '?' ).append( entry.getKey() ).append( '=' ).append( entry.getValue() );
+            }
+        }
+
+        return res.toString();
     }
 }
