@@ -1,0 +1,164 @@
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+-->
+
+<script id="cudf_universe_tmpl" type="text/html">
+    <div id="cudf-universe-action" class="well">
+        <p>${$.i18n.prop('cudf.message.universe-extraction')}</p>
+        <a href="#" onclick="showCUDFUniverseExtract()" class="btn" id="show-cudf-universe-button">
+            ${$.i18n.prop('cudf.show-text')}
+        </a>
+        <a href="#" onclick="getCUDFUniverseExtract()" class='btn' id="get-cudf-universe-extract">
+            ${$.i18n.prop('cudf.extract-text')}
+        </a>
+        <div id="get-cudf-universe-spinner-div"></div>
+    </div>
+    <pre class="prettyprint hide" id="show-cudf-universe-content"></pre>
+</script>
+
+<script id="cudfJobsMain" type="text/html">
+    <div class="header">
+        <h2>${$.i18n.prop('cudf.job.page.header')}</h2>
+    </div>
+    <ul id="cudf-jobs-view-tabs" class="nav nav-tabs">
+        <li id="cudf-jobs-view-tabs-li-grid" class="active">
+            <a id="cudf-jobs-view-tabs-a-grid" data-toggle="tab" href="#cudf-jobs-view">
+                ${$.i18n.prop('cudf.job.tab.grid.title')}
+            </a>
+        </li>
+        <li id="cudf-jobs-view-tabs-li-edit">
+            <a id="cudf-jobs-view-tabs-a-edit" data-toggle="tab" href="#cudf-jobs-edit">
+                ${$.i18n.prop('cudf.job.tab.add.title')}
+            </a>
+        </li>
+    </ul>
+    <div id="cudf-jobs-view-tabs-content" class="tab-content">
+        <div id="cudf-jobs-view" class="tab-pane active">
+            <table class="table table-striped table-bordered"
+                   data-bind="simpleGrid: cudfJobsViewModel,simpleGridTemplate:'table-cudf-job-tmpl',pageLinksId:'cudf-jobs-page-link-id'">
+            </table>
+            <div id="cudf-jobs-page-link-id"></div>
+        </div>
+        <div id="cudf-jobs-edit" class="tab-pane">
+            <div id="cudf-jobs-edit-div" data-bind="template: {name: 'cudf-job-edit-tmpl'}">
+            </div>
+        </div>
+    </div>
+</script>
+
+<script id="table-cudf-job-tmpl" type="text/html">
+    <thead>
+    <tr>
+        {{each(i, columnDefinition) columns}}
+        <th>${ columnDefinition.headerText }</th>
+        {{/each}}
+        <th>${$.i18n.prop('cudf.job.table.header.debug')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.edit')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.delete')}</th>
+        <th>${$.i18n.prop('cudf.job.table.header.launch')}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{each(i, cudfJob) itemsOnCurrentPage()}}
+    <tr>
+        {{each(i, columnDefinition) columns}}
+        {{var val = (typeof columnDefinition.rowText == 'function' ? columnDefinition.rowText(cudfJob) : cudfJob[columnDefinition.rowText])}}
+        <td>
+            ${val}
+        </td>
+        {{/each}}
+        <td>
+            {{if cudfJob.debug()==true }}
+            Debug mode
+            {{else}}
+            Production mode
+            {{/if}}
+        </td>
+        <td><a class="btn btn-primary" data-bind="click: function(){editCUDFJob(cudfJob)}"><i class="icon-pencil icon-white"/></a></td>
+        <td><a class="btn btn-danger" data-bind="click: function(){deleteCUDFJob(cudfJob)}"><i class="icon-trash icon-white"/></a></td>
+        <td><a class="btn btn-warning" data-bind="click: function(){launchCUDFJob(cudfJob)}"><i class="icon-play-circle  icon-white"/></a></td>
+    </tr>
+    {{/each}}
+    </tbody>
+</script>
+
+<script id="cudf-job-edit-tmpl" type="text/html">
+    <form id="cudf-job-edit-form" class="form-horizontal">
+        <fieldset>
+            <div class="control-group">
+                <label class="control-label" for="id">${$.i18n.prop('cudf.job.form.id')}</label>
+                <div class="controls">
+                    <input id="id" type="text" class="input-large required" name="id" data-bind="value: cudfJob.id"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="location">${$.i18n.prop('cudf.job.form.location')}</label>
+                <div class="controls">
+                    <input id="location" type="text" class="input-xxlarge required" name="location" data-bind="value: cudfJob.location"/>
+                    <p class="help-block">${$.i18n.prop('cudf.job.form.location.explanations')}</p>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="cronExpression">${$.i18n.prop('cudf.job.form.cronExpression')}</label>
+                <div class="controls">
+                    <input id="cronExpression" type="text" class="input-large required" name="cronExpression" data-bind="value: cudfJob.cronExpression"/>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="debug">${$.i18n.prop('cudf.job.form.debug')}</label>
+                <div class="controls">
+                    <input id="debug" type="checkbox" name="debug" data-bind="checked: cudfJob.debug"/>
+                    <p class="help-block">${$.i18n.prop('cudf.job.form.debug.explanations')}</p>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label" for="allRepositories">${$.i18n.prop('cudf.job.form.allRepositories')}</label>
+                <div class="controls">
+                    <input id="allRepositories" type="checkbox" name="allRepositories" data-bind="checked: cudfJob.allRepositories"
+                           data-toggle="collapse" data-target="#cudf-job-repository-groups-list"/>
+                </div>
+            </div>
+            <hr/>
+            <div id="cudf-job-repository-groups-list" class="collapse">
+                <h4>${$.i18n.prop('cudf.job.form.repositoryGroup')}</h4>
+                <div id="cudf-job-repository-groups-view" class="control-group">
+                    <label class="control-label">${$.i18n.prop('cudf.job.form.repositoryGroup')}</label>
+                    <div class="controls">
+                        {{each(i, repositoryGroup) cudfJobsViewModel.availableRepositoryGroups}}
+                        <label class="radio">
+                            <input type="radio" name="group" data-bind="attr: {value: repositoryGroup}, checked: $root.cudfJob.repositoryGroup"/>
+                            <span data-bind="text: repositoryGroup"></span>
+                        </label>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" data-bind="click: save">${$.i18n.prop('cudf.job.form.submit')}</button>
+                <button class="btn" data-bind="click: reset">${$.i18n.prop('cudf.job.form.reset')}</button>
+            </div>
+        </fieldset>
+    </form>
+</script>
+
+<script id="cudf-job-delete-warning-tmpl" type='text/html'>
+    <div>
+        <span class="label label-warning">${$.i18n.prop('warning.not.undone.operation')}</span>
+    </div>
+    </div>
+</script>

@@ -22,9 +22,10 @@ require(['jquery',"jquery.tmpl",'i18n',"utils","text!templates/archiva/menu.html
           "text!templates/archiva/repositories.html",
           "text!templates/archiva/search.html",
           "text!templates/archiva/general-admin.html",
-          "text!templates/archiva/docs.html"],
+          "text!templates/archiva/docs.html",
+          "text!templates/archiva/cudf.html"],
   function(jquery,jqueryTmpl,i18n,utils,menu,generics,modal,repositories,
-           search,general_admin,docs) {
+           search,general_admin,docs,cudf) {
     loadArchivaTemplate=function(){
       var htmlFragment=$("#html-fragments");
       // template loading
@@ -35,6 +36,7 @@ require(['jquery',"jquery.tmpl",'i18n',"utils","text!templates/archiva/menu.html
       htmlFragment.append(repositories);
       htmlFragment.append(search);
       htmlFragment.append(general_admin);
+      htmlFragment.append(cudf);
       $.log("main-tmpl.js loaded");
     }
   }

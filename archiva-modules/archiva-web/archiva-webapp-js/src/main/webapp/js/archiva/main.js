@@ -20,7 +20,7 @@ define("archiva.main",["jquery","jquery.ui","sammy","jquery.tmpl",'i18n',"jquery
          "jquery.validate","jquery.json","knockout","redback.templates","archiva.templates",
           "redback.roles","redback","archiva.general-admin","archiva.repositories",
           "archiva.network-proxies","archiva.proxy-connectors","archiva.repository-groups","archiva.artifacts-management",
-          "archiva.proxy-connectors-rules","archiva.docs"],
+          "archiva.proxy-connectors-rules","archiva.docs", "archiva.cudf"],
 function(jquery,ui,sammy,tmpl,i18n,jqueryCookie,bootstrap,archivaSearch,jqueryValidate,jqueryJson,ko) {
 
   /**
