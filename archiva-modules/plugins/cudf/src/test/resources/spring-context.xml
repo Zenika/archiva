@@ -59,4 +59,16 @@
     </property>
   </bean>
 
+
+  <bean name="cache#cudf" class="org.apache.archiva.redback.components.cache.ehcache.EhcacheCache"
+        init-method="initialize">
+
+    <property name="diskPersistent" value="true"/>
+    <property name="overflowToDisk" value="true"/>
+    <property name="diskStorePath" value="target/data/cudf/cache"/>
+    <property name="eternal" value="true"/>
+    <property name="maxElementsInMemory" value="100000"/>
+    <property name="name" value="cudfCache"/>
+  </bean>
+
 </beans>
