@@ -23,14 +23,15 @@ import com.zenika.cudf.adapter.resolver.CUDFVersionResolver;
 import com.zenika.cudf.model.Binary;
 import com.zenika.cudf.model.BinaryId;
 import org.apache.archiva.common.utils.VersionComparator;
-import org.apache.archiva.metadata.repository.*;
+import org.apache.archiva.metadata.repository.MetadataResolutionException;
+import org.apache.archiva.metadata.repository.MetadataResolver;
+import org.apache.archiva.metadata.repository.RepositorySession;
+import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**

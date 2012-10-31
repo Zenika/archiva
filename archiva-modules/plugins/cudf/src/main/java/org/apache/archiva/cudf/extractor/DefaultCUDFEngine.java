@@ -44,13 +44,13 @@ public class DefaultCUDFEngine
 
     @Inject
     private CUDFUniverseLoader universeLoader;
-    
+
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                  List<String> repositories, Writer writer )
         throws IOException
     {
-        new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositoryId, repositories,
-                                                     repositorySessionFactory );
+        new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositoryId,
+                                                           repositories, repositorySessionFactory );
     }
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type,
@@ -58,7 +58,7 @@ public class DefaultCUDFEngine
         throws IOException
     {
         new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositories,
-                                                     repositorySessionFactory );
+                                                           repositorySessionFactory );
     }
 
     public void computeCUDFUniverse( List<String> repositoryIds, Writer writer, Writer debugWriter )
@@ -90,5 +90,4 @@ public class DefaultCUDFEngine
             }
         }
     }
-    
 }

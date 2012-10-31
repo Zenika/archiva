@@ -92,7 +92,9 @@ public class DefaultCUDFJobsAdmin
         {
             log.warn(
                 "The CUDF job configuration that should be remove with id " + cudfJob.getId() + " doesn't exist." );
-        } else {
+        }
+        else
+        {
             cudfConfiguration.removeCudfJob( cudfJobConfiguration );
         }
         saveConfiguration( getArchivaConfiguration().getConfiguration() );

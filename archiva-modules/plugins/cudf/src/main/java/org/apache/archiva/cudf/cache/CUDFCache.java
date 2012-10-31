@@ -20,8 +20,6 @@ package org.apache.archiva.cudf.cache;
  */
 
 import com.zenika.cudf.adapter.cache.Cache;
-import com.zenika.cudf.model.Binary;
-import com.zenika.cudf.model.BinaryId;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -40,11 +38,13 @@ public class CUDFCache
     private org.apache.archiva.redback.components.cache.Cache cache;
 
 
-    public void put(Object key, Object value) {
-        cache.put(key, value);
+    public void put( Object key, Object value )
+    {
+        cache.put( key, value );
     }
 
-    public Object get(Object key) {
-        return cache.get(key);
+    public Object get( Object key )
+    {
+        return cache.get( key );
     }
 }

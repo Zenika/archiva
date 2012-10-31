@@ -31,7 +31,7 @@
 
   <bean name="cache#cudf" class="org.apache.archiva.redback.components.cache.ehcache.EhcacheCache"
         init-method="initialize">
-    
+
     <property name="diskPersistent" value="true"/>
     <property name="overflowToDisk" value="true"/>
     <property name="diskStorePath" value="${appserver.base}/data/cudf/cache"/>
