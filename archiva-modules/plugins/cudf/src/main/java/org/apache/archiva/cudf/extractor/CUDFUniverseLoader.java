@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,6 +64,8 @@ public class CUDFUniverseLoader
 
     private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
 
+    private FileWriter outDebug;
+
     public void loadUniverse( List<String> repositoryIds )
     {
         if ( !isLoaded() )
@@ -79,6 +83,15 @@ public class CUDFUniverseLoader
 
     private void loadArchivaUniverse( List<String> repositoryIds )
     {
+        try
+        {
+            outDebug = new FileWriter(
+                System.getProperty( "appserver.base" ) + "/data/cudf/" + System.currentTimeMillis() + "-projects.txt" );
+        }
+        catch ( IOException e )
+        {
+            throw new RuntimeException( "Unable to open projects debug file" );
+        }
         for ( String repositoryId : repositoryIds )
         {
             RepositorySession repositorySession = null;
@@ -105,6 +118,14 @@ public class CUDFUniverseLoader
                     repositorySession.close();
                 }
             }
+        }
+        try
+        {
+            outDebug.close();
+        }
+        catch ( IOException e )
+        {
+            throw new RuntimeException( "Unable to close projects.txt file" );
         }
     }
 
@@ -147,6 +168,15 @@ public class CUDFUniverseLoader
                                         String repositoryId, String namespace, String project )
         throws MetadataResolutionException
     {
+        try
+        {
+            outDebug.append( "[" ).append( repositoryId ).append( "]=>" ).append( namespace ).append( ":" ).append(
+                project );
+        }
+        catch ( IOException e )
+        {
+            log.error( "Unable to write log on " + namespace + ":" + project + " project", e );
+        }
         List<String> projectVersions = new LinkedList<String>(
             metadataResolver.resolveProjectVersions( repositorySession, repositoryId, namespace, project ) );
         Collections.sort( projectVersions, VersionComparator.getInstance() );
