@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -65,7 +66,7 @@ public class RepositoryModelResolver
 
     private WagonFactory wagonFactory;
 
-    private List<RemoteRepository> remoteRepositories;
+    private List<RemoteRepository> remoteRepositories = new ArrayList<RemoteRepository>();
 
     private ManagedRepository targetRepository;
 
