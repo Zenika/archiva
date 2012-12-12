@@ -60,7 +60,7 @@ public class CUDFUniverseLoader
 
     private CUDFDescriptor descriptor;
 
-    private Logger log = LoggerFactory.getLogger( CUDFExtractor.class );
+    private Logger log = LoggerFactory.getLogger( CUDFUniverseLoader.class );
 
     public void loadUniverse( List<String> repositoryIds )
     {
