@@ -61,7 +61,13 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
       }
       self.repositoryGroup.repositories(repositories);
       self.repositoryGroup.modified(true);
+      var mainContent=$("#main-content");
+      mainContent.find("#repository-groups-edit-available-repositories").find(".icon-plus-sign" ).off("click");
+      mainContent.find("#repository-groups-edit-order-div").find(".icon-minus-sign" ).off("click");
+      self.renderSortableAvailables(self.repositoryGroupsViewModel);
+      self.renderSortableChoosed(self.repositoryGroupsViewModel);
     }
+
     this.saveRepositoryGroup=function(repositoryGroup){
       if (self.update){
         self.repositoryGroupsViewModel.saveRepositoryGroup(repositoryGroup);
@@ -73,6 +79,63 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
     this.removeRepository=function(id){
       $.log("removeRepository:"+id);
     }
+
+    this.removeAvailable=function(idVal){
+      for (var i=0;i<self.repositoryGroupsViewModel.managedRepositories().length;i++){
+        if(self.repositoryGroupsViewModel.managedRepositories()[i].id()==idVal){
+          self.availableRepositories.remove(repositoryGroupsViewModel.managedRepositories()[i]);
+        }
+      }
+
+      for(var i= 0;i<self.repositoryGroupsViewModel.managedRepositories().length;i++){
+        if(self.repositoryGroupsViewModel.managedRepositories()[i].id()==idVal){
+          $.log("find repo to add");
+          self.repositoryGroup.repositories.push(idVal);
+          self.repositoryGroup.managedRepositories.push(findManagedRepository(idVal,self.repositoryGroupsViewModel.managedRepositories()));
+        }
+      }
+      $("#main-content").find("#repository-groups-edit-order-div").find("#minus-"+idVal ).on("click",function(){
+        var idVal = $(this).attr("id");
+        idVal=idVal.substringAfterFirst("minus-");
+        self.removeChoosed(idVal);
+      });
+    }
+
+    this.renderSortableAvailables=function(repositoryGroupsViewModel){
+      $("#main-content").find("#repository-groups-edit-available-repositories").find(".icon-plus-sign" ).on("click",function(){
+        var idVal = $(this).attr("id");
+        idVal=idVal.substringAfterFirst("plus-");
+        self.removeAvailable(idVal);
+      });
+    }
+
+    this.removeChoosed=function(idVal){
+      for (var i=0;i<self.repositoryGroupsViewModel.managedRepositories().length;i++){
+        if(self.repositoryGroupsViewModel.managedRepositories()[i].id()==idVal){
+          self.availableRepositories.push(repositoryGroupsViewModel.managedRepositories()[i]);
+        }
+      }
+
+      for(var i= 0;i<self.repositoryGroup.repositories().length;i++){
+        if(self.repositoryGroup.repositories()[i]==idVal){
+          self.repositoryGroup.repositories.remove(self.repositoryGroup.repositories()[i]);
+          self.repositoryGroup.managedRepositories.remove(findManagedRepository(idVal,self.repositoryGroupsViewModel.managedRepositories()));
+        }
+      }
+      $("#main-content").find("#repository-groups-edit-available-repositories").find("#plus-"+idVal ).on("click",function(){
+        var idVal = $(this).attr("id");
+        idVal=idVal.substringAfterFirst("plus-");
+        self.removeAvailable(idVal);
+      });
+    }
+
+    this.renderSortableChoosed=function(repositoryGroupsViewModel){
+      $("#main-content").find("#repository-groups-edit-order-div").find(".icon-minus-sign" ).on("click",function(){
+        var idVal = $(this).attr("id");
+        idVal=idVal.substringAfterFirst("minus-");
+        self.removeChoosed(idVal);
+      });
+    }
   }
 
   RepositoryGroupsViewModel=function(){
@@ -80,6 +143,10 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
     this.repositoryGroups=ko.observableArray([]);
     this.managedRepositories=ko.observableArray([]);
     this.applicationUrl="";
+
+    this.removeFromList=function(managedRepository){
+      $.log("removeFromList");
+    }
 
     this.findManagedRepository=function(id){
       return findManagedRepository(id,self.managedRepositories());
@@ -111,7 +178,7 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
 
     this.editRepositoryGroup=function(repositoryGroup){
 
-
+      var mainContent=$("#main-content");
       $.ajax({
           url: "restServices/archivaServices/archivaAdministrationService/applicationUrl",
           type: "GET",
@@ -121,15 +188,27 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
             var repositoryGroupViewModel=new RepositoryGroupViewModel(repositoryGroup,true,self);
             repositoryGroupViewModel.applicationUrl=applicationUrl;
             activateRepositoryGroupEditTab();
-            ko.applyBindings(repositoryGroupViewModel,$("#main-content").find("#repository-groups-edit" ).get(0));
-            $("#main-content" ).find("#repository-groups-view-tabs-li-edit" ).find("a").html($.i18n.prop("edit"));
+            ko.applyBindings(repositoryGroupViewModel,mainContent.find("#repository-groups-edit" ).get(0));
+            repositoryGroupViewModel.renderSortableChoosed(self);
+            repositoryGroupViewModel.renderSortableAvailables(self);
+            mainContent.find("#repository-groups-view-tabs-li-edit" ).find("a").html($.i18n.prop("edit"));
           }
         });
     }
 
+    this.editRepositoryGroupWithId=function(repositoryGroupId){
+
+      $.each(self.repositoryGroups(), function(index, value) {
+        if(value.id()==repositoryGroupId){
+          self.editRepositoryGroup(value);
+        }
+      });
+    }
+
     this.saveRepositoryGroup=function(repositoryGroup){
         clearUserMessages();
-        $("#user-messages").html(mediumSpinnerImg());
+        var userMessages=$("#user-messages");
+        userMessages.html(mediumSpinnerImg());
         $("#repository-group-save" ).button('loading');
         $.ajax("restServices/archivaServices/repositoryGroupService/updateRepositoryGroup",
           {
@@ -149,7 +228,7 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
             },
             complete:function(data){
               $("#repository-group-save" ).button('reset');
-              removeMediumSpinnerImg("#user-messages");
+              removeMediumSpinnerImg(userMessages);
             }
           }
         );
@@ -187,7 +266,7 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
 
   }
 
-  displayRepositoryGroups=function(){
+  displayRepositoryGroups=function(successFn){
     screenChange();
     var mainContent = $("#main-content");
     mainContent.html(mediumSpinnerImg());
@@ -221,7 +300,6 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
                   ko.applyBindings(self.repositoryGroupsViewModel,mainContent.find("#repository-groups-view" ).get(0));
                   $.log("displayRepositoryGroups#applyBindings after");
 
-
                   mainContent.find("#repository-groups-view-tabs").on('show', function (e) {
                     if ($(e.target).attr("href")=="#repository-groups-edit") {
                       var repositoryGroup = new RepositoryGroup();
@@ -229,6 +307,8 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
 
                       activateRepositoryGroupEditTab();
                       ko.applyBindings(repositoryGroupViewModel,mainContent.find("#repository-groups-edit" ).get(0));
+                      repositoryGroupViewModel.renderSortableChoosed(self.repositoryGroupsViewModel);
+                      repositoryGroupViewModel.renderSortableAvailables(self.repositoryGroupsViewModel);
                     }
                     if ($(e.target).attr("href")=="#repository-groups-view") {
                       mainContent.find("#repository-groups-view-tabs-li-edit a").html($.i18n.prop("add"));
@@ -236,6 +316,10 @@ function(jquery,i18n,jqueryTmpl,bootstrap,jqueryValidate,jqueryUi,ko) {
                     }
 
                   });
+
+                  if(successFn){
+                    successFn(self.repositoryGroupsViewModel);
+                  }
 
                 }
               }

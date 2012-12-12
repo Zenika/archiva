@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -132,12 +131,11 @@ public class DownloadRemoteIndexTask
             tempIndexDirectory.deleteOnExit();
             String baseIndexUrl = indexingContext.getIndexUpdateUrl();
 
-            String wagonProtocol =
-                new URL( this.remoteRepository.getUrl() ).getProtocol() + ( ( this.networkProxy != null
-                    && this.networkProxy.isUseNtlm() ) ? "-ntlm" : "" );
+            String wagonProtocol = new URL( this.remoteRepository.getUrl() ).getProtocol();
 
             final StreamWagon wagon = (StreamWagon) wagonFactory.getWagon(
-                new WagonFactoryRequest( wagonProtocol, this.remoteRepository.getExtraHeaders() ) );
+                new WagonFactoryRequest( wagonProtocol, this.remoteRepository.getExtraHeaders() ).networkProxy(
+                    this.networkProxy ) );
             int timeoutInMilliseconds = remoteRepository.getTimeout() * 1000;
             // FIXME olamy having 2 config values
             wagon.setReadTimeout( timeoutInMilliseconds );
@@ -262,8 +260,7 @@ public class DownloadRemoteIndexTask
 
         public void transferProgress( TransferEvent transferEvent, byte[] buffer, int length )
         {
-            log.debug( "transfer of {} : {}/{}",
-                       Arrays.asList( transferEvent.getResource().getName(), buffer.length, length ).toArray() );
+            log.debug( "transfer of {} : {}/{}", transferEvent.getResource().getName(), buffer.length, length );
         }
 
         public void transferCompleted( TransferEvent transferEvent )
@@ -276,9 +273,8 @@ public class DownloadRemoteIndexTask
 
         public void transferError( TransferEvent transferEvent )
         {
-            log.info( "error of transfer file {}: {}", Arrays.asList( transferEvent.getResource().getName(),
-                                                                      transferEvent.getException().getMessage() ).toArray(
-                new Object[2] ), transferEvent.getException() );
+            log.info( "error of transfer file {}: {}", transferEvent.getResource().getName(),
+                      transferEvent.getException().getMessage(), transferEvent.getException() );
         }
 
         public void debug( String message )

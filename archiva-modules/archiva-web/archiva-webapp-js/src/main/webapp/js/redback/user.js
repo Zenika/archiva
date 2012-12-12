@@ -16,8 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","knockout.simpleGrid"],
-function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
+define("redback.user",["jquery","utils","i18n","jquery.validate","knockout","knockout.simpleGrid","purl"],
+function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid,purl) {
 
   /**
    * object model for user with some function to create/update/delete users
@@ -34,9 +34,11 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
    * @param locked
    * @param passwordChangeRequired
    * @param ownerViewModel
+   * @param readOnly
+   * @param uuserManagerId
    */
   User=function(username, password, confirmPassword,fullName,email,permanent,validated,timestampAccountCreation,
-                timestampLastLogin,timestampLastPasswordChange,locked,passwordChangeRequired,ownerViewModel) {
+                timestampLastLogin,timestampLastPasswordChange,locked,passwordChangeRequired,ownerViewModel,readOnly,userManagerId) {
     var self=this;
     // Potentially Editable Field.
     this.username = ko.observable(username);
@@ -75,6 +77,10 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
     this.assignedRoles.subscribe(function(newValue){self.modified(true)});
 
     this.modified=ko.observable(false);
+
+    this.readOnly=readOnly;
+
+    this.userManagerId=userManagerId;
 
     this.rememberme=false;
 
@@ -482,7 +488,27 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
               displayErrorMessage("issue appended");
             }
             window.modalChangePasswordBox.modal('hide');
-          }
+            var curHash = getUrlHash();
+            var url = $.url(window.location);
+            var newLocation=url.attr("path");
+            var requestLang=url.param("request_lang");
+            if(requestLang){
+              newLocation+="?request_lang="+requestLang;
+            }
+            if(curHash){
+              newLocation+="#"+curHash;
+            }else{
+              newLocation+="#search";
+            }
+            window.location=newLocation;
+          },
+           statusCode: {
+             500: function(data){
+               $("#modal-password-change-err-message" ).empty();
+               displayRestError($.parseJSON(data.responseText),"modal-password-change-err-message");
+               $("#modal-password-change-err-message" ).show();
+             }
+           }
         });
 
       }
@@ -536,7 +562,7 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
   login=function(){
     $.log("user.js#login");
 
-    $("#modal-login-err-message").html("");
+    $("#modal-login-err-message").empty();
 
     var valid = $("#user-login-form").valid();
     if (!valid) {
@@ -627,13 +653,17 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
     $("#modal-password-change").focus();
   }
 
+  EditUserDetailViewModel=function(user){
+    this.user=user;
+  }
+
   /**
    * display modal box for updating current user details
    */
   editUserDetailsBox=function(){
     clearUserMessages();
     $("#modal-user-edit-err-message").hide();
-    $("#modal-user-edit-err-message").html("");
+    $("#modal-user-edit-err-message").empty();
     if (window.modalEditUserBox == null) {
       window.modalEditUserBox = $("#modal-user-edit").modal({backdrop:'static',show:false});
       window.modalEditUserBox.bind('hidden', function () {
@@ -658,9 +688,19 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
       });
     }
     var currentUser = getUserFromLoginCookie();
-    $("#modal-user-edit").find("#username").html(currentUser.username);
+    /*$("#modal-user-edit").find("#username").html(currentUser.username);
     $("#modal-user-edit").find("#fullname").val(currentUser.fullName);
-    $("#modal-user-edit").find("#email").val(currentUser.email);
+    $("#modal-user-edit").find("#email").val(currentUser.email);*/
+
+    $("#modal-user-edit-content" ).attr("data-bind",'template: {name:"modal-user-edit-tmpl"}');
+
+    var editUserDetailViewModel=new EditUserDetailViewModel(currentUser);
+    ko.applyBindings(editUserDetailViewModel,$("#modal-user-edit-content").get(0));
+
+    if(currentUser.readOnly){
+      $("#modal-user-edit-footer" ).hide();
+    }
+
     window.modalEditUserBox.modal('show');
     $("#user-edit-form").validate({
       rules: {
@@ -682,7 +722,7 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
    * @param user
    */
   editUserDetails=function(user){
-    $("#modal-user-edit-err-message").html("");
+    $("#modal-user-edit-err-message").empty();
     $.ajax("restServices/redbackServices/userService/updateMe", {
         data: ko.toJSON(user),
         contentType: 'application/json',
@@ -690,7 +730,6 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
         dataType: 'json',
         success: function(result) {
           var created = result;
-          // FIXME i18n
           if (created == true) {
             displaySuccessMessage( $.i18n.prop("user.details.updated"));
             window.modalEditUserBox.modal('hide');
@@ -776,7 +815,7 @@ function(jquery,utils,i18n,jqueryValidate,ko,koSimpleGrid) {
   mapUser=function(data) {
     return new User(data.username, data.password, null,data.fullName,data.email,data.permanent,data.validated,
                     data.timestampAccountCreation,data.timestampLastLogin,data.timestampLastPasswordChange,
-                    data.locked,data.passwordChangeRequired,self);
+                    data.locked,data.passwordChangeRequired,self,data.readOnly,data.userManagerId);
   }
 
 

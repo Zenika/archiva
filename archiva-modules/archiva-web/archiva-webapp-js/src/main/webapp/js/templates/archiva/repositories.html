@@ -86,15 +86,12 @@
         {{/each}}
         <th>Releases</th>
         <th>Snapshots</th>
-        <!--th title="${$.i18n.prop('managedrepository.scan.index')}">${$.i18n.prop('managedrepository.scan.grid.header')}</th-->
         <th>${$.i18n.prop('managedrepository.actions')}</th>
         <th>${$.i18n.prop('edit')}</th>
         <th>${$.i18n.prop('delete')}</th>
         <th>${$.i18n.prop('modified')}</th>
-        <!--th>${$.i18n.prop('description')}</th-->
         <th>${$.i18n.prop('managed.repository.rss.header')}</th>
         <th title="${$.i18n.prop('managedrepository.stats')}">${$.i18n.prop('managedrepository.stats.grid.header')}</th>
-        <!--th title="${$.i18n.prop('managedrepository.scan.directories')}">${$.i18n.prop('managedrepository.scan.directories.grid.header')}</th-->
       </tr>
   </thead>
   <tbody>
@@ -187,15 +184,6 @@
             <td>
                <a href="${row.feedsUrl}"><img src="images/atom.gif" alt="" title="${$.i18n.prop('managedrepository.feeds')} ${row.name()}"/></a>
             </td>
-            <!--td>
-                {{if row.description()}}
-                <a class="btn btn-warning btn-mini popover-doc" id="managedrepo-description-help"
-                   data-content="${row.description()}" data-title="${$.i18n.prop('description')}"
-                   data-placement="left">
-                    <i class="icon-question-sign icon-white"></i>
-                </a>
-                {{/if}}
-            </td-->
             <td id="managedrepository-stats-${row.id()}">
               <img src="images/utilities-system-monitor-22-22.png" data-original-title="${$.i18n.prop('managedrepository.stats')}"
                    data-bind="event: { mouseover: function(){ showStats(row) }, mouseout: function(){ hideStats(row) },}"
@@ -916,7 +904,7 @@
       <td>
           <a class="btn btn-info btn-mini" id="proxy-connectors-grid-remoterepo-settings-edit-${row.sourceRepoId()}-${row.targetRepoId()}"
                   data-original-title="${$.i18n.prop('proxy-connectors.grid.remoterepo.settings.popover.title')}"
-                  data-content="${buildSettings(row)}" data-bind="click: showSettings">
+                  data-content="${buildSettings(row)}" data-bind="click: showSettings" data-html="true">
               <i class="icon-question-sign icon-white"></i>
           </a>
 
@@ -961,13 +949,13 @@
 </script>
 
 <script id='proxy-connectors-remote-settings-popover-tmpl' type='text/html'>
-  <div>
+  <span>
     {{if proxyId}}
       ${$.i18n.prop('proxy-connectors.remoterepo.settings.networkproxy')}: ${proxyConnector.proxyId}
     {{else}}
       ${$.i18n.prop('proxy-connectors.remoterepo.settings.networkproxy')}: ${$.i18n.prop('none')}
     {{/if}}
-    <table class="table">
+    <table class="table table-bordered">
       <thead>
         <th colspan="2">${$.i18n.prop('proxy-connector.policies')}</th>
       </thead>
@@ -981,7 +969,7 @@
         {{/each}}
       </tbody>
     </table>
-  </div>
+  </span>
 </script>
 
 <script id="proxy-connector-edit-form-tmpl" type='text/html'>
@@ -1182,7 +1170,7 @@
                 <div class="span6 dotted">
                   <div id="repository-groups-edit-div" data-bind='template:{name:"repository-group-edit-tmpl"}'></div>
                   <div id="repository-groups-edit-order-div" style="min-height: 80px"
-                     data-bind="sortable: { template: 'repository-group-edit-order-tmpl',data:repositoryGroup.managedRepositories,afterMove:repositoryMoved}">
+                     data-bind="sortable: { template: 'repository-group-edit-order-tmpl-choosed',data:repositoryGroup.managedRepositories,afterMove:repositoryMoved}">
                   </div>
                 </div>
 
@@ -1190,7 +1178,7 @@
                   <h5>${$.i18n.prop('repository.groups.available.repositories')}</h5>
                   <br/>
                   <div id="repository-groups-edit-available-repositories" style="min-height: 80px"
-                       data-bind="sortable: { template: 'repository-group-edit-order-tmpl',data:availableRepositories,afterMove:repositoryMoved}">
+                       data-bind="sortable: { template: 'repository-group-edit-order-tmpl-available',data:availableRepositories,afterMove:repositoryMoved}">
 
                   </div>
                 </div>
@@ -1198,6 +1186,44 @@
               </div>
 
         </div>
+
+  </div>
+</script>
+
+<script id="repository-group-edit-order-tmpl-choosed" type="text/html">
+  <div class="well draggable-item">
+    <span class="pull-right">
+      <i class="icon-minus-sign cursor-hand" id="minus-${$data.id()}"/>
+    </span>
+    <blockquote>
+      ${$data.id()}
+      <br/>
+      ${$data.name()}
+      <br/>
+      <a href="${$data.url}" target="_blank">
+        ${$data.url}
+      </a>
+      <br/>
+    </blockquote>
+
+  </div>
+</script>
+
+<script id="repository-group-edit-order-tmpl-available" type="text/html">
+  <div class="well draggable-item">
+    <span class="pull-right">
+      <i class="icon-plus-sign cursor-hand" id="plus-${$data.id()}"/>
+    </span>
+    <blockquote>
+      ${$data.id()}
+      <br/>
+      ${$data.name()}
+      <br/>
+      <a href="${$data.url}" target="_blank">
+        ${$data.url}
+      </a>
+      <br/>
+    </blockquote>
 
   </div>
 </script>
@@ -1285,21 +1311,7 @@
   </div>
 </script>
 
-<script id="repository-group-edit-order-tmpl" type="text/html">
-  <div class="well draggable-item">
-    <blockquote>
-      ${$data.id()}
-      <br/>
-      ${$data.name()}
-      <br/>
-      <a href="${$data.url}" target="_blank">
-        ${$data.url}
-      </a>
-      <br/>
-    </blockquote>
 
-  </div>
-</script>
 
 <script id="repository-group-delete-warning-tmpl" type='text/html'>
     <div>
@@ -1359,15 +1371,15 @@
             <div class="span6 dotted">
               <div id="proxy-connectors-rules-edit-div" data-bind='template:{name:"proxy-connectors-rules-edit-tmpl"}'></div>
               <div id="proxy-connectors-rules-edit-order-div" style="min-height: 80px"
-                 data-bind="sortable: { template: 'proxy-connectors-rules-edit-proxy-connectors-tmpl',data:proxyConnectorRule.proxyConnectors,afterMove:proxyConnectorMoved}">
+                 data-bind="sortable: { template: 'proxy-connectors-rules-edit-proxy-connectors-tmpl-choosen',data:proxyConnectorRule.proxyConnectors,afterMove:proxyConnectorMoved}">
               </div>
             </div>
 
             <div class="span6 dotted">
               <h5>${$.i18n.prop('proxy-connector-rules.available.proxyConnectors')}</h5>
               <br/>
-              <div id="proxy-connectors-rules-available-repositories" style="min-height: 80px"
-                   data-bind="sortable: { template: 'proxy-connectors-rules-edit-proxy-connectors-tmpl',data:availableProxyConnectors,afterMove:proxyConnectorMoved}">
+              <div id="proxy-connectors-rules-available-proxy-connectors" style="min-height: 80px"
+                   data-bind="sortable: { template: 'proxy-connectors-rules-edit-proxy-connectors-tmpl-availables',data:availableProxyConnectors,afterMove:proxyConnectorMoved}">
 
               </div>
             </div>
@@ -1483,11 +1495,22 @@
     </div>
 </script>
 
-<script id="proxy-connectors-rules-edit-proxy-connectors-tmpl" type="text/html">
-    <div class="well draggable-item">
-      <blockquote>
-        ${$data.sourceRepoId()} <-> ${$data.targetRepoId()}
-      </blockquote>
+<script id="proxy-connectors-rules-edit-proxy-connectors-tmpl-choosen" type="text/html">
+  <div class="well draggable-item">
+    <i class="icon-minus-sign cursor-hand pull-right" data-source-repoId="${$data.sourceRepoId()}" data-target-repoId="${$data.targetRepoId()}"/>
+    <blockquote>
+      ${$data.sourceRepoId()} <-> ${$data.targetRepoId()}
+    </blockquote>
 
-    </div>
+  </div>
+</script>
+
+<script id="proxy-connectors-rules-edit-proxy-connectors-tmpl-availables" type="text/html">
+  <div class="well draggable-item">
+    <i class="icon-plus-sign cursor-hand pull-right" data-source-repoId="${$data.sourceRepoId()}" data-target-repoId="${$data.targetRepoId()}"/>
+    <blockquote>
+      ${$data.sourceRepoId()} <-> ${$data.targetRepoId()}
+    </blockquote>
+
+  </div>
 </script>

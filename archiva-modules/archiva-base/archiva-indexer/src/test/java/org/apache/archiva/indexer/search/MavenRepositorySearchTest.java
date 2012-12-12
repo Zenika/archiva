@@ -21,6 +21,8 @@ package org.apache.archiva.indexer.search;
 
 import org.apache.archiva.common.utils.FileUtil;
 import org.apache.archiva.indexer.util.SearchUtil;
+import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
+import org.codehaus.plexus.util.FileUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
@@ -29,14 +31,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
 
 
-@RunWith( ArchivaSpringJUnit4ClassRunner.class )
-@ContextConfiguration( locations = { "classpath*:/META-INF/spring-context.xml", "classpath:/spring-context.xml" } )
-public class NexusRepositorySearchTest
-    extends AbstractNexusRepositorySearch
+@RunWith ( ArchivaSpringJUnit4ClassRunner.class )
+@ContextConfiguration ( locations = { "classpath*:/META-INF/spring-context.xml", "classpath:/spring-context.xml" } )
+public class MavenRepositorySearchTest
+    extends AbstractMavenRepositorySearch
 {
 
 
@@ -851,5 +853,47 @@ public class NexusRepositorySearchTest
 
         assertNotNull( results );
         assertEquals( 0, results.getHits().size() );
+    }
+
+    @Test
+    public void nolimitedResult()
+        throws Exception
+    {
+
+        File repo = new File( "target/repo-release" );
+        File indexDirectory = new File( repo, ".index" );
+        FileUtils.copyDirectoryStructure( new File( "src/test/repo-release" ), repo );
+
+        createIndex( "repo-release", Collections.<File>emptyList(), false );
+
+        nexusIndexer.addIndexingContext( REPO_RELEASE, REPO_RELEASE, repo, indexDirectory,
+                                         repo.toURI().toURL().toExternalForm(),
+                                         indexDirectory.toURI().toURL().toString(), search.getAllIndexCreators() );
+
+        SearchResultLimits limits = new SearchResultLimits( 0 );
+        limits.setPageSize( 300 );
+
+        archivaConfigControl.expectAndReturn( archivaConfig.getConfiguration(), config, 1, 5 );
+
+        archivaConfigControl.replay();
+
+        SearchResults searchResults = search.search( null, Arrays.asList( REPO_RELEASE ), "org.example", limits,
+                                                     Collections.<String>emptyList() );
+
+        log.info( "results: {}", searchResults.getHits().size() );
+
+        assertEquals( 255, searchResults.getHits().size() );
+
+        SearchFields searchFields = new SearchFields();
+        searchFields.setGroupId( "org.example" );
+        searchFields.setRepositories( Arrays.asList( REPO_RELEASE ) );
+
+        searchResults = search.search( null, searchFields, limits );
+
+        log.info( "results: {}", searchResults.getHits().size() );
+
+        assertEquals( 255, searchResults.getHits().size() );
+
+        archivaConfigControl.verify();
     }
 }

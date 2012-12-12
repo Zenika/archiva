@@ -54,17 +54,20 @@ import org.apache.archiva.test.utils.ArchivaSpringJUnit4ClassRunner;
  */
 @RunWith( ArchivaSpringJUnit4ClassRunner.class )
 @ContextConfiguration( locations = { "classpath*:/META-INF/spring-context.xml", "classpath:/spring-context.xml" } )
-public abstract class AbstractNexusRepositorySearch
+public abstract class AbstractMavenRepositorySearch
     extends TestCase
 {
 
     protected Logger log = LoggerFactory.getLogger( getClass() );
 
-    public static String TEST_REPO_1 = "nexus-search-test-repo";
+    public static String TEST_REPO_1 = "maven-search-test-repo";
 
-    public static String TEST_REPO_2 = "nexus-search-test-repo-2";
+    public static String TEST_REPO_2 = "maven-search-test-repo-2";
 
-    NexusRepositorySearch search;
+
+    public static String REPO_RELEASE = "repo-release";
+
+    MavenRepositorySearch search;
 
     ArchivaConfiguration archivaConfig;
 
@@ -104,7 +107,7 @@ public abstract class AbstractNexusRepositorySearch
         DefaultProxyConnectorAdmin defaultProxyConnectorAdmin = new DefaultProxyConnectorAdmin();
         defaultProxyConnectorAdmin.setArchivaConfiguration( archivaConfig );
 
-        search = new NexusRepositorySearch( plexusSisuBridge, defaultManagedRepositoryAdmin, mavenIndexerUtils,
+        search = new MavenRepositorySearch( plexusSisuBridge, defaultManagedRepositoryAdmin, mavenIndexerUtils,
                                             defaultProxyConnectorAdmin );
 
         nexusIndexer = plexusSisuBridge.lookup( NexusIndexer.class );
@@ -114,13 +117,13 @@ public abstract class AbstractNexusRepositorySearch
         config = new Configuration();
         config.addManagedRepository( createRepositoryConfig( TEST_REPO_1 ) );
         config.addManagedRepository( createRepositoryConfig( TEST_REPO_2 ) );
+        config.addManagedRepository( createRepositoryConfig( REPO_RELEASE ) );
     }
 
     @After
     public void tearDown()
         throws Exception
     {
-
         for ( IndexingContext indexingContext : nexusIndexer.getIndexingContexts().values() )
         {
             nexusIndexer.removeIndexingContext( indexingContext, true );
@@ -211,9 +214,6 @@ public abstract class AbstractNexusRepositorySearch
         }
         // force flushing
         context.getIndexWriter().commit();
-        //context.getIndexWriter().close( true );
-        // wait for io flush ....
-        //Thread.sleep( 2000 );
         context.setSearchable( true );
 
     }

@@ -22,7 +22,7 @@
   <id>configuration</id>
   <name>Configuration</name>
   <description>
-    Configuration for the Maven Repository Manager.
+    Configuration format for Archiva (Maven Repository Manager).
   </description>
   <defaults>
     <default>
@@ -167,6 +167,15 @@
           <description>
             The NetworkConfiguration .
           </description>
+        </field>
+        <field>
+          <name>redbackRuntimeConfiguration</name>
+          <version>1.4.0+</version>
+          <association>
+            <type>RedbackRuntimeConfiguration</type>
+            <multiplicity>1</multiplicity>
+          </association>
+          <description>The RedbackRuntimeConfiguration.</description>
         </field>
         <field>
           <name>proxyConnectorRuleConfigurations</name>
@@ -1447,6 +1456,125 @@
       </fields>
     </class>
 
+    <class>
+      <name>RedbackRuntimeConfiguration</name>
+      <version>1.4.0+</version>
+      <description>
+        The runtime configuration.
+      </description>
+      <fields>
+        <field>
+          <name>migratedFromRedbackConfiguration</name>
+          <description>flag to know if redback configuration has been checked/migrated.</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+          <defaultValue>false</defaultValue>
+        </field>
+        <field>
+          <name>userManagerImpls</name>
+          <description>The user manager impls to use.</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>String</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+        <field>
+          <name>ldapConfiguration</name>
+          <description>the ldap configuration</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>LdapConfiguration</type>
+          </association>
+        </field>
+        <field>
+          <name>configurationProperties</name>
+          <description>extra properties for redback configuration. String/String</description>
+          <version>1.4.0+</version>
+          <type>Map</type>
+          <association xml.mapStyle="inline">
+            <type>String</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+      </fields>
+    </class>
+
+    <class>
+      <name>LdapConfiguration</name>
+      <version>1.4.0+</version>
+      <description>
+        The LDAP configuration.
+      </description>
+      <fields>
+        <field>
+          <name>hostName</name>
+          <description>The LDAP host.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>port</name>
+          <description>The LDAP port.</description>
+          <version>1.4.0+</version>
+          <type>int</type>
+        </field>
+        <field>
+          <name>ssl</name>
+          <description>ssl LDAP connection.</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+        </field>
+        <field>
+          <name>baseDn</name>
+          <description>The LDAP base dn.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>contextFactory</name>
+          <description>contextFactory to use.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>bindDn</name>
+          <description>The LDAP bind dn.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>password</name>
+          <description>The LDAP password.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>authenticationMethod</name>
+          <description>The LDAP authenticationMethod.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>bindAuthenticatorEnabled</name>
+          <description>The LDAP authenticator enabled.</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+        </field>
+        <field>
+          <name>extraProperties</name>
+          <version>1.4.0+</version>
+          <type>Map</type>
+          <description>Additionnal properties to use for ldap connection.</description>
+          <association xml.mapStyle="inline">
+            <type>String</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+      </fields>
+    </class>
+
+
     <!--
         _____ _    _ _____  ______
        / ____| |  | |  __ \|  ____|
@@ -1537,6 +1665,8 @@
         </field>
       </fields>
     </class>
+
+
   </classes>
 </model>
 

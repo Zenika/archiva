@@ -21,17 +21,16 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:task="http://www.springframework.org/schema/task"
-       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
            http://www.springframework.org/schema/context
            http://www.springframework.org/schema/context/spring-context-3.0.xsd
            http://www.springframework.org/schema/task
-           http://www.springframework.org/schema/task/spring-task-3.0.xsd
-           http://www.springframework.org/schema/util
-           http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+           http://www.springframework.org/schema/task/spring-task-3.0.xsd">
 
   <context:property-placeholder location="classpath:application.properties"/>
+
+  <alias name="userConfiguration#archiva" alias="userConfiguration#default" />
 
   <bean id="loggerManager" class="org.codehaus.plexus.logging.slf4j.Slf4jLoggerManager"
         init-method="initialize"/>
@@ -138,7 +137,10 @@
     </property>
   </bean>
   
+  <alias name="userManager#archiva" alias="userManager#configurable"/>
 
+  <alias name="ldapConnectionFactory#archiva" alias="ldapConnectionFactory"/>
+  <alias name="ldapConnectionFactory#archiva" alias="ldapConnectionFactory#configurable"/>
     
     <!-- <component>
       <role>org.apache.archiva.webdav.util.MimeTypes</role>
@@ -149,40 +151,13 @@
       </configuration>
     </component> -->
 
-
-    <!--
-    olamy TODO check if necessary !!
-   PLXREDBACK-81 bad role hint, redefining here until redback alpha-2 is released.
-
-    <component>
-      <role>org.apache.archiva.redback.system.check.EnvironmentCheck</role>
-      <role-hint>locked-admin-check</role-hint>
-      <implementation>org.apache.archiva.redback.integration.checks.security.LockedAdminEnvironmentCheck</implementation>
-      <description>LockedAdminEnvironmentCheck: checks if accounts marked as system administrator are locked
-        and unlocks them on startup.
-      </description>
-      <requirements>
-        <requirement>
-          <role>org.apache.archiva.redback.users.UserManager</role>
-          <role-hint>cached</role-hint>
-          <field-name>userManager</field-name>
-        </requirement>
-        <requirement>
-          <role>org.apache.archiva.redback.rbac.RBACManager</role>
-          <role-hint>cached</role-hint>
-          <field-name>rbacManager</field-name>
-        </requirement>
-      </requirements>
-    </component>
-    -->
-
   <!-- TODO move to spring sample and test it -->
     <!-- START SNIPPET: ldap -->
     <!-- 
        Ldap Authentication can be enabled by setting enabling these components and setting the following configuration options in your security.properties file
 
        ============================================================
-       user.manager.impl=ldap
+
        ldap.bind.authenticator.enabled=true
        redback.default.admin=admin
        security.policy.password.expiration.enabled=false
@@ -205,19 +180,13 @@
 
        until this process is better documented, the following is the document for configuration ldap with redback
       
-       http://redback.codehaus.org/integration/ldap.html
+       http://archiva.apache.org/redback/integration/ldap.html
     -->
 
     <!--
     
     this component manages the connection to the ldap server
      -->
-
-    <!--
-    <bean name="ldapConnectionFactory" class="org.apache.archiva.redback.common.ldap.connection.ConfigurableLdapConnectionFactory">
-      <property name="userConf" ref="userConfiguration"/>
-    </bean>
-    -->
 
     
     <!-- 

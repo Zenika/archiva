@@ -19,22 +19,22 @@ package org.apache.archiva.web.rss;
  * under the License.
  */
 
-import org.apache.archiva.redback.keys.KeyManager;
-import org.apache.archiva.redback.policy.AccountLockedException;
-import org.apache.archiva.redback.policy.UserSecurityPolicy;
-import org.apache.archiva.redback.users.User;
-import org.apache.archiva.redback.users.UserManager;
-import org.apache.archiva.redback.users.UserManagerListener;
-import org.apache.archiva.redback.users.UserNotFoundException;
-import org.apache.archiva.redback.users.UserQuery;
 import org.apache.archiva.redback.authentication.AuthenticationDataSource;
 import org.apache.archiva.redback.authentication.AuthenticationException;
 import org.apache.archiva.redback.authentication.AuthenticationResult;
 import org.apache.archiva.redback.authorization.AuthorizationException;
 import org.apache.archiva.redback.authorization.AuthorizationResult;
+import org.apache.archiva.redback.keys.KeyManager;
+import org.apache.archiva.redback.policy.AccountLockedException;
+import org.apache.archiva.redback.policy.UserSecurityPolicy;
 import org.apache.archiva.redback.system.DefaultSecuritySession;
 import org.apache.archiva.redback.system.SecuritySession;
 import org.apache.archiva.redback.system.SecuritySystem;
+import org.apache.archiva.redback.users.User;
+import org.apache.archiva.redback.users.UserManager;
+import org.apache.archiva.redback.users.UserManagerListener;
+import org.apache.archiva.redback.users.UserNotFoundException;
+import org.apache.archiva.redback.users.UserQuery;
 import org.apache.archiva.redback.users.jdo.JdoUser;
 
 import java.util.ArrayList;
@@ -45,8 +45,6 @@ import java.util.Map;
 
 /**
  * SecuritySystem stub used for testing.
- *
- *
  */
 public class SecuritySystemStub
     implements SecuritySystem
@@ -88,13 +86,13 @@ public class SecuritySystemStub
         return session;
     }
 
-    public AuthorizationResult authorize( SecuritySession arg0, Object arg1 )
+    public AuthorizationResult authorize( SecuritySession arg0, String arg1 )
         throws AuthorizationException
     {
         return null;
     }
 
-    public AuthorizationResult authorize( SecuritySession arg0, Object arg1, Object arg2 )
+    public AuthorizationResult authorize( SecuritySession arg0, String arg1, String arg2 )
         throws AuthorizationException
     {
         AuthorizationResult result = new AuthorizationResult( true, arg1, null );
@@ -131,53 +129,65 @@ public class SecuritySystemStub
     {
         return new UserManager()
         {
+
+            public String getDescriptionKey()
+            {
+                return "French wine is better than Australian wine !";
+            }
+
+            public boolean isFinalImplementation()
+            {
+                return false;
+            }
+
+            public void initialize()
+            {
+                // no op
+            }
+
             public boolean isReadOnly()
             {
-                return false;  //To change body of implemented methods use File | Settings | File Templates.
+                return false;
             }
 
             public String getId()
             {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return null;
             }
 
             public void addUserManagerListener( UserManagerListener listener )
             {
-                //To change body of implemented methods use File | Settings | File Templates.
+                // no op
             }
 
             public void removeUserManagerListener( UserManagerListener listener )
             {
-                //To change body of implemented methods use File | Settings | File Templates.
+                // no op
             }
 
             public User createUser( String username, String fullName, String emailAddress )
             {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return null;
             }
 
             public User createGuestUser()
             {
                 return new User()
                 {
-                    public Object getPrincipal()
+
+                    public String getUsername()
                     {
                         return "guest";
                     }
 
-                    public String getUsername()
-                    {
-                        return null;  //To change body of implemented methods use File | Settings | File Templates.
-                    }
-
                     public void setUsername( String name )
                     {
-                        //To change body of implemented methods use File | Settings | File Templates.
+
                     }
 
                     public String getFullName()
                     {
-                        return null;  //To change body of implemented methods use File | Settings | File Templates.
+                        return null;
                     }
 
                     public void setFullName( String name )
@@ -308,6 +318,11 @@ public class SecuritySystemStub
                     public void setLastLoginDate( Date date )
                     {
                         //To change body of implemented methods use File | Settings | File Templates.
+                    }
+
+                    public String getUserManagerId()
+                    {
+                        return "mock";
                     }
                 };
             }
@@ -349,19 +364,15 @@ public class SecuritySystemStub
             {
                 return new User()
                 {
-                    public Object getPrincipal()
+
+                    public String getUsername()
                     {
                         return "guest";
                     }
 
-                    public String getUsername()
-                    {
-                        return null;  //To change body of implemented methods use File | Settings | File Templates.
-                    }
-
                     public void setUsername( String name )
                     {
-                        //To change body of implemented methods use File | Settings | File Templates.
+
                     }
 
                     public String getFullName()
@@ -498,6 +509,11 @@ public class SecuritySystemStub
                     {
                         //To change body of implemented methods use File | Settings | File Templates.
                     }
+
+                    public String getUserManagerId()
+                    {
+                        return "mock";
+                    }
                 };
             }
 
@@ -521,21 +537,9 @@ public class SecuritySystemStub
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
 
-            public User findUser( Object principal )
-                throws UserNotFoundException
-            {
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public boolean userExists( Object principal )
+            public boolean userExists( String principal )
             {
                 return false;  //To change body of implemented methods use File | Settings | File Templates.
-            }
-
-            public void deleteUser( Object principal )
-                throws UserNotFoundException
-            {
-                //To change body of implemented methods use File | Settings | File Templates.
             }
 
             public void deleteUser( String username )
@@ -568,13 +572,13 @@ public class SecuritySystemStub
         return false;
     }
 
-    public boolean isAuthorized( SecuritySession arg0, Object arg1 )
+    public boolean isAuthorized( SecuritySession arg0, String arg1 )
         throws AuthorizationException
     {
         return false;
     }
 
-    public boolean isAuthorized( SecuritySession arg0, Object arg1, Object arg2 )
+    public boolean isAuthorized( SecuritySession arg0, String arg1, String arg2 )
         throws AuthorizationException
     {
         if ( repoIds.contains( arg2 ) )
@@ -585,4 +589,8 @@ public class SecuritySystemStub
         return false;
     }
 
+    public boolean userManagerReadOnly()
+    {
+        return true;
+    }
 }

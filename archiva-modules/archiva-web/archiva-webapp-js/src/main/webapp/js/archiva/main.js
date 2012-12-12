@@ -55,7 +55,8 @@ function(jquery,ui,sammy,tmpl,i18n,jqueryCookie,bootstrap,archivaSearch,jqueryVa
     // cleanup karmas
     window.redbackModel.operatioNames=[];
     hideElementWithKarma();
-    $("#main-content").html("");
+    $("#main-content").empty();
+    $("#user-messages" ).empty();
     $.ajax({
       url: 'restServices/redbackServices/loginService/logout',
       complete: function(){
@@ -205,7 +206,8 @@ function(jquery,ui,sammy,tmpl,i18n,jqueryCookie,bootstrap,archivaSearch,jqueryVa
       this.usersMenuItems = ko.observableArray([
         {  text : $.i18n.prop('menu.users') , id: null},
         {  text : $.i18n.prop('menu.users.manage')    , id: "menu-users-list-a", href: "#users" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayUsersGrid()}},
-        {  text : $.i18n.prop('menu.users.roles')     , id: "menu-roles-list-a", href: "#roles" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayRolesGrid()}}
+        {  text : $.i18n.prop('menu.users.roles')     , id: "menu-roles-list-a", href: "#roles" , redback: "{permissions: ['archiva-manage-users']}", func: function(){displayRolesGrid()}},
+        {  text : $.i18n.prop('menu.runtime-configuration')    , id: "menu-runtime-configuration-list-a"  , href: "#runtimeconfig"    , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRuntimeConfiguration()}}
       ]);
 
       this.docsMenuItems = ko.observableArray([
@@ -681,6 +683,14 @@ function(jquery,ui,sammy,tmpl,i18n,jqueryCookie,bootstrap,archivaSearch,jqueryVa
           $.log("edit managed repository:"+repositoryId);
           displayRepositoriesGrid(function(managedRepositoriesViewModel){managedRepositoriesViewModel.editManagedRepositoryWithId(repositoryId)});
         });
+
+        this.get("#repositorygroupedit/:groupId",function(){
+          var groupId=this.params.groupId;
+          $.log("edit repository group:"+groupId);
+          displayRepositoryGroups(function(repositoryGroupsViewModel){repositoryGroupsViewModel.editRepositoryGroupWithId(groupId)});
+
+        });
+
 
       });
   };

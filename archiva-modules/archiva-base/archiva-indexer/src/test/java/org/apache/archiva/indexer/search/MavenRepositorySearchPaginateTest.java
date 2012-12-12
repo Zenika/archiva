@@ -30,14 +30,14 @@ import org.apache.archiva.test.utils.ArchivaBlockJUnit4ClassRunner;
  * @author Olivier Lamy
  */
 @RunWith( ArchivaBlockJUnit4ClassRunner.class )
-public class NexusRepositorySearchPaginateTest
+public class MavenRepositorySearchPaginateTest
     extends TestCase
 {
     @Test
     public void nonPaginatedResult()
         throws Exception
     {
-        NexusRepositorySearch search = new NexusRepositorySearch();
+        MavenRepositorySearch search = new MavenRepositorySearch();
 
         SearchResults searchResults = build( 10, new SearchResultLimits( 0 ) );
 
@@ -51,7 +51,7 @@ public class NexusRepositorySearchPaginateTest
     public void nonPaginatedHugeResult()
         throws Exception
     {
-        NexusRepositorySearch search = new NexusRepositorySearch();
+        MavenRepositorySearch search = new MavenRepositorySearch();
 
         SearchResults origSearchResults = build( 63, new SearchResultLimits( 0 ) );
 
@@ -71,7 +71,7 @@ public class NexusRepositorySearchPaginateTest
     public void paginatedResult()
         throws Exception
     {
-        NexusRepositorySearch search = new NexusRepositorySearch();
+        MavenRepositorySearch search = new MavenRepositorySearch();
 
         SearchResults searchResults = build( 32, new SearchResultLimits( 1 ) );
 

@@ -521,9 +521,10 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     this.networkConfiguration=ko.observable(networkConfiguration);
 
     save=function(){
-      $("#user-messages" ).html(mediumSpinnerImg());
+      var userMessages=$("#user-messages");
+      userMessages.html(mediumSpinnerImg());
       var mainContent=$("#main-content");
-      if (!$("#main-content" ).find("#network-configuration-edit-form").valid()){
+      if (!mainContent.find("#network-configuration-edit-form").valid()){
         return;
       }
       mainContent.find("#network-configuration-btn-save" ).button('loading');
@@ -536,7 +537,7 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
           displaySuccessMessage( $.i18n.prop("network-configuration.updated"));
         },
         complete: function(){
-          removeMediumSpinnerImg("#user-messages");
+          removeMediumSpinnerImg(userMessages);
           mainContent.find("#network-configuration-btn-save" ).button('reset');
         }
       });
@@ -605,7 +606,8 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     var self=this;
     save=function(){
       var mainContent=$("#main-content" );
-      $("#user-messages").html( mediumSpinnerImg());
+      var userMessages=$("#user-messages");
+      userMessages.html( mediumSpinnerImg());
       mainContent.find("#ui-configuration-btn-save" ).button('loading');
       $.ajax("restServices/archivaServices/archivaAdministrationService/setUiConfiguration", {
         type: "POST",
@@ -616,7 +618,7 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
           displaySuccessMessage( $.i18n.prop("ui-configuration.updated"));
         },
         complete: function(){
-          removeMediumSpinnerImg("#user-messages");
+          removeMediumSpinnerImg(userMessages);
           mainContent.find("#ui-configuration-btn-save" ).button('reset');
         }
       });
@@ -856,7 +858,8 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
           return;
       }
       clearUserMessages();
-      $("#user-messages" ).html(mediumSpinnerImg());
+      var userMessages=$("#user-messages");
+      userMessages.html(mediumSpinnerImg());
       mainContent.find("#appearance-configuration-btn-save" ).button('loading');
       $.ajax("restServices/archivaServices/archivaAdministrationService/setOrganisationInformation", {
         type: "POST",
@@ -871,7 +874,7 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
           displayErrorMessage($.i18n.prop('appearance-configuration.updating-error'));
         },
         complete: function(){
-          removeMediumSpinnerImg("#user-messages");
+          removeMediumSpinnerImg(userMessages);
           mainContent.find("#appearance-configuration-btn-save" ).button('reset');
         }
       });
@@ -1144,7 +1147,210 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         ko.applyBindings( statisticsReportViewModel, mainContent.get( 0 ) );
         ko.applyBindings( healthReportViewModel, mainContent.get( 0 ) );
       }
-    })
+    });
   }
+
+
+  ArchivaRuntimeConfiguration=function(userManagerImpls,ldapConfiguration,migratedFromRedbackConfiguration,configurationPropertiesEntries){
+    this.userManagerImpls=ko.observableArray(userManagerImpls);
+    this.ldapConfiguration=ko.observable(ldapConfiguration);
+    this.migratedFromRedbackConfiguration=ko.observable(migratedFromRedbackConfiguration);
+    this.configurationPropertiesEntries=ko.observableArray(configurationPropertiesEntries?configurationPropertiesEntries:[]);
+  }
+
+  mapArchivaRuntimeConfiguration=function(data){
+
+    var configurationPropertiesEntries = data.configurationPropertiesEntries == null ? []: $.each(data.configurationPropertiesEntries,function(item){
+      return new Entry(item.key, item.value);
+    });
+    if (!$.isArray(configurationPropertiesEntries)){
+        configurationPropertiesEntries=[];
+    }
+
+    return new ArchivaRuntimeConfiguration(data.userManagerImpls,mapLdapConfiguration(data.ldapConfiguration),data.migratedFromRedbackConfiguration,
+                                           configurationPropertiesEntries);
+  }
+
+  LdapConfiguration=function(hostName,port,ssl,baseDn,contextFactory,bindDn,password,authenticationMethod,
+                             extraPropertiesEntries){
+    //private String hostName;
+    this.hostName=ko.observable(hostName);
+
+    //private String port;
+    this.port=ko.observable(port);
+
+    //private boolean ssl = false;
+    this.ssl=ko.observable(ssl);
+
+    //private String baseDn;
+    this.baseDn=ko.observable(baseDn);
+
+    //private String contextFactory;
+    this.contextFactory=ko.observable(contextFactory);
+
+    //private String bindDn;
+    this.bindDn=ko.observable(bindDn);
+
+    //private String password;
+    this.password=ko.observable(password);
+
+    //private String authenticationMethod;
+    this.authenticationMethod=ko.observable(authenticationMethod);
+
+    this.extraPropertiesEntries=ko.observableArray(extraPropertiesEntries);
+  }
+
+  mapLdapConfiguration=function(data){
+      if(data){
+        var extraPropertiesEntries = data.extraPropertiesEntries == null ? []: $.each(data.extraPropertiesEntries,function(item){
+            return new Entry(item.key, item.value);
+        });
+        if (!$.isArray(extraPropertiesEntries)){
+            extraPropertiesEntries=[];
+        }
+        return new LdapConfiguration(data.hostName,data.port,data.ssl,data.baseDn,data.contextFactory,data.bindDn,data.password,
+                                    data.authenticationMethod,extraPropertiesEntries);
+      }
+      return null;
+  }
+
+  ArchivaRuntimeConfigurationViewModel=function(archivaRuntimeConfiguration,userManagerImplementationInformations){
+    var self=this;
+    this.archivaRuntimeConfiguration=ko.observable(archivaRuntimeConfiguration);
+    this.userManagerImplementationInformations=ko.observable(userManagerImplementationInformations);
+
+    this.usedUserManagerImpls=ko.observableArray([]);
+
+    findUserManagerImplementationInformation=function(id){
+      for(var i= 0;i<self.userManagerImplementationInformations().length;i++){
+        $.log(id+""+self.userManagerImplementationInformations()[i].beanId);
+        if(id==self.userManagerImplementationInformations()[i].beanId){
+          return self.userManagerImplementationInformations()[i];
+        }
+      }
+    }
+
+    for(var i= 0;i<archivaRuntimeConfiguration.userManagerImpls().length;i++){
+      var id=archivaRuntimeConfiguration.userManagerImpls()[i];
+      $.log("id:"+id);
+      var userManagerImplementationInformation=findUserManagerImplementationInformation(id);
+
+      if(userManagerImplementationInformation!=null){
+        this.usedUserManagerImpls.push(userManagerImplementationInformation);
+      }
+    }
+
+    isUsedUserManagerImpl=function(userManagerImplementationInformation){
+      for(var i=0;i<self.usedUserManagerImpls().length;i++){
+        if(self.usedUserManagerImpls()[i].beanId==userManagerImplementationInformation.beanId){
+          return true;
+        }
+      }
+      return false;
+    }
+
+    this.availableUserManagerImpls=ko.observableArray([]);
+
+    for(var i=0;i<self.userManagerImplementationInformations().length;i++){
+      if(!isUsedUserManagerImpl(self.userManagerImplementationInformations()[i])){
+        self.availableUserManagerImpls.push(self.userManagerImplementationInformations()[i]);
+      }
+
+    }
+
+    userManagerImplMoved=function(arg){
+      $.log("userManagerImplMoved:"+arg.sourceIndex+" to " + arg.targetIndex);
+      //self.usedUserManagerImpls().push(self.availableUserManagerImpls()[arg.sourceIndex]);
+    }
+
+    saveArchivaRuntimeConfiguration=function(){
+      $.log("saveArchivaRuntimeConfiguration");
+      $("#archiva-runtime-configuration-save" ).button('loading');
+      clearUserMessages();
+      var userMessages=$("#user-messages");
+      userMessages.html(mediumSpinnerImg());
+      $("#repository-group-save" ).button('loading');
+      self.archivaRuntimeConfiguration().userManagerImpls=ko.observableArray([]);
+      $.log("length:"+self.usedUserManagerImpls().length);
+      for(var i=0;i<self.usedUserManagerImpls().length;i++){
+        var beanId=self.usedUserManagerImpls()[i].beanId;
+        $.log("beanId:"+beanId);
+        self.archivaRuntimeConfiguration().userManagerImpls.push(beanId);
+      }
+      $.log("length:"+self.archivaRuntimeConfiguration().userManagerImpls().length);
+      $.log("json:"+ko.toJSON(self.archivaRuntimeConfiguration));
+      $.ajax("restServices/archivaServices/archivaRuntimeConfigurationService/archivaRuntimeConfiguration",
+        {
+          type: "PUT",
+          contentType: 'application/json',
+          data:ko.toJSON(self.archivaRuntimeConfiguration),
+          dataType: 'json',
+          success: function(data) {
+            var message=$.i18n.prop('archiva-runtime-configuration.updated');//,self.archivaRuntimeConfiguration().userManagerImpl());
+            displaySuccessMessage(message);
+          },
+          error: function(data) {
+            var res = $.parseJSON(data.responseText);
+            displayRestError(res);
+          },
+          complete:function(data){
+            removeMediumSpinnerImg(userMessages);
+            $("#archiva-runtime-configuration-save" ).button('reset');
+          }
+        }
+      );
+
+    }
+  }
+
+  UserManagerImplementationInformation=function(beanId,descriptionKey,readOnly){
+    this.beanId=beanId;
+    this.descriptionKey=descriptionKey;
+    this.description= $.i18n.prop(descriptionKey);
+    this.readOnly=readOnly;
+  }
+
+  mapUserManagerImplementationInformations=function(data){
+    return $.map(data, function(item) {
+      return mapUserManagerImplementationInformation(item);
+    });
+  }
+
+  mapUserManagerImplementationInformation=function(data){
+    if(data==null){
+      return null;
+    }
+    return new UserManagerImplementationInformation(data.beanId,data.descriptionKey,data.readOnly);
+  }
+
+  displayRuntimeConfiguration=function(){
+    $.log("displayRuntimeConfiguration");
+    var mainContent = $("#main-content");
+    mainContent.html(mediumSpinnerImg());
+
+    $.ajax("restServices/archivaServices/archivaRuntimeConfigurationService/userManagerImplementationInformation", {
+      type: "GET",
+      dataType: 'json',
+      success: function(data) {
+      var userManagerImplementationInformations=mapUserManagerImplementationInformations(data);
+      $.ajax("restServices/archivaServices/archivaRuntimeConfigurationService/archivaRuntimeConfiguration", {
+        type: "GET",
+        dataType: 'json',
+        success: function(data) {
+          var archivaRuntimeConfiguration = mapArchivaRuntimeConfiguration(data);
+          var archivaRuntimeConfigurationViewModel =
+              new ArchivaRuntimeConfigurationViewModel(archivaRuntimeConfiguration,userManagerImplementationInformations);
+          mainContent.html( $( "#runtime-configuration-main" ).tmpl() );
+          ko.applyBindings(archivaRuntimeConfigurationViewModel,$("#runtime-configuration-content" ).get(0));
+          activatePopoverDoc();
+        }
+      });
+
+      }
+    });
+
+  }
+
+
 
 });

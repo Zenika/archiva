@@ -73,6 +73,7 @@
       <ref bean="reportRepositoriesService#rest" />
       <ref bean="mergeRepositoriesService#rest"/>
       <ref bean="proxyConnectorRuleService#rest"/>
+      <ref bean="archivaRuntimeConfigurationService#rest"/>
     </jaxrs:serviceBeans>
 
     <jaxrs:outInterceptors>

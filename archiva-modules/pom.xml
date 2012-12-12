@@ -30,9 +30,9 @@
   <url>http://archiva.apache.org/ref/${project.version}</url>
 
   <properties>
-    <siteFilePath>${user.home}/archiva-ref-${project.version}/</siteFilePath>
+    <siteFilePath>${user.home}/archiva-sites/archiva-ref-${project.version}/</siteFilePath>
     <siteUrlDeployment>file://${siteFilePath}</siteUrlDeployment>
-    <scmPubCheckoutDirectory>${user.home}/archiva-ref-${project.version}-content</scmPubCheckoutDirectory>
+    <scmPubCheckoutDirectory>${user.home}/archiva-sites/archiva-ref-${project.version}-content</scmPubCheckoutDirectory>
   </properties>
 
   <modules>
@@ -80,10 +80,14 @@
         <configuration>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <configLocation>config/maven_checks.xml</configLocation>
-          <reportSets>
-            <report>checkstyle</report>
-          </reportSets>
         </configuration>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>checkstyle-aggregate</report>
+            </reports>
+          </reportSet>
+        </reportSets>
       </plugin>
       <plugin>
         <!-- No need for the standard project reports -->
@@ -98,6 +102,7 @@
         <version>${javadocPluginVersion}</version>
         <inherited>false</inherited>
         <configuration>
+          <notimestamp>true</notimestamp>
           <source>1.5</source>
           <links>
             <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
