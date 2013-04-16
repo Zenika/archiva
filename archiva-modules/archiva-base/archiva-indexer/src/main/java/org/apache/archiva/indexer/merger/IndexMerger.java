@@ -32,15 +32,14 @@ public interface IndexMerger
     /**
      * system property which contains the value in s for ttl of temporary index groups
      */
-    static final String TMP_GROUP_INDEX_SYS_KEY = "archiva.tmp.group.index.ttl";
+    String TMP_GROUP_INDEX_SYS_KEY = "archiva.tmp.group.index.ttl";
 
     /**
-     * @param repositoriesIds repositories Ids to merge content
-     * @param packIndex       will generate a downloadable index
+     * @param indexMergerRequest
      * @return a temporary directory with a merge index (directory marked deleteOnExit)
      * @throws IndexMergerException
      */
-    IndexingContext buildMergedIndex( Collection<String> repositoriesIds, boolean packIndex )
+    IndexingContext buildMergedIndex( IndexMergerRequest indexMergerRequest )
         throws IndexMergerException;
 
     void cleanTemporaryGroupIndex( TemporaryGroupIndex temporaryGroupIndex );
@@ -50,6 +49,6 @@ public interface IndexMerger
     /**
      * @return ttl of temporay group index
      */
-    int getDefaultGroupIndexTtl();
+    int getGroupMergedIndexTtl();
 
 }

@@ -74,6 +74,7 @@
       <ref bean="mergeRepositoriesService#rest"/>
       <ref bean="proxyConnectorRuleService#rest"/>
       <ref bean="archivaRuntimeConfigurationService#rest"/>
+      <ref bean="redbackRuntimeConfigurationService#rest"/>
     </jaxrs:serviceBeans>
 
     <jaxrs:outInterceptors>

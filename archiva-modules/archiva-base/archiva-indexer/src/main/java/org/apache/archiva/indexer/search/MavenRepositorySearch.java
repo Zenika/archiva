@@ -39,7 +39,6 @@ import org.apache.maven.index.NexusIndexer;
 import org.apache.maven.index.OSGI;
 import org.apache.maven.index.context.IndexCreator;
 import org.apache.maven.index.context.IndexingContext;
-import org.apache.maven.index.context.UnsupportedExistingLuceneIndexException;
 import org.apache.maven.index.expr.SourcedSearchExpression;
 import org.apache.maven.index.expr.UserInputSearchExpression;
 import org.slf4j.Logger;
@@ -47,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,7 +58,7 @@ import java.util.Set;
 /**
  * RepositorySearch implementation which uses the Maven Indexer for searching.
  */
-@Service ("repositorySearch#maven")
+@Service("repositorySearch#maven")
 public class MavenRepositorySearch
     implements RepositorySearch
 {
@@ -338,37 +336,8 @@ public class MavenRepositorySearch
 
                 if ( repoConfig != null )
                 {
-                    String indexDir = repoConfig.getIndexDirectory();
-                    File indexDirectory = null;
-                    if ( indexDir != null && !"".equals( indexDir ) )
-                    {
-                        indexDirectory = new File( repoConfig.getIndexDirectory() );
-                        if ( !indexDirectory.isAbsolute() )
-                        {
-                            indexDirectory = new File( repoConfig.getLocation(), repoConfig.getIndexDirectory() );
-                        }
-                    }
-                    else
-                    {
-                        indexDirectory = new File( repoConfig.getLocation(), ".indexer" );
-                    }
 
-                    IndexingContext context = indexer.getIndexingContexts().get( repoConfig.getId() );
-                    if ( context != null )
-                    {
-                        // alreday here so no need to record it again
-                        log.debug( "index with id {} already exists skip adding it", repoConfig.getId() );
-                        // set searchable flag
-                        context.setSearchable( repoConfig.isScanned() );
-                        indexingContextIds.add( context.getId() );
-                        indexingContextIds.addAll( getRemoteIndexingContextIds( repo ) );
-                        continue;
-                    }
-
-                    context = indexer.addIndexingContext( repoConfig.getId(), repoConfig.getId(),
-                                                          new File( repoConfig.getLocation() ), indexDirectory, null,
-                                                          null, getAllIndexCreators() );
-                    context.setSearchable( repoConfig.isScanned() );
+                    IndexingContext context = managedRepositoryAdmin.createIndexContext( repoConfig );
                     if ( context.isSearchable() )
                     {
                         indexingContextIds.addAll( getRemoteIndexingContextIds( repo ) );
@@ -382,23 +351,13 @@ public class MavenRepositorySearch
                 }
                 else
                 {
-                    log.warn( "Repository '" + repo + "' not found in configuration." );
+                    log.warn( "Repository '{}' not found in configuration.", repo );
                 }
-            }
-            catch ( UnsupportedExistingLuceneIndexException e )
-            {
-                log.warn( "Error accessing index of repository '" + repo + "' : " + e.getMessage() );
-                continue;
-            }
-            catch ( IOException e )
-            {
-                log.warn( "IO error occured while accessing index of repository '" + repo + "' : " + e.getMessage() );
-                continue;
             }
             catch ( RepositoryAdminException e )
             {
-                log.warn( "RepositoryAdminException occured while accessing index of repository '" + repo + "' : "
-                              + e.getMessage() );
+                log.warn( "RepositoryAdminException occured while accessing index of repository '{}' : {}", repo,
+                          e.getMessage() );
                 continue;
             }
         }

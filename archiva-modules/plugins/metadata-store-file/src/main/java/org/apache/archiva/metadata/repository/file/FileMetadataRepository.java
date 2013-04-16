@@ -89,8 +89,7 @@ public class FileMetadataRepository
     {
         // TODO: should be configurable, like the index
         String basedir = configuration.getConfiguration().getManagedRepositoriesAsMap().get( repoId ).getLocation();
-        File dir = new File( basedir, ".archiva" );
-        return dir;
+        return new File( basedir, ".archiva" );
     }
 
     private File getDirectory( String repoId )
@@ -307,6 +306,13 @@ public class FileMetadataRepository
         List<String> facets = new ArrayList<String>();
         recurse( facets, "", directory );
         return facets;
+    }
+
+    public boolean hasMetadataFacet( String repositoryId, String facetId )
+        throws MetadataRepositoryException
+    {
+        // TODO could be improved a bit
+        return !getMetadataFacets( repositoryId, facetId ).isEmpty();
     }
 
     private void recurse( List<String> facets, String prefix, File directory )

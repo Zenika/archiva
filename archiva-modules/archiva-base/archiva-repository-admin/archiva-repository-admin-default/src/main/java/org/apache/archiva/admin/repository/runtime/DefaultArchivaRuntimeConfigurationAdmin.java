@@ -8,7 +8,7 @@ package org.apache.archiva.admin.repository.runtime;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -20,118 +20,107 @@ package org.apache.archiva.admin.repository.runtime;
 
 import net.sf.beanlib.provider.replicator.BeanReplicator;
 import org.apache.archiva.admin.model.RepositoryAdminException;
-import org.apache.archiva.admin.model.beans.LdapConfiguration;
 import org.apache.archiva.admin.model.beans.ArchivaRuntimeConfiguration;
+import org.apache.archiva.admin.model.beans.CacheConfiguration;
 import org.apache.archiva.admin.model.runtime.ArchivaRuntimeConfigurationAdmin;
 import org.apache.archiva.configuration.ArchivaConfiguration;
 import org.apache.archiva.configuration.Configuration;
 import org.apache.archiva.configuration.IndeterminateConfigurationException;
-import org.apache.archiva.configuration.RedbackRuntimeConfiguration;
+import org.apache.archiva.redback.components.cache.Cache;
 import org.apache.archiva.redback.components.registry.RegistryException;
-import org.apache.archiva.redback.configuration.UserConfiguration;
-import org.apache.archiva.redback.configuration.UserConfigurationException;
-import org.apache.archiva.redback.configuration.UserConfigurationKeys;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.List;
 
 /**
  * @author Olivier Lamy
  * @since 1.4-M4
  */
-@Service( "userConfiguration#archiva" )
+@Service("archivaRuntimeConfigurationAdmin#default")
 public class DefaultArchivaRuntimeConfigurationAdmin
-    implements ArchivaRuntimeConfigurationAdmin, UserConfiguration
+    implements ArchivaRuntimeConfigurationAdmin
 {
-
-    protected Logger log = LoggerFactory.getLogger( getClass() );
 
     @Inject
     private ArchivaConfiguration archivaConfiguration;
 
     @Inject
-    @Named( value = "userConfiguration#redback" )
-    UserConfiguration userConfiguration;
+    @Named( value = "cache#url-failures-cache" )
+    private Cache urlFailureCache;
 
     @PostConstruct
     public void initialize()
-        throws UserConfigurationException
+        throws RepositoryAdminException
     {
-        try
+        ArchivaRuntimeConfiguration archivaRuntimeConfiguration = getArchivaRuntimeConfiguration();
+
+        boolean save = false;
+
+        // NPE free
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration() == null )
         {
-            ArchivaRuntimeConfiguration archivaRuntimeConfiguration = getArchivaRuntimeConfiguration();
-            // migrate or not data from redback
-            if ( !archivaRuntimeConfiguration.isMigratedFromRedbackConfiguration() )
-            {
-                // so migrate if available
-                String userManagerImpl = userConfiguration.getString( UserConfigurationKeys.USER_MANAGER_IMPL );
-                if ( StringUtils.isNotEmpty( userManagerImpl ) )
-                {
-                    archivaRuntimeConfiguration.getUserManagerImpls().add( userManagerImpl );
-                }
+            archivaRuntimeConfiguration.setUrlFailureCacheConfiguration( new CacheConfiguration() );
+        }
 
-                // now ldap
-
-                LdapConfiguration ldapConfiguration = archivaRuntimeConfiguration.getLdapConfiguration();
-                if ( ldapConfiguration == null )
-                {
-                    ldapConfiguration = new LdapConfiguration();
-                    archivaRuntimeConfiguration.setLdapConfiguration( ldapConfiguration );
-                }
-
-                ldapConfiguration.setHostName(
-                    userConfiguration.getString( UserConfigurationKeys.LDAP_HOSTNAME, null ) );
-                ldapConfiguration.setPort( userConfiguration.getInt( UserConfigurationKeys.LDAP_PORT, -1 ) );
-                ldapConfiguration.setSsl( userConfiguration.getBoolean( UserConfigurationKeys.LDAP_SSL, false ) );
-                ldapConfiguration.setBaseDn(
-                    userConfiguration.getConcatenatedList( UserConfigurationKeys.LDAP_BASEDN, null ) );
-                ldapConfiguration.setContextFactory(
-                    userConfiguration.getString( UserConfigurationKeys.LDAP_CONTEX_FACTORY, null ) );
-                ldapConfiguration.setBindDn(
-                    userConfiguration.getConcatenatedList( UserConfigurationKeys.LDAP_BINDDN, null ) );
-                ldapConfiguration.setPassword(
-                    userConfiguration.getString( UserConfigurationKeys.LDAP_PASSWORD, null ) );
-                ldapConfiguration.setAuthenticationMethod(
-                    userConfiguration.getString( UserConfigurationKeys.LDAP_AUTHENTICATION_METHOD, null ) );
-
-                archivaRuntimeConfiguration.setMigratedFromRedbackConfiguration( true );
-
-                updateArchivaRuntimeConfiguration( archivaRuntimeConfiguration );
-
-            }
-
-            // we must ensure userManagerImpls list is not empty if so put at least jdo one !
-            if ( archivaRuntimeConfiguration.getUserManagerImpls().isEmpty() )
-            {
-                log.info(
-                    "archivaRuntimeConfiguration with empty userManagerImpls so force at least jdo implementation !" );
-                archivaRuntimeConfiguration.getUserManagerImpls().add( "jdo" );
-            }
+        // if -1 it means non initialized to take values from the spring bean
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getTimeToIdleSeconds() < 0 )
+        {
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().setTimeToIdleSeconds(
+                urlFailureCache.getTimeToIdleSeconds() );
+            save = true;
 
         }
-        catch ( RepositoryAdminException e )
+        urlFailureCache.setTimeToIdleSeconds(
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getTimeToIdleSeconds() );
+
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getTimeToLiveSeconds() < 0 )
         {
-            throw new UserConfigurationException( e.getMessage(), e );
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().setTimeToLiveSeconds(
+                urlFailureCache.getTimeToLiveSeconds() );
+            save = true;
+
         }
+        urlFailureCache.setTimeToLiveSeconds(
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getTimeToLiveSeconds() );
+
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getMaxElementsInMemory() < 0 )
+        {
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().setMaxElementsInMemory(
+                urlFailureCache.getMaxElementsInMemory() );
+            save = true;
+        }
+        urlFailureCache.setMaxElementsInMemory(
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getMaxElementsInMemory() );
+
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getMaxElementsOnDisk() < 0 )
+        {
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().setMaxElementsOnDisk(
+                urlFailureCache.getMaxElementsOnDisk() );
+            save = true;
+        }
+        urlFailureCache.setMaxElementsOnDisk(
+            archivaRuntimeConfiguration.getUrlFailureCacheConfiguration().getMaxElementsOnDisk() );
+
+        if ( save )
+        {
+            updateArchivaRuntimeConfiguration( archivaRuntimeConfiguration );
+        }
+
     }
 
     public ArchivaRuntimeConfiguration getArchivaRuntimeConfiguration()
+        throws RepositoryAdminException
     {
-        return build( archivaConfiguration.getConfiguration().getRedbackRuntimeConfiguration() );
+        return build( archivaConfiguration.getConfiguration().getArchivaRuntimeConfiguration() );
     }
 
     public void updateArchivaRuntimeConfiguration( ArchivaRuntimeConfiguration archivaRuntimeConfiguration )
         throws RepositoryAdminException
     {
-        RedbackRuntimeConfiguration runtimeConfiguration = build( archivaRuntimeConfiguration );
         Configuration configuration = archivaConfiguration.getConfiguration();
-        configuration.setRedbackRuntimeConfiguration( runtimeConfiguration );
+        configuration.setArchivaRuntimeConfiguration( build( archivaRuntimeConfiguration ) );
         try
         {
             archivaConfiguration.save( configuration );
@@ -146,264 +135,52 @@ public class DefaultArchivaRuntimeConfigurationAdmin
         }
     }
 
-    private ArchivaRuntimeConfiguration build( RedbackRuntimeConfiguration runtimeConfiguration )
+    protected ArchivaRuntimeConfiguration build(
+        org.apache.archiva.configuration.ArchivaRuntimeConfiguration archivaRuntimeConfiguration )
     {
-        ArchivaRuntimeConfiguration archivaRuntimeConfiguration =
-            new BeanReplicator().replicateBean( runtimeConfiguration, ArchivaRuntimeConfiguration.class );
-
-        if ( runtimeConfiguration.getLdapConfiguration() != null )
+        if ( archivaRuntimeConfiguration == null )
         {
-            archivaRuntimeConfiguration.setLdapConfiguration(
-                new BeanReplicator().replicateBean( runtimeConfiguration.getLdapConfiguration(),
-                                                    LdapConfiguration.class ) );
+            return new ArchivaRuntimeConfiguration();
         }
 
-        if ( archivaRuntimeConfiguration.getLdapConfiguration() == null )
+        ArchivaRuntimeConfiguration res =
+            new BeanReplicator().replicateBean( archivaRuntimeConfiguration, ArchivaRuntimeConfiguration.class );
+
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration() != null )
         {
-            // prevent NPE
-            archivaRuntimeConfiguration.setLdapConfiguration( new LdapConfiguration() );
+
+            res.setUrlFailureCacheConfiguration(
+                new BeanReplicator().replicateBean( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration(),
+                                                    CacheConfiguration.class ) );
+
         }
 
-        return archivaRuntimeConfiguration;
+        return res;
     }
 
-    private RedbackRuntimeConfiguration build( ArchivaRuntimeConfiguration archivaRuntimeConfiguration )
+    protected org.apache.archiva.configuration.ArchivaRuntimeConfiguration build(
+        ArchivaRuntimeConfiguration archivaRuntimeConfiguration )
     {
-        RedbackRuntimeConfiguration redbackRuntimeConfiguration =
-            new BeanReplicator().replicateBean( archivaRuntimeConfiguration, RedbackRuntimeConfiguration.class );
-
-        redbackRuntimeConfiguration.setLdapConfiguration(
-            new BeanReplicator().replicateBean( archivaRuntimeConfiguration.getLdapConfiguration(),
-                                                org.apache.archiva.configuration.LdapConfiguration.class ) );
-
-        return redbackRuntimeConfiguration;
-    }
-
-    // wrapper for UserConfiguration to intercept values (and store it not yet migrated
-
-
-    public String getString( String key )
-    {
-        if ( UserConfigurationKeys.USER_MANAGER_IMPL.equals( key ) )
+        if ( archivaRuntimeConfiguration == null )
         {
-            // possible false for others than archiva user manager
-            return getArchivaRuntimeConfiguration().getUserManagerImpls().get( 0 );
+            return new org.apache.archiva.configuration.ArchivaRuntimeConfiguration();
         }
 
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
+        org.apache.archiva.configuration.ArchivaRuntimeConfiguration res =
+            new BeanReplicator().replicateBean( archivaRuntimeConfiguration,
+                                                org.apache.archiva.configuration.ArchivaRuntimeConfiguration.class );
 
-        if ( conf.getConfigurationProperties().containsKey( key ) )
+        if ( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration() != null )
         {
-            return conf.getConfigurationProperties().get( key );
+
+            res.setUrlFailureCacheConfiguration(
+                new BeanReplicator().replicateBean( archivaRuntimeConfiguration.getUrlFailureCacheConfiguration(),
+                                                    org.apache.archiva.configuration.CacheConfiguration.class ) );
+
         }
 
-        String value = userConfiguration.getString( key );
-        if ( value == null )
-        {
-            return null;
-        }
-        conf.getConfigurationProperties().put( key, value );
-
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public String getString( String key, String defaultValue )
-    {
-        if ( UserConfigurationKeys.LDAP_HOSTNAME.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getHostName();
-        }
-        if ( UserConfigurationKeys.LDAP_CONTEX_FACTORY.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getContextFactory();
-        }
-        if ( UserConfigurationKeys.LDAP_PASSWORD.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getPassword();
-        }
-        if ( UserConfigurationKeys.LDAP_AUTHENTICATION_METHOD.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getAuthenticationMethod();
-        }
-
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
-
-        if ( conf.getConfigurationProperties().containsKey( key ) )
-        {
-            return conf.getConfigurationProperties().get( key );
-        }
-
-        String value = userConfiguration.getString( key, defaultValue );
-
-        if ( value == null )
-        {
-            return null;
-        }
-
-        conf.getConfigurationProperties().put( key, value );
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public int getInt( String key )
-    {
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
-
-        if ( conf.getConfigurationProperties().containsKey( key ) )
-        {
-            return Integer.valueOf( conf.getConfigurationProperties().get( key ) );
-        }
-
-        int value = userConfiguration.getInt( key );
-
-        conf.getConfigurationProperties().put( key, Integer.toString( value ) );
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public int getInt( String key, int defaultValue )
-    {
-        if ( UserConfigurationKeys.LDAP_PORT.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getPort();
-        }
-
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
-
-        if ( conf.getConfigurationProperties().containsKey( key ) )
-        {
-            return Integer.valueOf( conf.getConfigurationProperties().get( key ) );
-        }
-
-        int value = userConfiguration.getInt( key, defaultValue );
-
-        conf.getConfigurationProperties().put( key, Integer.toString( value ) );
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public boolean getBoolean( String key )
-    {
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
-
-        if ( conf.getConfigurationProperties().containsKey( key ) )
-        {
-            return Boolean.valueOf( conf.getConfigurationProperties().get( key ) );
-        }
-
-        boolean value = userConfiguration.getBoolean( key );
-
-        conf.getConfigurationProperties().put( key, Boolean.toString( value ) );
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public boolean getBoolean( String key, boolean defaultValue )
-    {
-        if ( UserConfigurationKeys.LDAP_SSL.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().isSsl();
-        }
-
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
-
-        if ( conf.getConfigurationProperties().containsKey( key ) )
-        {
-            return Boolean.valueOf( conf.getConfigurationProperties().get( key ) );
-        }
-
-        boolean value = userConfiguration.getBoolean( key, defaultValue );
-
-        conf.getConfigurationProperties().put( key, Boolean.toString( value ) );
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public List<String> getList( String key )
-    {
-        List<String> value = userConfiguration.getList( key );
-
-        ArchivaRuntimeConfiguration conf = getArchivaRuntimeConfiguration();
-        // TODO concat values
-        conf.getConfigurationProperties().put( key, "" );
-        try
-        {
-            updateArchivaRuntimeConfiguration( conf );
-        }
-        catch ( RepositoryAdminException e )
-        {
-            log.error( "fail to save ArchivaRuntimeConfiguration: {}", e.getMessage(), e );
-            throw new RuntimeException( e.getMessage(), e );
-        }
-
-        return value;
-    }
-
-    public String getConcatenatedList( String key, String defaultValue )
-    {
-        if ( UserConfigurationKeys.LDAP_BASEDN.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getBaseDn();
-        }
-        if ( UserConfigurationKeys.LDAP_BINDDN.equals( key ) )
-        {
-            return getArchivaRuntimeConfiguration().getLdapConfiguration().getBindDn();
-        }
-        return userConfiguration.getConcatenatedList( key, defaultValue );
+        return res;
     }
 }
+
+

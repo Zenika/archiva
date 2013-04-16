@@ -114,6 +114,10 @@ public abstract class AbstractMavenRepositorySearch
 
         artifactContextProducer = plexusSisuBridge.lookup( ArtifactContextProducer.class );
 
+        defaultManagedRepositoryAdmin.setMavenIndexerUtils( mavenIndexerUtils );
+        defaultManagedRepositoryAdmin.setIndexer( nexusIndexer );
+        defaultManagedRepositoryAdmin.setIndexCreators( mavenIndexerUtils.getAllIndexCreators() );
+
         config = new Configuration();
         config.addManagedRepository( createRepositoryConfig( TEST_REPO_1 ) );
         config.addManagedRepository( createRepositoryConfig( TEST_REPO_2 ) );

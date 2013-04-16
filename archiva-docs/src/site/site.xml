@@ -22,6 +22,9 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd"
   name="Archiva Documentation">
+
+  <googleAnalyticsAccountId>UA-140879-5</googleAnalyticsAccountId>
+
   <bannerLeft>
     <name>Apache Archiva</name>
     <src>http://archiva.apache.org/images/archiva.png</src>
@@ -34,6 +37,7 @@
       <sideBarEnabled>true</sideBarEnabled>
       <leftColumnClass>span2</leftColumnClass>
       <bodyColumnClass>span10</bodyColumnClass>
+      <skipGenerationDate>true</skipGenerationDate>
       <googleSearch>
         <sitesearch>${project.url}</sitesearch>
       </googleSearch>
@@ -98,7 +102,7 @@
         <item name="Using LDAP"              href="/adminguide/ldap.html" />
 -->
       </item>
-      <item name="Runtime Configuration"      href="/adminguide/configuration.html" collapse="true">
+      <item name="Archiva Configuration"      href="/adminguide/configuration.html" collapse="true">
         <item name="Repositories"             href="/adminguide/repositories.html" />
         <item name="Proxy Connectors"         href="/adminguide/proxy-connectors.html" />
         <item name="Proxy Connectors Rules"   href="/adminguide/proxy-connector-rules.html"/>
@@ -109,11 +113,13 @@
         <item name="Staging Repositories"     href="/adminguide/staging-repositories.html"/>
         <item name="Appearance Configuration" href="/adminguide/appearance-configuration.html"/>
         <item name="UI Configuration"         href="/adminguide/ui-configuration.html"/>
-        <item name="Runtime Configuration"    href="/adminguide/runtime-configuration.html"/>
+        <item name="Url Failure Cache Configuration"         href="/adminguide/url-cache-failure-configuration.html"/>
+        <item name="Users Runtime Configuration"    href="/adminguide/redback-runtime-configuration.html"/>
       </item>
       <item name="REST Apis"                    href="/adminguide/webservices/rest.html"/>
 
       <item name="Configuration Files"       href="/adminguide/configuration-files.html" />
+      <item name="System Status"             href="/adminguide/system-status.html" />
       <item name="Log Files"                 href="/adminguide/logging.html" collapse="true">
         <item name="Archiva Logs"            href="/adminguide/archiva-logs.html" />
         <item name="Audit Logs"              href="/adminguide/audit-logs.html" />

@@ -32,6 +32,8 @@ import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.scheduler.ArchivaTaskScheduler;
 import org.apache.archiva.scheduler.cudf.ArchivaCUDFTaskExecutor;
 import org.apache.archiva.scheduler.cudf.CUDFTask;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -43,6 +45,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -358,5 +361,29 @@ public class DefaultCUDFService
     protected String getSelectedRepoExceptionMessage()
     {
         return "cudf.root.group.repository.denied";
+    }
+
+    private List<String> getSelectedRepos( String repositoryId )
+            throws ArchivaRestServiceException
+    {
+
+        List<String> selectedRepos = getObservableRepos();
+
+        if ( CollectionUtils.isEmpty(selectedRepos) )
+        {
+            return Collections.emptyList();
+        }
+
+        if ( StringUtils.isNotEmpty(repositoryId) )
+        {
+            // check user has karma on the repository
+            if ( !selectedRepos.contains( repositoryId ) )
+            {
+                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
+                        Response.Status.FORBIDDEN.getStatusCode(), null );
+            }
+            selectedRepos = Collections.singletonList( repositoryId );
+        }
+        return selectedRepos;
     }
 }

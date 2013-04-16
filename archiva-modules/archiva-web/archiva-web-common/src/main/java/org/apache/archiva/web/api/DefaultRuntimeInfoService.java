@@ -18,8 +18,14 @@ package org.apache.archiva.web.api;
  * under the License.
  */
 
+import org.apache.archiva.admin.model.beans.RedbackRuntimeConfiguration;
+import org.apache.archiva.redback.configuration.UserConfigurationKeys;
+import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
+import org.apache.archiva.rest.api.services.RedbackRuntimeConfigurationService;
+import org.apache.archiva.web.model.CookieInformation;
 import org.apache.archiva.web.runtime.ArchivaRuntimeInfo;
 import org.apache.archiva.web.model.ApplicationRuntimeInfo;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +41,7 @@ import java.util.Locale;
 /**
  * @author Olivier Lamy
  */
-@Service( "runtimeInfoService#rest" )
+@Service("runtimeInfoService#rest")
 public class DefaultRuntimeInfoService
     implements RuntimeInfoService
 {
@@ -43,6 +49,9 @@ public class DefaultRuntimeInfoService
     private Logger i18nLogger = LoggerFactory.getLogger( "archivaMissingi18n.logger" );
 
     private ArchivaRuntimeInfo archivaRuntimeInfo;
+
+    @Inject
+    private RedbackRuntimeConfigurationService redbackRuntimeConfigurationService;
 
     @Context
     protected HttpServletRequest httpServletRequest;
@@ -54,6 +63,7 @@ public class DefaultRuntimeInfoService
     }
 
     public ApplicationRuntimeInfo getApplicationRuntimeInfo( String locale )
+        throws ArchivaRestServiceException
     {
         ApplicationRuntimeInfo applicationRuntimeInfo = new ApplicationRuntimeInfo();
         applicationRuntimeInfo.setBuildNumber( this.archivaRuntimeInfo.getBuildNumber() );
@@ -64,6 +74,25 @@ public class DefaultRuntimeInfoService
         SimpleDateFormat sfd = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ssz",
                                                      new Locale( StringUtils.isEmpty( locale ) ? "en" : locale ) );
         applicationRuntimeInfo.setTimestampStr( sfd.format( new Date( archivaRuntimeInfo.getTimestamp() ) ) );
+
+        CookieInformation cookieInformation = new CookieInformation();
+
+        RedbackRuntimeConfiguration redbackRuntimeConfiguration =
+            redbackRuntimeConfigurationService.getRedbackRuntimeConfiguration();
+
+        cookieInformation.setDomain(
+            redbackRuntimeConfiguration.getConfigurationProperties().get( UserConfigurationKeys.REMEMBER_ME_DOMAIN ) );
+        cookieInformation.setPath(
+            redbackRuntimeConfiguration.getConfigurationProperties().get( UserConfigurationKeys.REMEMBER_ME_PATH ) );
+        cookieInformation.setSecure(
+            redbackRuntimeConfiguration.getConfigurationProperties().get( UserConfigurationKeys.REMEMBER_ME_SECURE ) );
+        cookieInformation.setTimeout(
+            redbackRuntimeConfiguration.getConfigurationProperties().get( UserConfigurationKeys.REMEMBER_ME_TIMEOUT ) );
+        cookieInformation.setRememberMeEnabled( BooleanUtils.toBoolean(
+            redbackRuntimeConfiguration.getConfigurationProperties().get(
+                UserConfigurationKeys.REMEMBER_ME_ENABLED ) ) );
+
+        applicationRuntimeInfo.setCookieInformation( cookieInformation );
 
         return applicationRuntimeInfo;
     }

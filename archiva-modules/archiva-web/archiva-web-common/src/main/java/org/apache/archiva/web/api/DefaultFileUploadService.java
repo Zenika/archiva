@@ -125,8 +125,10 @@ public class DefaultFileUploadService
         {
 
             String classifier = getStringValue( multipartBody, "classifier" );
+            // skygo: http header form pomFile was once sending 1 for true and void for false
+            // leading to permanent false value for pomFile if using toBoolean(); use , "1", ""
             boolean pomFile = BooleanUtils.toBoolean( getStringValue( multipartBody, "pomFile" ) );
-
+            
             Attachment file = multipartBody.getAttachment( "files[]" );
 
             //Content-Disposition: form-data; name="files[]"; filename="org.apache.karaf.features.command-2.2.2.jar"

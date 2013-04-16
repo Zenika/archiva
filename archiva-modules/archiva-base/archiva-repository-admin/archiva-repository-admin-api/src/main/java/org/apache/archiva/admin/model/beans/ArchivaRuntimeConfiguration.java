@@ -8,7 +8,7 @@ package org.apache.archiva.admin.model.beans;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,121 +19,38 @@ package org.apache.archiva.admin.model.beans;
  */
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Olivier Lamy
  * @since 1.4-M4
  */
-@XmlRootElement(name = "redbackRuntimeConfiguration")
+@XmlRootElement( name = "archivaRuntimeConfiguration" )
 public class ArchivaRuntimeConfiguration
-    implements Serializable
 {
-
-    /**
-     * Field userManagerImpls.
-     */
-    private List<String> userManagerImpls = new ArrayList<String>();
-
-    private LdapConfiguration ldapConfiguration;
-
-    /**
-     * flag to know if redback configuration has been checked/migrated.
-     */
-    private boolean migratedFromRedbackConfiguration = false;
-
-    private Map<String, String> configurationProperties;
-
-    /**
-     * field to ease json mapping wrapper on <code>configurationProperties</code> field
-     */
-    private List<PropertyEntry> configurationPropertiesEntries;
+    private CacheConfiguration urlFailureCacheConfiguration;
 
     public ArchivaRuntimeConfiguration()
     {
         // no op
     }
 
-    public List<String> getUserManagerImpls()
+    public CacheConfiguration getUrlFailureCacheConfiguration()
     {
-        return userManagerImpls;
+        return urlFailureCacheConfiguration;
     }
 
-    public void setUserManagerImpls( List<String> userManagerImpls )
+    public void setUrlFailureCacheConfiguration( CacheConfiguration urlFailureCacheConfiguration )
     {
-        this.userManagerImpls = userManagerImpls;
-    }
-
-    public LdapConfiguration getLdapConfiguration()
-    {
-        return ldapConfiguration;
-    }
-
-    public void setLdapConfiguration( LdapConfiguration ldapConfiguration )
-    {
-        this.ldapConfiguration = ldapConfiguration;
-    }
-
-    public boolean isMigratedFromRedbackConfiguration()
-    {
-        return migratedFromRedbackConfiguration;
-    }
-
-    public void setMigratedFromRedbackConfiguration( boolean migratedFromRedbackConfiguration )
-    {
-        this.migratedFromRedbackConfiguration = migratedFromRedbackConfiguration;
-    }
-
-    public Map<String, String> getConfigurationProperties()
-    {
-        if ( this.configurationProperties == null )
-        {
-            this.configurationProperties = new HashMap<String, String>();
-        }
-        return configurationProperties;
-    }
-
-    public void setConfigurationProperties( Map<String, String> configurationProperties )
-    {
-        this.configurationProperties = configurationProperties;
-    }
-
-    public List<PropertyEntry> getConfigurationPropertiesEntries()
-    {
-        configurationPropertiesEntries = new ArrayList<PropertyEntry>( getConfigurationProperties().size() );
-        for ( Map.Entry<String, String> entry : getConfigurationProperties().entrySet() )
-        {
-            configurationPropertiesEntries.add( new PropertyEntry( entry.getKey(), entry.getValue() ) );
-        }
-        return configurationPropertiesEntries;
-    }
-
-    public void setConfigurationPropertiesEntries( List<PropertyEntry> configurationPropertiesEntries )
-    {
-        this.configurationPropertiesEntries = configurationPropertiesEntries;
-        if ( configurationPropertiesEntries != null )
-        {
-            this.configurationProperties = new HashMap<String, String>( configurationPropertiesEntries.size() );
-            for ( PropertyEntry propertyEntry : configurationPropertiesEntries )
-            {
-                this.configurationProperties.put( propertyEntry.getKey(), propertyEntry.getValue() );
-            }
-        }
+        this.urlFailureCacheConfiguration = urlFailureCacheConfiguration;
     }
 
     @Override
     public String toString()
     {
-        return "ArchivaRuntimeConfiguration{" +
-            "userManagerImpls=" + userManagerImpls +
-            ", ldapConfiguration=" + ldapConfiguration +
-            ", migratedFromRedbackConfiguration=" + migratedFromRedbackConfiguration +
-            ", configurationProperties=" + configurationProperties +
-            ", configurationPropertiesEntries=" + configurationPropertiesEntries +
-            '}';
+        final StringBuilder sb = new StringBuilder();
+        sb.append( "ArchivaRuntimeConfiguration" );
+        sb.append( "{urlFailureCacheConfiguration=" ).append( urlFailureCacheConfiguration );
+        sb.append( '}' );
+        return sb.toString();
     }
 }

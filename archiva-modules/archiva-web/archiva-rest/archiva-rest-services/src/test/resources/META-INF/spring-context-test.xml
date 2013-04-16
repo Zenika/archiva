@@ -86,4 +86,8 @@
   <alias name="repositorySessionFactory#jcr" alias="repositorySessionFactory"/>
 
   <alias name="userConfiguration#redback" alias="userConfiguration#default"/>
+
+  <alias name="authorizer#rbac" alias="authorizer#default"/>
+
+  <alias name="userManager#configurable" alias="userManager#default"/>
 </beans>

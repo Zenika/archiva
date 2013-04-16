@@ -30,10 +30,11 @@ import org.apache.archiva.maven2.model.Artifact;
 import org.apache.archiva.metadata.model.ArtifactMetadata;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
+import org.apache.archiva.redback.configuration.UserConfiguration;
+import org.apache.archiva.redback.configuration.UserConfigurationKeys;
 import org.apache.archiva.redback.rest.services.RedbackAuthenticationThreadLocal;
 import org.apache.archiva.redback.rest.services.RedbackRequestInformation;
 import org.apache.archiva.redback.users.User;
-import org.apache.archiva.redback.users.UserManager;
 import org.apache.archiva.repository.RepositoryContentFactory;
 import org.apache.archiva.repository.RepositoryException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
@@ -80,7 +81,7 @@ public abstract class AbstractRestService
 
 
     @Inject
-    @Named (value = "repositorySessionFactory")
+    @Named(value = "repositorySessionFactory")
     protected RepositorySessionFactory repositorySessionFactory;
 
     @Inject
@@ -93,8 +94,13 @@ public abstract class AbstractRestService
     protected RepositoryContentFactory repositoryContentFactory;
 
     @Inject
-    @Named ( value = "archivaTaskScheduler#repository" )
+    @Named(value = "archivaTaskScheduler#repository")
     protected DefaultRepositoryArchivaTaskScheduler repositoryTaskScheduler;
+
+
+    @Inject
+    @Named( value = "userConfiguration#default" )
+    protected UserConfiguration config;
 
     @Context
     protected HttpServletRequest httpServletRequest;
@@ -139,29 +145,29 @@ public abstract class AbstractRestService
         return Collections.emptyList();
     }
 
-    protected List<String> getSelectedRepos( String repositoryId )
-        throws ArchivaRestServiceException
-    {
-
-        List<String> selectedRepos = getObservableRepos();
-
-        if ( CollectionUtils.isEmpty( selectedRepos ) )
-        {
-            return Collections.<String>emptyList();
-        }
-
-        if ( StringUtils.isNotEmpty( repositoryId ) )
-        {
-            // check user has karma on the repository
-            if ( !selectedRepos.contains( repositoryId ) )
-            {
-                throw new ArchivaRestServiceException( getSelectedRepoExceptionMessage(),
-                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
-            }
-            selectedRepos = Collections.singletonList( repositoryId );
-        }
-        return selectedRepos;
-    }
+//    protected List<String> getSelectedRepos( String repositoryId )
+//        throws ArchivaRestServiceException
+//    {
+//
+//        List<String> selectedRepos = getObservableRepos();
+//
+//        if ( CollectionUtils.isEmpty( selectedRepos ) )
+//        {
+//            return Collections.<String>emptyList();
+//        }
+//
+//        if ( StringUtils.isNotEmpty( repositoryId ) )
+//        {
+//            // check user has karma on the repository
+//            if ( !selectedRepos.contains( repositoryId ) )
+//            {
+//                throw new ArchivaRestServiceException( getSelectedRepoExceptionMessage(),
+//                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
+//            }
+//            selectedRepos = Collections.singletonList( repositoryId );
+//        }
+//        return selectedRepos;
+//    }
 
     protected String getSelectedRepoExceptionMessage()
     {
@@ -173,9 +179,9 @@ public abstract class AbstractRestService
         RedbackRequestInformation redbackRequestInformation = RedbackAuthenticationThreadLocal.get();
 
         return redbackRequestInformation == null
-            ? UserManager.GUEST_USERNAME
+            ? config.getString( UserConfigurationKeys.DEFAULT_GUEST )
             : ( redbackRequestInformation.getUser() == null
-                ? UserManager.GUEST_USERNAME
+                ? config.getString( UserConfigurationKeys.DEFAULT_GUEST )
                 : redbackRequestInformation.getUser().getUsername() );
     }
 
@@ -203,7 +209,9 @@ public abstract class AbstractRestService
 
         for ( Map.Entry<String, T> entry : springBeans.entrySet() )
         {
-            String key = StringUtils.substringAfterLast( entry.getKey(), "#" );
+            String key = StringUtils.contains( entry.getKey(), '#' )
+                ? StringUtils.substringAfterLast( entry.getKey(), "#" )
+                : entry.getKey();
             beans.put( key, entry.getValue() );
         }
         return beans;

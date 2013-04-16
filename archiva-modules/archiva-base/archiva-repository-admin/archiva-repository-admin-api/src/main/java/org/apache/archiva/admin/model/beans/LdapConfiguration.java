@@ -19,6 +19,7 @@ package org.apache.archiva.admin.model.beans;
  */
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +29,9 @@ import java.util.Map;
  * @author Olivier Lamy
  * @since 1.4-M4
  */
-@XmlRootElement( name = "ldapConfiguration" )
+@XmlRootElement(name = "ldapConfiguration")
 public class LdapConfiguration
+    implements Serializable
 {
 
 
@@ -64,6 +66,11 @@ public class LdapConfiguration
     private String bindDn;
 
     /**
+     * The LDAP base dn for groups (if empty baseDn is used).
+     */
+    private String baseGroupsDn;
+
+    /**
      * The LDAP password.
      */
     private String password;
@@ -79,6 +86,11 @@ public class LdapConfiguration
     private boolean bindAuthenticatorEnabled;
 
     /**
+     * Will use role name as LDAP group.
+     */
+    private boolean useRoleNameAsGroup = false;
+
+    /**
      * Field extraProperties.
      */
     private Map<String, String> extraProperties = new HashMap<String, String>();
@@ -87,6 +99,11 @@ public class LdapConfiguration
      * field to ease json mapping wrapper on <code>extraProperties</code> field
      */
     private List<PropertyEntry> extraPropertiesEntries;
+
+    /**
+     * LDAP writable.
+     */
+    private boolean writable = false;
 
     public LdapConfiguration()
     {
@@ -213,5 +230,35 @@ public class LdapConfiguration
                 this.extraProperties.put( propertyEntry.getKey(), propertyEntry.getValue() );
             }
         }
+    }
+
+    public String getBaseGroupsDn()
+    {
+        return baseGroupsDn;
+    }
+
+    public void setBaseGroupsDn( String baseGroupsDn )
+    {
+        this.baseGroupsDn = baseGroupsDn;
+    }
+
+    public boolean isWritable()
+    {
+        return writable;
+    }
+
+    public void setWritable( boolean writable )
+    {
+        this.writable = writable;
+    }
+
+    public boolean isUseRoleNameAsGroup()
+    {
+        return useRoleNameAsGroup;
+    }
+
+    public void setUseRoleNameAsGroup( boolean useRoleNameAsGroup )
+    {
+        this.useRoleNameAsGroup = useRoleNameAsGroup;
     }
 }

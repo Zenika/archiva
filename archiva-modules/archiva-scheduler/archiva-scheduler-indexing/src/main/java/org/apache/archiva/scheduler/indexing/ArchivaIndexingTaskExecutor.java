@@ -28,7 +28,6 @@ import org.apache.archiva.common.plexusbridge.PlexusSisuBridgeException;
 import org.apache.archiva.redback.components.taskqueue.Task;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutor;
-import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.maven.index.ArtifactContext;
@@ -91,7 +90,7 @@ public class ArchivaIndexingTaskExecutor
     }
 
     /**
-     * depending on current {@link Action} you have.
+     * depending on current {@link Task} you have.
      * If {@link org.apache.archiva.scheduler.indexing.ArtifactIndexingTask.Action.FINISH} && isExecuteOnEntireRepo:
      * repository will be scanned.
      *
@@ -242,16 +241,12 @@ public class ArchivaIndexingTaskExecutor
 
             if ( !repository.isSkipPackedIndexCreation() )
             {
-                File managedRepository = new File( repository.getLocation() );
-                String indexDirectory = repository.getIndexDirectory();
-                final File indexLocation = StringUtils.isBlank( indexDirectory )
-                    ? new File( managedRepository, ".indexer" )
-                    : new File( indexDirectory );
-                IndexPackingRequest request = new IndexPackingRequest( context, indexLocation );
+
+                IndexPackingRequest request = new IndexPackingRequest( context, context.getIndexDirectoryFile() );
                 indexPacker.packIndex( request );
                 context.updateTimestamp( true );
 
-                log.debug( "Index file packaged at '{}'.", indexLocation.getPath() );
+                log.debug( "Index file packaged at '{}'.", context.getIndexDirectoryFile() );
             }
             else
             {

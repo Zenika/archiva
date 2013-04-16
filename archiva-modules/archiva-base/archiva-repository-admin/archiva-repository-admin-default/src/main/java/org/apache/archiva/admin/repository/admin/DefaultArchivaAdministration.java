@@ -33,11 +33,12 @@ import org.apache.archiva.configuration.Configuration;
 import org.apache.archiva.configuration.UserInterfaceOptions;
 import org.apache.archiva.configuration.WebappConfiguration;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.maven.wagon.providers.http.HttpWagon;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,6 +52,8 @@ public class DefaultArchivaAdministration
     implements ArchivaAdministration
 {
 
+    private PoolingClientConnectionManager poolingClientConnectionManager;
+
     @PostConstruct
     public void initialize()
         throws RepositoryAdminException
@@ -58,6 +61,15 @@ public class DefaultArchivaAdministration
         // setup wagon on start with initial values
         NetworkConfiguration networkConfiguration = getNetworkConfiguration();
         setupWagon( networkConfiguration );
+    }
+
+    @PreDestroy
+    public void shutdown()
+    {
+        if ( this.poolingClientConnectionManager != null )
+        {
+            this.poolingClientConnectionManager.shutdown();
+        }
     }
 
 
@@ -380,19 +392,19 @@ public class DefaultArchivaAdministration
         {
             // back to default values
             HttpWagon.setUseClientManagerPooled( true );
-            ThreadSafeClientConnManager threadSafeClientConnManager = new ThreadSafeClientConnManager();
-            threadSafeClientConnManager.setDefaultMaxPerRoute( 30 );
-            threadSafeClientConnManager.setMaxTotal( 30 );
-            HttpWagon.setConnectionManagerPooled( threadSafeClientConnManager );
+            poolingClientConnectionManager = new PoolingClientConnectionManager();
+            poolingClientConnectionManager.setDefaultMaxPerRoute( 30 );
+            poolingClientConnectionManager.setMaxTotal( 30 );
+            HttpWagon.setConnectionManagerPooled( poolingClientConnectionManager );
 
         }
         else
         {
             HttpWagon.setUseClientManagerPooled( networkConfiguration.isUsePooling() );
-            ThreadSafeClientConnManager threadSafeClientConnManager = new ThreadSafeClientConnManager();
-            threadSafeClientConnManager.setDefaultMaxPerRoute( networkConfiguration.getMaxTotalPerHost() );
-            threadSafeClientConnManager.setMaxTotal( networkConfiguration.getMaxTotal() );
-            HttpWagon.setConnectionManagerPooled( threadSafeClientConnManager );
+            poolingClientConnectionManager = new PoolingClientConnectionManager();
+            poolingClientConnectionManager.setDefaultMaxPerRoute( networkConfiguration.getMaxTotalPerHost() );
+            poolingClientConnectionManager.setMaxTotal( networkConfiguration.getMaxTotal() );
+            HttpWagon.setConnectionManagerPooled( poolingClientConnectionManager );
         }
     }
 

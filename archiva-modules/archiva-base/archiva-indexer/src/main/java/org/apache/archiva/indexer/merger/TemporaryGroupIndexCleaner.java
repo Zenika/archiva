@@ -51,14 +51,16 @@ public class TemporaryGroupIndexCleaner
     }
 
     // 900000
-    @Scheduled( fixedDelay = 900000 )
+    @Scheduled(fixedDelay = 900000)
     public void cleanTemporaryIndex()
     {
+
         for ( TemporaryGroupIndex temporaryGroupIndex : indexMerger.getTemporaryGroupIndexes() )
         {
-            // cleanup files older than 60 minutes 3600000
-            if ( new Date().getTime() - temporaryGroupIndex.getCreationTime() > 3600000 )
+            // cleanup files older than the ttl
+            if ( new Date().getTime() - temporaryGroupIndex.getCreationTime() > indexMerger.getGroupMergedIndexTtl() )
             {
+                log.info( "cleanTemporaryIndex for groupId {}", temporaryGroupIndex.getGroupId() );
                 indexMerger.cleanTemporaryGroupIndex( temporaryGroupIndex );
 
             }

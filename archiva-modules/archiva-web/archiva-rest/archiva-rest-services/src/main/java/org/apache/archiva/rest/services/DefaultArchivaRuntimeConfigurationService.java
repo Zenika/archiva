@@ -8,7 +8,7 @@ package org.apache.archiva.rest.services;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -20,26 +20,15 @@ package org.apache.archiva.rest.services;
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
 import org.apache.archiva.admin.model.beans.ArchivaRuntimeConfiguration;
+import org.apache.archiva.admin.model.beans.CacheConfiguration;
 import org.apache.archiva.admin.model.runtime.ArchivaRuntimeConfigurationAdmin;
-import org.apache.archiva.redback.common.ldap.connection.LdapConnectionConfiguration;
-import org.apache.archiva.redback.common.ldap.connection.LdapConnectionFactory;
-import org.apache.archiva.redback.policy.CookieSettings;
-import org.apache.archiva.redback.policy.PasswordRule;
-import org.apache.archiva.redback.users.UserManager;
-import org.apache.archiva.rest.api.model.UserManagerImplementationInformation;
+import org.apache.archiva.redback.components.cache.Cache;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.ArchivaRuntimeConfigurationService;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Olivier Lamy
@@ -54,17 +43,10 @@ public class DefaultArchivaRuntimeConfigurationService
     private ArchivaRuntimeConfigurationAdmin archivaRuntimeConfigurationAdmin;
 
     @Inject
-    @Named( value = "userManager#configurable" )
-    private UserManager userManager;
+    @Named( value = "cache#url-failures-cache" )
+    private Cache usersCache;
 
-    @Inject
-    private ApplicationContext applicationContext;
-
-    @Inject
-    @Named( value = "ldapConnectionFactory#configurable" )
-    private LdapConnectionFactory ldapConnectionFactory;
-
-    public ArchivaRuntimeConfiguration getArchivaRuntimeConfigurationAdmin()
+    public ArchivaRuntimeConfiguration getArchivaRuntimeConfiguration()
         throws ArchivaRestServiceException
     {
         try
@@ -82,78 +64,20 @@ public class DefaultArchivaRuntimeConfigurationService
     {
         try
         {
-            // has user manager impl changed ?
-            boolean userManagerChanged = archivaRuntimeConfiguration.getUserManagerImpls().size()
-                != archivaRuntimeConfigurationAdmin.getArchivaRuntimeConfiguration().getUserManagerImpls().size();
-
-            userManagerChanged =
-                userManagerChanged || ( archivaRuntimeConfiguration.getUserManagerImpls().toString().hashCode()
-                    != archivaRuntimeConfigurationAdmin.getArchivaRuntimeConfiguration().getUserManagerImpls().toString().hashCode() );
-
             archivaRuntimeConfigurationAdmin.updateArchivaRuntimeConfiguration( archivaRuntimeConfiguration );
-
-            if ( userManagerChanged )
+            CacheConfiguration cacheConfiguration = archivaRuntimeConfiguration.getUrlFailureCacheConfiguration();
+            if ( cacheConfiguration != null )
             {
-                log.info( "user managerImpls changed to {} so reload it",
-                          archivaRuntimeConfiguration.getUserManagerImpls() );
-                userManager.initialize();
+                usersCache.setTimeToLiveSeconds( cacheConfiguration.getTimeToLiveSeconds() );
+                usersCache.setTimeToIdleSeconds( cacheConfiguration.getTimeToIdleSeconds() );
+                usersCache.setMaxElementsOnDisk( cacheConfiguration.getMaxElementsOnDisk() );
+                usersCache.setMaxElementsInMemory( cacheConfiguration.getMaxElementsInMemory() );
             }
-
-            ldapConnectionFactory.initialize();
-
-            Collection<PasswordRule> passwordRules = applicationContext.getBeansOfType( PasswordRule.class ).values();
-
-            for ( PasswordRule passwordRule : passwordRules )
-            {
-                passwordRule.initialize();
-            }
-
-            Collection<CookieSettings> cookieSettingsList =
-                applicationContext.getBeansOfType( CookieSettings.class ).values();
-
-            for ( CookieSettings cookieSettings : cookieSettingsList )
-            {
-                cookieSettings.initialize();
-            }
-
-            return Boolean.TRUE;
         }
         catch ( RepositoryAdminException e )
         {
             throw new ArchivaRestServiceException( e.getMessage(), e );
         }
-
-    }
-
-    public List<UserManagerImplementationInformation> getUserManagerImplementationInformations()
-        throws ArchivaRestServiceException
-    {
-
-        Map<String, UserManager> beans = applicationContext.getBeansOfType( UserManager.class );
-
-        if ( beans.isEmpty() )
-        {
-            return Collections.emptyList();
-        }
-
-        List<UserManagerImplementationInformation> informations =
-            new ArrayList<UserManagerImplementationInformation>( beans.size() );
-
-        for ( Map.Entry<String, UserManager> entry : beans.entrySet() )
-        {
-            UserManager userManager = applicationContext.getBean( entry.getKey(), UserManager.class );
-            if ( userManager.isFinalImplementation() )
-            {
-                UserManagerImplementationInformation information = new UserManagerImplementationInformation();
-                information.setBeanId( StringUtils.substringAfter( entry.getKey(), "#" ) );
-                information.setDescriptionKey( userManager.getDescriptionKey() );
-                information.setReadOnly( userManager.isReadOnly() );
-                informations.add( information );
-            }
-        }
-
-        return informations;
+        return Boolean.TRUE;
     }
 }
-
-

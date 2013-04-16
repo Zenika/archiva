@@ -70,7 +70,7 @@ import java.util.Map;
  *
  * @author Olivier Lamy
  */
-@Service ( "managedRepositoryAdmin#default" )
+@Service( "managedRepositoryAdmin#default" )
 public class DefaultManagedRepositoryAdmin
     extends AbstractRepositoryAdmin
     implements ManagedRepositoryAdmin
@@ -81,7 +81,7 @@ public class DefaultManagedRepositoryAdmin
     public static final String STAGE_REPO_ID_END = "-stage";
 
     @Inject
-    @Named ( value = "archivaTaskScheduler#repository" )
+    @Named( value = "archivaTaskScheduler#repository" )
     private RepositoryArchivaTaskScheduler repositoryTaskScheduler;
 
     @Inject
@@ -339,7 +339,7 @@ public class DefaultManagedRepositoryAdmin
         }
         catch ( Exception e )
         {
-            throw new RepositoryAdminException( "Error saving configuration for delete action" + e.getMessage() );
+            throw new RepositoryAdminException( "Error saving configuration for delete action" + e.getMessage(), e );
         }
 
         return Boolean.TRUE;
@@ -468,9 +468,13 @@ public class DefaultManagedRepositoryAdmin
 
         ManagedRepositoryConfiguration toremove = configuration.findManagedRepositoryById( managedRepository.getId() );
 
+        boolean updateIndexContext = false;
+
         if ( toremove != null )
         {
             configuration.removeManagedRepository( toremove );
+
+            updateIndexContext = !StringUtils.equals( toremove.getIndexDir(), managedRepository.getIndexDirectory() );
         }
 
         ManagedRepositoryConfiguration stagingRepository = getStageRepoConfig( toremove );
@@ -518,7 +522,29 @@ public class DefaultManagedRepositoryAdmin
         {
             repositorySession.close();
         }
-        createIndexContext( managedRepository );
+
+        if ( updateIndexContext )
+        {
+            try
+            {
+                IndexingContext indexingContext = indexer.getIndexingContexts().get( managedRepository.getId() );
+                if ( indexingContext != null )
+                {
+                    indexer.removeIndexingContext( indexingContext, true );
+                }
+
+                // delete directory too as only content is deleted
+                File indexDirectory = indexingContext.getIndexDirectoryFile();
+                FileUtils.deleteDirectory( indexDirectory );
+
+                createIndexContext( managedRepository );
+            }
+            catch ( IOException e )
+            {
+                throw new RepositoryAdminException( e.getMessage(), e );
+            }
+        }
+
         return true;
     }
 
@@ -557,6 +583,14 @@ public class DefaultManagedRepositoryAdmin
         throws RepositoryAdminException
     {
 
+        IndexingContext context = indexer.getIndexingContexts().get( repository.getId() );
+
+        if ( context != null )
+        {
+            log.debug( "skip creating repository indexingContent with id {} as already exists", repository.getId() );
+            return context;
+        }
+
         // take care first about repository location as can be relative
         File repositoryDirectory = new File( repository.getLocation() );
 
@@ -575,35 +609,28 @@ public class DefaultManagedRepositoryAdmin
         try
         {
 
-            IndexingContext context = indexer.getIndexingContexts().get( repository.getId() );
-
-            if ( context != null )
-            {
-                log.debug( "skip adding repository indexingContent with id {} as already exists", repository.getId() );
-                return context;
-            }
-
             String indexDir = repository.getIndexDirectory();
-            File managedRepository = new File( repository.getLocation() );
+            //File managedRepository = new File( repository.getLocation() );
 
             File indexDirectory = null;
-            if ( indexDir != null && !"".equals( indexDir ) )
+            if ( StringUtils.isNotBlank( indexDir ) )
             {
                 indexDirectory = new File( repository.getIndexDirectory() );
+                // not absolute so create it in repository directory
                 if ( !indexDirectory.isAbsolute() )
                 {
-                    indexDirectory = new File( managedRepository, repository.getIndexDirectory() );
-                    repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
+                    indexDirectory = new File( repositoryDirectory, repository.getIndexDirectory() );
                 }
+                repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
             }
             else
             {
-                indexDirectory = new File( managedRepository, ".indexer" );
-                if ( !managedRepository.isAbsolute() )
+                indexDirectory = new File( repositoryDirectory, ".indexer" );
+                if ( !repositoryDirectory.isAbsolute() )
                 {
                     indexDirectory = new File( repositoryDirectory, ".indexer" );
-                    repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
                 }
+                repository.setIndexDirectory( indexDirectory.getAbsolutePath() );
             }
 
             if ( !indexDirectory.exists() )
@@ -615,9 +642,9 @@ public class DefaultManagedRepositoryAdmin
 
             if ( context == null )
             {
-                context = indexer.addIndexingContext( repository.getId(), repository.getId(), managedRepository,
+                context = indexer.addIndexingContext( repository.getId(), repository.getId(), repositoryDirectory,
                                                       indexDirectory,
-                                                      managedRepository.toURI().toURL().toExternalForm(),
+                                                      repositoryDirectory.toURI().toURL().toExternalForm(),
                                                       indexDirectory.toURI().toURL().toString(), indexCreators );
 
                 context.setSearchable( repository.isScanned() );
@@ -798,5 +825,25 @@ public class DefaultManagedRepositoryAdmin
     public void setMavenIndexerUtils( MavenIndexerUtils mavenIndexerUtils )
     {
         this.mavenIndexerUtils = mavenIndexerUtils;
+    }
+
+    public NexusIndexer getIndexer()
+    {
+        return indexer;
+    }
+
+    public void setIndexer( NexusIndexer indexer )
+    {
+        this.indexer = indexer;
+    }
+
+    public List<? extends IndexCreator> getIndexCreators()
+    {
+        return indexCreators;
+    }
+
+    public void setIndexCreators( List<? extends IndexCreator> indexCreators )
+    {
+        this.indexCreators = indexCreators;
     }
 }

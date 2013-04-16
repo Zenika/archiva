@@ -701,7 +701,7 @@ public class DefaultBrowseService
         {
             if ( session != null )
             {
-                session.close();
+                session.closeQuietly();
             }
         }
 
@@ -771,7 +771,8 @@ public class DefaultBrowseService
         return new ArtifactContent();
     }
 
-    public Boolean artifactAvailable( String groupId, String artifactId, String version, String repositoryId )
+    public Boolean artifactAvailable( String groupId, String artifactId, String version, String classifier,
+                                      String repositoryId )
         throws ArchivaRestServiceException
     {
         List<String> selectedRepos = getSelectedRepos( repositoryId );
@@ -793,8 +794,10 @@ public class DefaultBrowseService
                 ManagedRepositoryContent managedRepositoryContent =
                     repositoryContentFactory.getManagedRepositoryContent( repoId );
                 // FIXME default to jar which can be wrong for war zip etc....
-                ArchivaArtifact archivaArtifact =
-                    new ArchivaArtifact( groupId, artifactId, version, "", "jar", repoId );
+                ArchivaArtifact archivaArtifact = new ArchivaArtifact( groupId, artifactId, version,
+                                                                       StringUtils.isEmpty( classifier )
+                                                                           ? ""
+                                                                           : classifier, "jar", repoId );
                 File file = managedRepositoryContent.toFile( archivaArtifact );
 
                 if ( file != null && file.exists() )
@@ -829,6 +832,12 @@ public class DefaultBrowseService
         }
 
         return false;
+    }
+
+    public Boolean artifactAvailable( String groupId, String artifactId, String version, String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        return artifactAvailable( groupId, artifactId, version, null, repositoryId );
     }
 
     public List<Artifact> getArtifacts( String repositoryId )
@@ -1002,6 +1011,31 @@ public class DefaultBrowseService
         }
         return path;
     }
+
+    private List<String> getSelectedRepos( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+
+        List<String> selectedRepos = getObservableRepos();
+
+        if ( CollectionUtils.isEmpty( selectedRepos ) )
+        {
+            return Collections.emptyList();
+        }
+
+        if ( StringUtils.isNotEmpty( repositoryId ) )
+        {
+            // check user has karma on the repository
+            if ( !selectedRepos.contains( repositoryId ) )
+            {
+                throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
+                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
+            }
+            selectedRepos = Collections.singletonList( repositoryId );
+        }
+        return selectedRepos;
+    }
+
 
     private String collapseNamespaces( RepositorySession repositorySession, MetadataResolver metadataResolver,
                                        Collection<String> repoIds, String n )

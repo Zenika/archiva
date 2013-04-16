@@ -606,7 +606,7 @@ public class DefaultArchivaConfiguration
             if ( file.getParentFile() != null )
             {
                 // Check that directory exists
-                if ( ( file.getParentFile().exists() == false ) || ( file.getParentFile().isDirectory() == false ) )
+                if ( ! file.getParentFile().isDirectory() )
                 {
                     // Directory to file must exist for file to be created
                     return false;
@@ -710,7 +710,7 @@ public class DefaultArchivaConfiguration
         catch ( EvaluatorException e )
         {
             throw new RuntimeException(
-                "Unable to evaluate expressions found in " + "userConfigFilename or altConfigFilename." );
+                "Unable to evaluate expressions found in " + "userConfigFilename or altConfigFilename.", e);
         }
         registry.addChangeListener( this );
     }
@@ -724,7 +724,7 @@ public class DefaultArchivaConfiguration
 
         List<String> dbConsumers = Arrays.asList( "update-db-artifact", "update-db-repository-metadata" );
 
-        // remove database consumers  if here
+        // remove database consumers if here
         List<String> intersec =
             ListUtils.intersection( dbConsumers, configuration.getRepositoryScanning().getKnownContentConsumers() );
 

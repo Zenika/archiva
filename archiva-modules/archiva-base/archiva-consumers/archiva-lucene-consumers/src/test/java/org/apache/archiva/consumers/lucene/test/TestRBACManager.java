@@ -38,50 +38,66 @@ import java.util.Set;
 /**
  * @author Olivier Lamy
  */
-@Service("rBACManager#cached")
+@Service("rbacManager#cached")
 public class TestRBACManager implements RBACManager
 {
+
+    public void initialize()
+    {
+
+    }
+
+    public boolean isFinalImplementation()
+    {
+        return false;
+    }
+
+    public String getDescriptionKey()
+    {
+        return "archiva.redback.rbacmanager.test";
+    }
+
     public void addListener( RBACManagerListener listener )
     {
-        //To change body of implemented methods use File | Settings | File Templates.
+
     }
 
     public void removeListener( RBACManagerListener listener )
     {
-        //To change body of implemented methods use File | Settings | File Templates.
+
     }
 
     public Role createRole( String name )
     {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     public boolean roleExists( String name )
     {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;
     }
 
     public boolean roleExists( Role role )
     {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;
     }
 
     public Role saveRole( Role role )
         throws RbacObjectInvalidException, RbacManagerException
     {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     public void saveRoles( Collection<Role> roles )
         throws RbacObjectInvalidException, RbacManagerException
     {
-        //To change body of implemented methods use File | Settings | File Templates.
+
     }
 
     public Role getRole( String roleName )
         throws RbacObjectNotFoundException, RbacManagerException
     {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null;
     }
 
     public Map<String, Role> getRoles( Collection<String> roleNames )
@@ -383,5 +399,10 @@ public class TestRBACManager implements RBACManager
     public void eraseDatabase()
     {
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    public boolean isReadOnly()
+    {
+        return false;
     }
 }

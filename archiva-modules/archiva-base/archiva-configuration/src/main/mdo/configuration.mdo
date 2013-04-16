@@ -178,6 +178,15 @@
           <description>The RedbackRuntimeConfiguration.</description>
         </field>
         <field>
+          <name>archivaRuntimeConfiguration</name>
+          <version>1.4.0+</version>
+          <association>
+            <type>ArchivaRuntimeConfiguration</type>
+            <multiplicity>1</multiplicity>
+          </association>
+          <description>The ArchivaRuntimeConfiguration.</description>
+        </field>
+        <field>
           <name>proxyConnectorRuleConfigurations</name>
           <version>1.4.0+</version>
           <association>
@@ -271,7 +280,7 @@
             {
                 for ( RepositoryGroupConfiguration group : (java.util.List<RepositoryGroupConfiguration>) repositoryGroups )
                 {
-                    if ( group.getRepositories().contains( repo.getId() ) )
+                    if ( !group.getRepositories().contains( repo.getId() ) )
                     {
                         String groupId = group.getId();
                         java.util.List<String> repos = map.get( groupId );
@@ -1457,6 +1466,24 @@
     </class>
 
     <class>
+      <name>ArchivaRuntimeConfiguration</name>
+      <version>1.4.0+</version>
+      <description>
+        The runtime configuration.
+      </description>
+      <fields>
+        <field>
+          <name>urlFailureCacheConfiguration</name>
+          <description>the url failure cache configuration</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>CacheConfiguration</type>
+          </association>
+        </field>
+      </fields>
+    </class>
+
+    <class>
       <name>RedbackRuntimeConfiguration</name>
       <version>1.4.0+</version>
       <description>
@@ -1480,11 +1507,29 @@
           </association>
         </field>
         <field>
+          <name>rbacManagerImpls</name>
+          <description>The RBAC Manager impls to use.</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>String</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+        <field>
           <name>ldapConfiguration</name>
           <description>the ldap configuration</description>
           <version>1.4.0+</version>
           <association>
             <type>LdapConfiguration</type>
+          </association>
+        </field>
+        <field>
+          <name>ldapGroupMappings</name>
+          <description>LdapGroupMappings</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>LdapGroupMapping</type>
+            <multiplicity>*</multiplicity>
           </association>
         </field>
         <field>
@@ -1495,6 +1540,21 @@
           <association xml.mapStyle="inline">
             <type>String</type>
             <multiplicity>*</multiplicity>
+          </association>
+        </field>
+        <field>
+          <name>useUsersCache</name>
+          <description>flag to know if redback will use a cache to prevent searching users already found.</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+          <defaultValue>true</defaultValue>
+        </field>
+        <field>
+          <name>usersCacheConfiguration</name>
+          <description>the users cache configuration</description>
+          <version>1.4.0+</version>
+          <association>
+            <type>CacheConfiguration</type>
           </association>
         </field>
       </fields>
@@ -1524,10 +1584,17 @@
           <description>ssl LDAP connection.</description>
           <version>1.4.0+</version>
           <type>boolean</type>
+          <defaultValue>false</defaultValue>
         </field>
         <field>
           <name>baseDn</name>
           <description>The LDAP base dn.</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>baseGroupsDn</name>
+          <description>The LDAP base dn for groups (if empty baseDn is used).</description>
           <version>1.4.0+</version>
           <type>String</type>
         </field>
@@ -1560,6 +1627,21 @@
           <description>The LDAP authenticator enabled.</description>
           <version>1.4.0+</version>
           <type>boolean</type>
+          <defaultValue>false</defaultValue>
+        </field>
+        <field>
+          <name>writable</name>
+          <description>LDAP writable.</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+          <defaultValue>false</defaultValue>
+        </field>
+        <field>
+          <name>useRoleNameAsGroup</name>
+          <description>Will use role name as LDAP group.</description>
+          <version>1.4.0+</version>
+          <type>boolean</type>
+          <defaultValue>false</defaultValue>
         </field>
         <field>
           <name>extraProperties</name>
@@ -1567,6 +1649,66 @@
           <type>Map</type>
           <description>Additionnal properties to use for ldap connection.</description>
           <association xml.mapStyle="inline">
+            <type>String</type>
+            <multiplicity>*</multiplicity>
+          </association>
+        </field>
+      </fields>
+    </class>
+
+
+    <class>
+      <name>CacheConfiguration</name>
+      <version>1.4.0+</version>
+      <description>Cache configuration.</description>
+      <fields>
+        <field>
+          <name>timeToIdleSeconds</name>
+          <description>TimeToIdleSeconds</description>
+          <version>1.4.0+</version>
+          <type>int</type>
+          <defaultValue>-1</defaultValue>
+        </field>
+        <field>
+          <name>timeToLiveSeconds</name>
+          <description>TimeToLiveSeconds</description>
+          <version>1.4.0+</version>
+          <type>int</type>
+          <defaultValue>-1</defaultValue>
+        </field>
+        <field>
+          <name>maxElementsInMemory</name>
+          <description>max elements in memory</description>
+          <version>1.4.0+</version>
+          <type>int</type>
+          <defaultValue>-1</defaultValue>
+        </field>
+        <field>
+          <name>maxElementsOnDisk</name>
+          <description>max elements on disk</description>
+          <version>1.4.0+</version>
+          <type>int</type>
+          <defaultValue>-1</defaultValue>
+        </field>
+      </fields>
+    </class>
+
+    <class>
+      <name>LdapGroupMapping</name>
+      <version>1.4.0+</version>
+      <description>configuration of a LDAP group to Archiva roles</description>
+      <fields>
+        <field>
+          <name>group</name>
+          <description>LDAP Group</description>
+          <version>1.4.0+</version>
+          <type>String</type>
+        </field>
+        <field>
+          <name>roleNames</name>
+          <version>1.4.0+</version>
+          <description>Archiva roles.</description>
+          <association>
             <type>String</type>
             <multiplicity>*</multiplicity>
           </association>

@@ -19,7 +19,9 @@ package org.apache.archiva.web.security;
  */
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
-import org.apache.archiva.admin.model.runtime.ArchivaRuntimeConfigurationAdmin;
+import org.apache.archiva.admin.model.runtime.RedbackRuntimeConfigurationAdmin;
+import org.apache.archiva.redback.components.cache.Cache;
+import org.apache.archiva.redback.users.AbstractUserManager;
 import org.apache.archiva.redback.users.User;
 import org.apache.archiva.redback.users.UserManager;
 import org.apache.archiva.redback.users.UserManagerException;
@@ -30,7 +32,9 @@ import org.apache.archiva.redback.users.configurable.ConfigurableUserManager;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,26 +46,30 @@ import java.util.Map;
  */
 @Service( "userManager#archiva" )
 public class ArchivaConfigurableUsersManager
-    extends ConfigurableUserManager
+    extends AbstractUserManager
 {
 
     @Inject
-    private ArchivaRuntimeConfigurationAdmin archivaRuntimeConfigurationAdmin;
+    private RedbackRuntimeConfigurationAdmin redbackRuntimeConfigurationAdmin;
 
     @Inject
     private ApplicationContext applicationContext;
 
     private Map<String, UserManager> userManagerPerId;
 
-    private List<UserManagerListener> listeners = new ArrayList<UserManagerListener>();
+    @Inject
+    @Named( value = "cache#users" )
+    private Cache<String, User> usersCache;
 
-    @Override
+    private boolean useUsersCache;
+
+    @PostConstruct
     public void initialize()
     {
         try
         {
             List<String> userManagerImpls =
-                archivaRuntimeConfigurationAdmin.getArchivaRuntimeConfiguration().getUserManagerImpls();
+                redbackRuntimeConfigurationAdmin.getRedbackRuntimeConfiguration().getUserManagerImpls();
             log.info( "use userManagerImpls: '{}'", userManagerImpls );
 
             userManagerPerId = new LinkedHashMap<String, UserManager>( userManagerImpls.size() );
@@ -71,6 +79,8 @@ public class ArchivaConfigurableUsersManager
                 setUserManagerImpl( userManagerImpl );
                 userManagerPerId.put( id, userManagerImpl );
             }
+
+            this.useUsersCache = redbackRuntimeConfigurationAdmin.getRedbackRuntimeConfiguration().isUseUsersCache();
         }
         catch ( RepositoryAdminException e )
         {
@@ -80,64 +90,96 @@ public class ArchivaConfigurableUsersManager
         }
     }
 
-    @Override
+    protected boolean useUsersCache()
+    {
+        return this.useUsersCache;
+    }
+
     public User addUser( User user )
         throws UserManagerException
     {
-        return userManagerPerId.get( user.getUserManagerId() ).addUser( user );
+        user = userManagerPerId.get( user.getUserManagerId() ).addUser( user );
+
+        if ( useUsersCache() )
+        {
+            usersCache.put( user.getUsername(), user );
+        }
+
+        return user;
     }
 
-    @Override
     public void addUserUnchecked( User user )
         throws UserManagerException
     {
         userManagerPerId.get( user.getUserManagerId() ).addUserUnchecked( user );
-    }
 
-    protected UserManager findFirstWritable()
-    {
-        for ( UserManager userManager : userManagerPerId.values() )
+        if ( useUsersCache() )
         {
-            if ( !userManager.isReadOnly() )
-            {
-                return userManager;
-            }
+            usersCache.put( user.getUsername(), user );
         }
-        return null;
     }
 
-    @Override
     public User createUser( String username, String fullName, String emailAddress )
         throws UserManagerException
     {
-        UserManager userManager = findFirstWritable();
-        if ( userManager == null )
+        Exception lastException = null;
+        boolean allFailed = true;
+        User user = null;
+        for ( UserManager userManager : userManagerPerId.values() )
         {
-            throw new RuntimeException( "impossible to find a writable userManager" );
+            try
+            {
+                if ( !userManager.isReadOnly() )
+                {
+                    user = userManager.createUser( username, fullName, emailAddress );
+                    allFailed = false;
+                }
+            }
+            catch ( Exception e )
+            {
+                lastException = e;
+            }
         }
-        return userManager.createUser( username, fullName, emailAddress );
+        if ( lastException != null && allFailed )
+        {
+            throw new UserManagerException( lastException.getMessage(), lastException );
+        }
+        return user;
     }
 
-    @Override
     public UserQuery createUserQuery()
     {
-        return super.createUserQuery();    //To change body of overridden methods use File | Settings | File Templates.
+        return userManagerPerId.values().iterator().next().createUserQuery();
     }
 
 
-    @Override
     public void deleteUser( String username )
         throws UserNotFoundException, UserManagerException
     {
-        UserManager userManager = findFirstWritable();
-        if ( userManager == null )
+        Exception lastException = null;
+        boolean allFailed = true;
+        User user = null;
+        for ( UserManager userManager : userManagerPerId.values() )
         {
-            throw new RuntimeException( "impossible to find a writable userManager" );
+            try
+            {
+                if ( !userManager.isReadOnly() )
+                {
+                    userManager.deleteUser( username );
+                    allFailed = false;
+                }
+            }
+            catch ( Exception e )
+            {
+                lastException = e;
+            }
         }
-        userManager.deleteUser( username );
+        if ( lastException != null && allFailed )
+        {
+            throw new UserManagerException( lastException.getMessage(), lastException );
+        }
     }
 
-    @Override
     public void eraseDatabase()
     {
         for ( UserManager userManager : userManagerPerId.values() )
@@ -146,12 +188,21 @@ public class ArchivaConfigurableUsersManager
         }
     }
 
-    @Override
     public User findUser( String username )
         throws UserManagerException
     {
+
         User user = null;
-        UserManagerException lastException = null;
+        if ( useUsersCache() )
+        {
+            user = usersCache.get( username );
+            if ( user != null )
+            {
+                return user;
+            }
+
+        }
+        Exception lastException = null;
         for ( UserManager userManager : userManagerPerId.values() )
         {
             try
@@ -159,6 +210,10 @@ public class ArchivaConfigurableUsersManager
                 user = userManager.findUser( username );
                 if ( user != null )
                 {
+                    if ( useUsersCache() )
+                    {
+                        usersCache.put( username, user );
+                    }
                     return user;
                 }
             }
@@ -166,7 +221,7 @@ public class ArchivaConfigurableUsersManager
             {
                 lastException = e;
             }
-            catch ( UserManagerException e )
+            catch ( Exception e )
             {
                 lastException = e;
             }
@@ -176,7 +231,7 @@ public class ArchivaConfigurableUsersManager
         {
             if ( lastException != null )
             {
-                throw lastException;
+                throw new UserManagerException( lastException.getMessage(), lastException );
             }
         }
 
@@ -188,33 +243,9 @@ public class ArchivaConfigurableUsersManager
     public User getGuestUser()
         throws UserNotFoundException, UserManagerException
     {
-        User user = null;
-        UserNotFoundException lastException = null;
-        for ( UserManager userManager : userManagerPerId.values() )
-        {
-            try
-            {
-                user = userManager.getGuestUser();
-                if ( user != null )
-                {
-                    return user;
-                }
-            }
-            catch ( UserNotFoundException e )
-            {
-                lastException = e;
-            }
-        }
-
-        if ( user == null && lastException != null )
-        {
-            throw lastException;
-        }
-
-        return user;
+        return findUser( GUEST_USERNAME );
     }
 
-    @Override
     public List<User> findUsersByEmailKey( String emailKey, boolean orderAscending )
         throws UserManagerException
     {
@@ -231,7 +262,6 @@ public class ArchivaConfigurableUsersManager
         return users;
     }
 
-    @Override
     public List<User> findUsersByFullNameKey( String fullNameKey, boolean orderAscending )
         throws UserManagerException
     {
@@ -248,7 +278,6 @@ public class ArchivaConfigurableUsersManager
         return users;
     }
 
-    @Override
     public List<User> findUsersByQuery( UserQuery query )
         throws UserManagerException
     {
@@ -265,7 +294,6 @@ public class ArchivaConfigurableUsersManager
         return users;
     }
 
-    @Override
     public List<User> findUsersByUsernameKey( String usernameKey, boolean orderAscending )
         throws UserManagerException
     {
@@ -282,13 +310,11 @@ public class ArchivaConfigurableUsersManager
         return users;
     }
 
-    @Override
     public String getId()
     {
         return null;
     }
 
-    @Override
     public List<User> getUsers()
         throws UserManagerException
     {
@@ -305,7 +331,6 @@ public class ArchivaConfigurableUsersManager
         return users;
     }
 
-    @Override
     public List<User> getUsers( boolean orderAscending )
         throws UserManagerException
     {
@@ -322,28 +347,43 @@ public class ArchivaConfigurableUsersManager
         return users;
     }
 
-    @Override
     public boolean isReadOnly()
     {
-        //olamy: must be it depends :-)
-        return true;
+        boolean readOnly = false;
+
+        for ( UserManager userManager : userManagerPerId.values() )
+        {
+            readOnly = readOnly || userManager.isReadOnly();
+        }
+        return readOnly;
     }
 
-    @Override
     public User updateUser( User user )
         throws UserNotFoundException, UserManagerException
     {
-        return userManagerPerId.get( user.getUserManagerId() ).updateUser( user );
+        user = userManagerPerId.get( user.getUserManagerId() ).updateUser( user );
+
+        if ( useUsersCache() )
+        {
+            usersCache.put( user.getUsername(), user );
+        }
+
+        return user;
     }
 
-    @Override
     public User updateUser( User user, boolean passwordChangeRequired )
         throws UserNotFoundException, UserManagerException
     {
-        return userManagerPerId.get( user.getUserManagerId() ).updateUser( user, passwordChangeRequired );
+        user = userManagerPerId.get( user.getUserManagerId() ).updateUser( user, passwordChangeRequired );
+
+        if ( useUsersCache() )
+        {
+            usersCache.put( user.getUsername(), user );
+        }
+
+        return user;
     }
 
-    @Override
     public void setUserManagerImpl( UserManager userManagerImpl )
     {
         // not possible here but we know so no need of log.error
@@ -351,59 +391,66 @@ public class ArchivaConfigurableUsersManager
     }
 
     @Override
-    public void addUserManagerListener( UserManagerListener listener )
-    {
-        this.listeners.add( listener );
-    }
-
-    @Override
-    public void removeUserManagerListener( UserManagerListener listener )
-    {
-        this.listeners.remove( listener );
-    }
-
-    @Override
-    protected void fireUserManagerInit( boolean freshDatabase )
-    {
-        for ( UserManagerListener listener : listeners )
-        {
-            listener.userManagerInit( freshDatabase );
-        }
-    }
-
-    @Override
-    protected void fireUserManagerUserAdded( User addedUser )
-    {
-        for ( UserManagerListener listener : listeners )
-        {
-            listener.userManagerUserAdded( addedUser );
-        }
-    }
-
-    @Override
-    protected void fireUserManagerUserRemoved( User removedUser )
-    {
-        for ( UserManagerListener listener : listeners )
-        {
-            listener.userManagerUserRemoved( removedUser );
-        }
-    }
-
-    @Override
-    protected void fireUserManagerUserUpdated( User updatedUser )
-    {
-        for ( UserManagerListener listener : listeners )
-        {
-            listener.userManagerUserUpdated( updatedUser );
-        }
-    }
-
-    @Override
     public User createGuestUser()
         throws UserManagerException
     {
-        return findFirstWritable().createGuestUser();
+        Exception lastException = null;
+        boolean allFailed = true;
+        User user = null;
+        for ( UserManager userManager : userManagerPerId.values() )
+        {
+            try
+            {
+                if ( !userManager.isReadOnly() )
+                {
+                    user = userManager.createGuestUser();
+                    allFailed = false;
+                }
+            }
+            catch ( Exception e )
+            {
+                lastException = e;
+            }
+        }
+        if ( lastException != null && allFailed )
+        {
+            throw new UserManagerException( lastException.getMessage(), lastException );
+        }
+        return user;
     }
+
+
+    public boolean userExists( String userName )
+        throws UserManagerException
+    {
+        Exception lastException = null;
+        boolean allFailed = true;
+        boolean exists = false;
+        for ( UserManager userManager : userManagerPerId.values() )
+        {
+            try
+            {
+
+                if ( userManager.userExists( userName ) )
+                {
+                    exists = true;
+                }
+                allFailed = false;
+
+            }
+            catch ( Exception e )
+            {
+                lastException = e;
+            }
+        }
+        if ( lastException != null && allFailed )
+        {
+            throw new UserManagerException( lastException.getMessage(), lastException );
+        }
+        return exists;
+    }
+
+
 
     @Override
     public boolean isFinalImplementation()

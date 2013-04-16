@@ -24,7 +24,7 @@ import org.apache.archiva.common.plexusbridge.MavenIndexerUtils;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridge;
 import org.apache.archiva.common.plexusbridge.PlexusSisuBridgeException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.maven.index.NexusIndexer;
 import org.apache.maven.index.context.IndexingContext;
 import org.apache.maven.index.context.UnsupportedExistingLuceneIndexException;
@@ -70,7 +70,7 @@ public class DefaultIndexMerger
 
     private List<TemporaryGroupIndex> temporaryGroupIndexes = new CopyOnWriteArrayList<TemporaryGroupIndex>();
 
-    private int defaultGroupIndexTtl;
+    private int groupMergedIndexTtl;
 
     @Inject
     public DefaultIndexMerger( PlexusSisuBridge plexusSisuBridge, MavenIndexerUtils mavenIndexerUtils )
@@ -84,15 +84,15 @@ public class DefaultIndexMerger
     @PostConstruct
     public void intialize()
     {
-        String ttlStr =
-            System.getProperty( IndexMerger.TMP_GROUP_INDEX_SYS_KEY, Integer.toString( DEFAULT_GROUP_INDEX_TTL ) );
-        this.defaultGroupIndexTtl = NumberUtils.toInt( ttlStr, DEFAULT_GROUP_INDEX_TTL );
-
+        this.groupMergedIndexTtl = Integer.getInteger( IndexMerger.TMP_GROUP_INDEX_SYS_KEY, DEFAULT_GROUP_INDEX_TTL );
     }
 
-    public IndexingContext buildMergedIndex( Collection<String> repositoriesIds, boolean packIndex )
+    public IndexingContext buildMergedIndex( IndexMergerRequest indexMergerRequest )
         throws IndexMergerException
     {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.reset();
+        stopWatch.start();
         File tempRepoFile = Files.createTempDir();
         tempRepoFile.deleteOnExit();
 
@@ -105,7 +105,7 @@ public class DefaultIndexMerger
                 indexer.addIndexingContext( tempRepoId, tempRepoId, tempRepoFile, indexLocation, null, null,
                                             mavenIndexerUtils.getAllIndexCreators() );
 
-            for ( String repoId : repositoriesIds )
+            for ( String repoId : indexMergerRequest.getRepositoriesIds() )
             {
                 IndexingContext idxToMerge = indexer.getIndexingContexts().get( repoId );
                 if ( idxToMerge != null )
@@ -116,12 +116,15 @@ public class DefaultIndexMerger
 
             indexingContext.optimize();
 
-            if ( packIndex )
+            if ( indexMergerRequest.isPackIndex() )
             {
                 IndexPackingRequest request = new IndexPackingRequest( indexingContext, indexLocation );
                 indexPacker.packIndex( request );
             }
-            temporaryGroupIndexes.add( new TemporaryGroupIndex( tempRepoFile, tempRepoId ) );
+            temporaryGroupIndexes.add(
+                new TemporaryGroupIndex( tempRepoFile, tempRepoId, indexMergerRequest.getGroupId() ) );
+            stopWatch.stop();
+            log.info( "merged index for repos {} in {} s", indexMergerRequest.getRepositoriesIds(), stopWatch.getTime() );
             return indexingContext;
         }
         catch ( IOException e )
@@ -167,8 +170,8 @@ public class DefaultIndexMerger
         return this.temporaryGroupIndexes;
     }
 
-    public int getDefaultGroupIndexTtl()
+    public int getGroupMergedIndexTtl()
     {
-        return this.defaultGroupIndexTtl;
+        return this.groupMergedIndexTtl;
     }
 }

@@ -23,7 +23,7 @@ import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.common.utils.FileUtil;
 import org.apache.archiva.redback.rest.services.AbstractRestServicesTest;
 import org.apache.archiva.rest.api.services.ArchivaAdministrationService;
-import org.apache.archiva.rest.api.services.ArchivaRuntimeConfigurationService;
+import org.apache.archiva.rest.api.services.RedbackRuntimeConfigurationService;
 import org.apache.archiva.rest.api.services.BrowseService;
 import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.rest.api.services.CommonServices;
@@ -58,7 +58,7 @@ import java.util.Date;
 /**
  * @author Olivier Lamy
  */
-@RunWith ( ArchivaBlockJUnit4ClassRunner.class )
+@RunWith(ArchivaBlockJUnit4ClassRunner.class)
 public abstract class AbstractArchivaRestTest
     extends AbstractRestServicesTest
 {
@@ -224,11 +224,12 @@ public abstract class AbstractArchivaRestTest
         return service;
     }
 
-    protected ArchivaRuntimeConfigurationService getArchivaRuntimeConfigurationService()
+    protected RedbackRuntimeConfigurationService getArchivaRuntimeConfigurationService()
     {
-        ArchivaRuntimeConfigurationService service = JAXRSClientFactory.create(
-            getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
-            ArchivaRuntimeConfigurationService.class, Collections.singletonList( new JacksonJaxbJsonProvider() ) );
+        RedbackRuntimeConfigurationService service =
+            JAXRSClientFactory.create( getBaseUrl() + "/" + getRestServicesPath() + "/archivaServices/",
+                                       RedbackRuntimeConfigurationService.class,
+                                       Collections.singletonList( new JacksonJaxbJsonProvider() ) );
 
         WebClient.client( service ).accept( MediaType.APPLICATION_JSON_TYPE );
         WebClient.client( service ).type( MediaType.APPLICATION_JSON_TYPE );
@@ -439,12 +440,20 @@ public abstract class AbstractArchivaRestTest
             FileUtils.deleteDirectory( badContent );
         }
 
+        File file = new File( repoPath );
+        if ( !file.isAbsolute() )
+        {
+            repoPath = getBasedir() + "/" + repoPath;
+        }
+
         managedRepository.setLocation( new File( repoPath ).getPath() );
         managedRepository.setIndexDirectory(
             System.getProperty( "java.io.tmpdir" ) + "/target/.index-" + Long.toString( new Date().getTime() ) );
 
         managedRepository.setStageRepoNeeded( stageNeeded );
         managedRepository.setSnapshots( true );
+
+        //managedRepository.setScanned( scanned );
 
         ManagedRepositoriesService service = getManagedRepositoriesService( authorizationHeader );
         service.addManagedRepository( managedRepository );

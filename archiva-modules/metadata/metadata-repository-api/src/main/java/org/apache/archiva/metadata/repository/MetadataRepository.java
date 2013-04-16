@@ -54,6 +54,17 @@ public interface MetadataRepository
     List<String> getMetadataFacets( String repositoryId, String facetId )
         throws MetadataRepositoryException;
 
+    /**
+     *
+     * @param repositoryId
+     * @param facetId
+     * @return true if the repository datas for this facetId
+     * @since 1.4-M4
+     * @throws MetadataRepositoryException
+     */
+    boolean hasMetadataFacet( String repositoryId, String facetId )
+        throws MetadataRepositoryException;
+
     MetadataFacet getMetadataFacet( String repositoryId, String facetId, String name )
         throws MetadataRepositoryException;
 
@@ -186,11 +197,18 @@ public interface MetadataRepository
         throws MetadataRepositoryException;
 
 
+    /**
+     * <b>implementations can throw RuntimeException</b>
+     */
     void save();
+
 
     void close()
         throws MetadataRepositoryException;
 
+    /**
+     * <b>implementations can throw RuntimeException</b>
+     */
     void revert();
 
     boolean canObtainAccess( Class<?> aClass );
