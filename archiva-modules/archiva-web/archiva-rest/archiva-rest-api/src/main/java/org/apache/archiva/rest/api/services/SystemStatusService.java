@@ -18,11 +18,12 @@ package org.apache.archiva.rest.api.services;
  * under the License.
  */
 
+import org.apache.archiva.redback.authorization.RedbackAuthorization;
 import org.apache.archiva.rest.api.model.CacheEntry;
+import org.apache.archiva.rest.api.model.HeapMemoryStatusResponse;
 import org.apache.archiva.rest.api.model.QueueEntry;
 import org.apache.archiva.rest.api.model.RepositoryScannerStatistics;
 import org.apache.archiva.security.common.ArchivaRoleConstants;
-import org.apache.archiva.redback.authorization.RedbackAuthorization;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,6 +39,14 @@ import java.util.List;
 @Path( "/systemStatusService/" )
 public interface SystemStatusService
 {
+
+    @Path( "heapMemoryStatus" )
+    @GET
+    @Produces( MediaType.APPLICATION_JSON )
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
+    HeapMemoryStatusResponse getHeapMemoryStatus()
+        throws ArchivaRestServiceException;
+
     @Path( "memoryStatus" )
     @GET
     @Produces( MediaType.TEXT_PLAIN )
@@ -79,7 +88,6 @@ public interface SystemStatusService
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     Boolean clearAllCaches()
         throws ArchivaRestServiceException;
-
 
     @Path( "repositoryScannerStatistics" )
     @GET

@@ -26,6 +26,7 @@ import org.apache.archiva.repository.scanner.RepositoryScanner;
 import org.apache.archiva.repository.scanner.RepositoryScannerInstance;
 import org.apache.archiva.rest.api.model.CacheEntry;
 import org.apache.archiva.rest.api.model.ConsumerScanningStatistics;
+import org.apache.archiva.rest.api.model.HeapMemoryStatusResponse;
 import org.apache.archiva.rest.api.model.QueueEntry;
 import org.apache.archiva.rest.api.model.RepositoryScannerStatistics;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
@@ -36,6 +37,15 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,6 +85,35 @@ public class DefaultSystemStatusService
         queues = getBeansOfType( applicationContext, TaskQueue.class );
 
         caches = getBeansOfType( applicationContext, Cache.class );
+    }
+
+    public HeapMemoryStatusResponse getHeapMemoryStatus()
+        throws ArchivaRestServiceException
+    {
+        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        try
+        {
+            Method method = memoryMXBean.getClass().getDeclaredMethod( "getHeapMemoryUsage", new Class[]{ } );
+            method.setAccessible( true );
+            MemoryUsage usage = (MemoryUsage) method.invoke( memoryMXBean );
+            HeapMemoryStatusResponse heapMemoryStatusResponse = new HeapMemoryStatusResponse();
+            heapMemoryStatusResponse.setInit( usage.getInit() );
+            heapMemoryStatusResponse.setMax( usage.getMax() );
+            heapMemoryStatusResponse.setUsed( usage.getUsed() );
+            return heapMemoryStatusResponse;
+        }
+        catch ( NoSuchMethodException e )
+        {
+            throw new ArchivaRestServiceException( "Memory status is not supported by your JVM", e );
+        }
+        catch ( InvocationTargetException e )
+        {
+            throw new ArchivaRestServiceException( "Memory status is not supported by your JVM", e );
+        }
+        catch ( IllegalAccessException e )
+        {
+            throw new ArchivaRestServiceException( "Memory status is not supported by your JVM", e );
+        }
     }
 
     public String getMemoryStatus()
