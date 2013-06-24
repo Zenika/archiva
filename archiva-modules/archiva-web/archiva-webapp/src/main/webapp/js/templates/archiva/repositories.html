@@ -205,7 +205,7 @@
   <form id="managed-repository-edit-form" class="well form-horizontal">
     <fieldset id="managed-repository-edit-fieldset">
       <div class="control-group">
-        <label class="control-label" for="id">${$.i18n.prop('id')}</label>
+        <label class="control-label" for="id">${$.i18n.prop('identifier')}</label>
 
         <div class="controls">
           {{if update}}
@@ -544,7 +544,7 @@
   <form id="remote-repository-edit-form" class="well form-horizontal">
     <fieldset id="remote-repository-edit-fieldset">
       <div class="control-group">
-        <label class="control-label" for="id">${$.i18n.prop('id')}</label>
+        <label class="control-label" for="id">${$.i18n.prop('identifier')}</label>
 
         <div class="controls">
           {{if update}}
@@ -904,7 +904,7 @@
   <form id="network-proxy-edit-form" class="well form-horizontal">
     <fieldset id="network-proxy-edit-fieldset">
       <div class="control-group">
-        <label class="control-label" for="id">${$.i18n.prop('id')}</label>
+        <label class="control-label" for="id">${$.i18n.prop('identifier')}</label>
 
         <div class="controls">
           {{if update}}
@@ -1412,11 +1412,9 @@
         </a>
       </td>
       <td>
-        {{if repositoryGroup.modified()}}
-        <a href="#" class="btn btn-warning" data-bind="click: function(){saveRepositoryGroup(repositoryGroup)}">
+        <a href="#" class="btn btn-warning" data-bind="click: function(){saveRepositoryGroup(repositoryGroup)},css: { disabled: repositoryGroup.modified()==false }">
           ${$.i18n.prop('save')}
         </a>
-        {{/if}}
       </td>
     </tr>
     {{/each}}
@@ -1426,39 +1424,49 @@
 
 <script id="repository-group-edit-tmpl" type="text/html">
   <div class="row-fluid">
-    {{if update}}
-    <div class="dotted span8">
-      <blockquote>
-        ${repositoryGroup.id}
-        <br/>
-        <a href="${window.archivaRuntimeInfo.baseUrl}/repository/${repositoryGroup.id()}" target="_blank">
-          ${applicationUrl}/repository/${repositoryGroup.id()}
-        </a>
-      </blockquote>
-    </div>
-    {{else}}
+
     <div class="dotted span8">
       <form id="repository-group-edit-form" class="well">
         <fieldset id="repository-group-edit-fieldset">
           <div class="control-group">
-            <label class="control-label" for="id">${$.i18n.prop('id')}</label>
-
+            <label class="control-label" for="id">${$.i18n.prop('identifier')}</label>
             <div class="controls">
               <input type="text" class="input-medium required" id="id" name="id" size="15"
                      data-bind="value: repositoryGroup.id,css:{'uneditable-input': update},readonly:update"/>
             </div>
           </div>
+          <div class="control-group">
+            <label class="control-label" for="mergedIndexPath">${$.i18n.prop('repository.group.mergedIndexPath')}</label>
+              <div class="controls">
+                <input type="text" class="input-large required" id="mergedIndexPath" name="mergedIndexPath"
+                       data-bind="value: repositoryGroup.mergedIndexPath"/>
+              </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="mergedIndexPath">${$.i18n.prop('repository.group.mergedIndexTtl')}</label>
+            <div class="controls">
+                <input type="text" class="input-large required" id="mergedIndexTtl" name="mergedIndexTtl"
+                       data-bind="value: repositoryGroup.mergedIndexTtl"/>
+            </div>
+          </div>
+          <div>
+            <a href="${window.archivaRuntimeInfo.baseUrl}/repository/${repositoryGroup.id()}" target="_blank">
+            {{if repositoryGroup.id()}}
+              ${applicationUrl}/repository/${repositoryGroup.id()}
+            {{/if}}
+            </a>
+          </div>
         </fieldset>
       </form>
     </div>
-    {{/if}}
-    {{if repositoryGroup.modified()}}
+
+
     <div class="span3">
       <a href="#" class="btn btn-warning" data-loading-text="${$.i18n.prop('common.loading')}"
-         id="repository-group-save" data-bind="click: function(){saveRepositoryGroup(repositoryGroup)}">${$.i18n.prop('save')}</a>
+         id="repository-group-save" data-bind="click: function(){saveRepositoryGroup(repositoryGroup)},css: { disabled: repositoryGroup.modified()==false }">${$.i18n.prop('save')}</a>
     </div>
     <br/>
-    {{/if}}
+
   </div>
 </script>
 

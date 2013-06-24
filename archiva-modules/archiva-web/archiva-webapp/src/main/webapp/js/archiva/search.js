@@ -2303,4 +2303,7 @@ define("archiva.search",["jquery","i18n","jquery.tmpl","select2","knockout","kno
     });
 
   }
+
+
+
 });

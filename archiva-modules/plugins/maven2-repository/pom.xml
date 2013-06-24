@@ -22,7 +22,7 @@
   <parent>
     <artifactId>plugins</artifactId>
     <groupId>org.apache.archiva</groupId>
-    <version>1.4-M4-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
   </parent>
   <artifactId>maven2-repository</artifactId>
   <packaging>bundle</packaging>
@@ -67,8 +67,8 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
+      <groupId>org.eclipse.sisu</groupId>
+      <artifactId>org.eclipse.sisu.plexus</artifactId>
     </dependency>
     <dependency>
       <groupId>org.sonatype.sisu</groupId>
@@ -200,7 +200,7 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.logging.log4j.adapters</groupId>
+      <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-1.2-api</artifactId>
     </dependency>
 

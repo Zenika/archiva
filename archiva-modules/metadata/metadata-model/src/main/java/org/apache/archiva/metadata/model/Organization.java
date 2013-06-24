@@ -19,10 +19,13 @@ package org.apache.archiva.metadata.model;
  * under the License.
  */
 
+import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
-@XmlRootElement( name = "organization" )
+@XmlRootElement(name = "organization")
 public class Organization
+    implements Serializable
 {
     private String name;
 

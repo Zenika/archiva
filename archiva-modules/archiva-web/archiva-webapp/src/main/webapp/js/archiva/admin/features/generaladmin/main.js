@@ -16,288 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout","knockout.simpleGrid",
+define("archiva/admin/features/generaladmin/main",["jquery","i18n","utils","jquery.tmpl","knockout","knockout.simpleGrid",
   "knockout.sortable","jquery.ui","jquery.validate","bootstrap","select2","knockout.select2"]
     , function(jquery,i18n,utils,jqueryTmpl,ko,simpleGrid,sortable,jqueryUi,validate,bootstrap,select2) {
 
-  //-------------------------
-  // legacy path part
-  //-------------------------
-
-  LegacyArtifactPath=function(path,groupId,artifactId,version,classifier,type,update){
-    //private String path;
-    this.path=ko.observable(path);
-
-    /**
-     * The artifact reference, as " [groupId] :
-     * [artifactId] : [version] : [classifier] : [type] ".
-     */
-    //private String artifact;
-    //this.artifact=ko.observable(artifact);
-    this.update=update;
-    //private String groupId;
-    this.groupId=ko.observable(groupId);
-
-    //private String artifactId;
-    this.artifactId=ko.observable(artifactId);
-
-    //private String version;
-    this.version=ko.observable(version);
-
-    //private String classifier;
-    this.classifier=ko.observable(classifier);
-
-    //private String type;
-    this.type=ko.observable(type);
-
-    this.modified=ko.observable();
-
-    this.artifact = ko.computed(function() {
-      var artifactValue="";
-      if (this.groupId()){
-        artifactValue+=this.groupId();
-      }
-      if (this.artifactId()){
-        artifactValue+=":"+this.artifactId();
-      }
-      if (this.version()){
-        artifactValue+=":"+this.version();
-      }
-      if (this.classifier()){
-        artifactValue+=":"+this.classifier();
-      }
-      if (this.type()){
-        artifactValue+=":"+this.type();
-      }
-      return artifactValue;
-    }, this);
+  showMenu = function(          administrationMenuItems) {
+        administrationMenuItems.push({  text : $.i18n.prop('menu.repository-scanning')      , order:2000, id: "menu-repository-scanning-list-a"    , href: "#scanningList"         , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRepositoryScanning();}});
+        administrationMenuItems.push({  text : $.i18n.prop('menu.runtime-configuration')    , order:2010, id: "menu-runtime-configuration-list-a"  , href: "#runtimeconfig"        , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayRuntimeConfiguration();}});
+        administrationMenuItems.push({  text : $.i18n.prop('menu.system-status')            , order:2020, id: "menu-system-status-list-a"          , href: "#status"               , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displaySystemStatus();}});
+        administrationMenuItems.push({  text : $.i18n.prop('menu.ui-configuration')         , order:2030, id: "menu-ui-configuration-list-a"       , href: "#uiconfig"             , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayUiConfiguration();}});
+        administrationMenuItems.push({  text : $.i18n.prop('menu.reports')                  , order:2040, id: "menu-report-list-a"                 , href: "#reports"              , redback: "{permissions: ['archiva-manage-configuration']}", func: function(){displayReportsPage();}});
+ 
   };
-
-  mapLegacyArtifactPaths=function(data){
-    if (data){
-      return $.isArray(data)? $.map(data,function(item){
-        return mapLegacyArtifactPath(item);
-      }):[mapLegacyArtifactPath(data)];
-    }
-    return [];
-  };
-
-  mapLegacyArtifactPath=function(data){
-    return data?new LegacyArtifactPath(data.path,data.groupId,data.artifactId,data.version,data.classifier,data.type):null;
-  };
-
-  activateLegacyArtifactPathFormValidation=function(){
-    var theForm=$("#main-content" ).find("#legacy-artifact-paths-edit-form");
-    var validator = theForm.validate({
-      showErrors: function(validator, errorMap, errorList) {
-       customShowError("#main-content #legacy-artifact-paths-edit-form",validator,errorMap,errorMap);
-      }
-    });
-  };
-
-  LegacyArtifactPathViewModel=function(legacyArtifactPath,update,legacyArtifactPathsViewModel){
-    var self=this;
-    this.update=update;
-    this.legacyArtifactPath=legacyArtifactPath;
-    this.legacyArtifactPathsViewModel=legacyArtifactPathsViewModel;
-
-    this.display=function(){
-      var mainContent=$("#main-content");
-      ko.applyBindings(self,mainContent.find("#legacy-artifact-paths-edit" ).get(0));
-      mainContent.find("#legacy-artifact-paths-view-tabs-li-edit a").html($.i18n.prop("edit"));
-      activateLegacyArtifactPathFormValidation();
-      activateLegacyArtifactPathsEditTab();
-    };
-
-    displayGrid=function(){
-      activateLegacyArtifactPathsGridTab();
-    };
-
-    calculatePath=function(){
-      var path="";
-      if (self.legacyArtifactPath.groupId()){
-        path+=self.legacyArtifactPath.groupId()+"/jars/";
-      }
-      if (self.legacyArtifactPath.artifactId()){
-        path+=self.legacyArtifactPath.artifactId();
-      }
-      if (self.legacyArtifactPath.version()){
-        path+="-"+self.legacyArtifactPath.version();
-      }
-      if (self.legacyArtifactPath.classifier()){
-        path+="-"+self.legacyArtifactPath.classifier();
-      }
-      if (self.legacyArtifactPath.type()){
-        path+="."+self.legacyArtifactPath.type();
-      }
-      self.legacyArtifactPath.path(path);
-    };
-
-    this.save=function(){
-      var theForm=$("#main-content" ).find("#legacy-artifact-paths-edit-form");
-      if (!theForm.valid()){
-        return;
-      }
-      // do that on server side
-      /*if (theForm.find("#artifact" ).val()
-          !=theForm.find("#path" ).val()){
-        var errorList=[{
-          message: $.i18n.prop("path must match artifact"),
-    		  element: theForm.find("#path" ).get(0)
-        }];
-        customShowError("#main-content #legacy-artifact-paths-edit-form", null, null, errorList);
-        return;
-      }*/
-      // TODO call id exists if add ?
-      clearUserMessages();
-      $.log("save ok");
-      if (self.update){
-        $.log("update");
-      }else {
-        $.ajax("restServices/archivaServices/archivaAdministrationService/addLegacyArtifactPath",
-          {
-            type: "POST",
-            contentType: 'application/json',
-            data: ko.toJSON(self.legacyArtifactPath),
-            dataType: 'json',
-            success: function(data) {
-              self.legacyArtifactPath.modified(false);
-              self.legacyArtifactPathsViewModel.legacyArtifactPaths.push(self.legacyArtifactPath);
-              displaySuccessMessage($.i18n.prop('legacy-artifact-path.added',self.legacyArtifactPath.path()));
-              activateLegacyArtifactPathsGridTab();
-            },
-            error: function(data) {
-              var res = $.parseJSON(data.responseText);
-              displayRestError(res);
-            }
-          }
-        );
-      }
-    }
-  };
-
-  LegacyArtifactPathsViewModel=function(){
-    var self=this;
-    this.legacyArtifactPaths=ko.observableArray([]);
-
-    this.gridViewModel = new ko.simpleGrid.viewModel({
-      data: self.legacyArtifactPaths,
-      columns: [
-        {
-          headerText: $.i18n.prop('legacy-artifact-paths.path'),
-          rowText: "path"
-        },
-        {
-          headerText: $.i18n.prop('legacy-artifact-paths.artifact'),
-          rowText: "artifact"
-        }
-      ],
-      pageSize: 5,
-      gridUpdateCallBack: function(networkProxy){
-        $("#main-content").find("#legacy-artifact-paths-table" ).find("[title]").tooltip();
-      }
-    });
-
-
-    editLegacyArtifactPath=function(legacyArtifactPath){
-      var legacyArtifactPathViewModel=new LegacyArtifactPathViewModel(legacyArtifactPath,true);
-      legacyArtifactPathViewModel.display();
-    };
-
-    removeLegacyArtifactPath=function(legacyArtifactPath){
-
-      openDialogConfirm(
-          function(){
-
-            $.ajax("restServices/archivaServices/archivaAdministrationService/deleteLegacyArtifactPath?path="+encodeURIComponent(legacyArtifactPath.path()),
-              {
-                type: "GET",
-                dataType: 'json',
-                success: function(data) {
-                  self.legacyArtifactPaths.remove(legacyArtifactPath);
-                  displaySuccessMessage($.i18n.prop('legacy-artifact-path.removed',legacyArtifactPath.path()));
-                  activateLegacyArtifactPathsGridTab();
-                },
-                error: function(data) {
-                  var res = $.parseJSON(data.responseText);
-                  displayRestError(res);
-                },
-                complete: function(){
-                  closeDialogConfirm();
-                }
-              }
-            );
-          }, $.i18n.prop('ok'), $.i18n.prop('cancel'), $.i18n.prop('legacy-artifact-path.delete.confirm',legacyArtifactPath.path()),
-                      $("#legacy-artifact-path-delete-warning-tmpl" ).tmpl(legacyArtifactPath));
-
-    };
-
-    updateLegacyArtifactPath=function(legacyArtifactPath){
-
-    }
-
-  };
-
-  displayLegacyArtifactPathSupport=function(){
-    screenChange();
-    var mainContent=$("#main-content");
-    mainContent.html(mediumSpinnerImg());
-
-    $.ajax("restServices/archivaServices/archivaAdministrationService/getLegacyArtifactPaths", {
-        type: "GET",
-        dataType: 'json',
-        success: function(data){
-          mainContent.html($("#legacy-artifact-path-main").tmpl());
-          var legacyArtifactPathsViewModel=new LegacyArtifactPathsViewModel();
-          var legacyPaths=mapLegacyArtifactPaths(data);
-          $.log("legacyPaths:"+legacyPaths.length);
-          legacyArtifactPathsViewModel.legacyArtifactPaths(legacyPaths);
-          ko.applyBindings(legacyArtifactPathsViewModel,mainContent.find("#legacy-artifact-paths-view" ).get(0));
-
-          mainContent.find("#legacy-artifact-paths-view-tabs").on('show', function (e) {
-            if ($(e.target).attr("href")=="#legacy-artifact-paths-edit") {
-              var viewModel = new LegacyArtifactPathViewModel(new LegacyArtifactPath(),false,legacyArtifactPathsViewModel);
-              viewModel.display();
-              activateLegacyArtifactPathFormValidation();
-              clearUserMessages();
-            }
-            if ($(e.target).attr("href")=="#legacy-artifact-paths-view") {
-              mainContent.find("#legacy-artifact-paths-view-tabs-li-edit a").html($.i18n.prop("add"));
-              clearUserMessages();
-            }
-
-          });
-
-
-          activateLegacyArtifactPathsGridTab();
-        }
-    });
-
-
-  };
-
-
-  activateLegacyArtifactPathsGridTab=function(){
-    var mainContent = $("#main-content");
-    mainContent.find("#legacy-artifact-paths-view-tabs-li-edit").removeClass("active");
-    mainContent.find("#legacy-artifact-paths-edit").removeClass("active");
-
-    mainContent.find("#legacy-artifact-paths-view-tabs-li-grid").addClass("active");
-    mainContent.find("#legacy-artifact-paths-view").addClass("active");
-    mainContent.find("#legacy-artifact-paths-view-tabs-li-edit a").html($.i18n.prop("add"));
-
-  };
-
-  activateLegacyArtifactPathsEditTab=function(){
-    var mainContent = $("#main-content");
-    mainContent.find("#legacy-artifact-paths-view-tabs-li-grid").removeClass("active");
-    mainContent.find("#legacy-artifact-paths-view").removeClass("active");
-
-    mainContent.find("#legacy-artifact-paths-view-tabs-li-edit").addClass("active");
-    mainContent.find("#legacy-artifact-paths-edit").addClass("active");
-  };
-
-
+ 
   //---------------------------
   // repository scanning part
   //---------------------------
@@ -1080,13 +811,13 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
         { headerText: "Artifact Count", rowText: "totalArtifactCount" },
         { headerText: "Group Count", rowText: "totalGroupCount" },
         { headerText: "Project Count", rowText: "totalProjectCount" },
-        { headerText: "Archetypes", rowText: function (item) { return item.totalCountForType.pom === "" ? item.totalCountForType.pom : "0"} },
-        { headerText: "Jars", rowText: function (item) { return item.totalCountForType.jar === "" ? item.totalCountForType.jar : "0" } },
-        { headerText: "Wars", rowText: function (item) { return item.totalCountForType.war === "" ? item.totalCountForType.war : "0" } },
-        { headerText: "Ears", rowText: function (item) { return item.totalCountForType.ear === "" ? item.totalCountForType.ear : "0" } },
-        { headerText: "Exes", rowText: function (item) { return item.totalCountForType.exe === "" ? item.totalCountForType.exe : "0" } },
-        { headerText: "Dlls", rowText: function (item) { return item.totalCountForType.dll === "" ? item.totalCountForType.dll : "0" } },
-        { headerText: "Zips", rowText: function (item) { return item.totalCountForType.zip === "" ? item.totalCountForType.zip : "0" } }
+        { headerText: "Archetypes", rowText: function (item) { return !item.totalCountForType.pom || item.totalCountForType.pom === "" ? "0" : item.totalCountForType.pom } },
+        { headerText: "Jars", rowText: function (item) { return !item.totalCountForType.war || item.totalCountForType.jar === "" ? "0" : item.totalCountForType.jar } },
+        { headerText: "Wars", rowText: function (item) { return !item.totalCountForType.war || item.totalCountForType.war === "" ? "0" : item.totalCountForType.jar } },
+        { headerText: "Ears", rowText: function (item) { return !item.totalCountForType.ear || item.totalCountForType.ear === "" ? "0" : item.totalCountForType.ear } },
+        { headerText: "Exes", rowText: function (item) { return !item.totalCountForType.exe || item.totalCountForType.exe === "" ? "0" : item.totalCountForType.exe } },
+        { headerText: "Dlls", rowText: function (item) { return !item.totalCountForType.dll || item.totalCountForType.dll === "" ? "0" : item.totalCountForType.dll} },
+        { headerText: "Zips", rowText: function (item) { return !item.totalCountForType.zip || item.totalCountForType.zip === "" ? "0" : item.totalCountForType.zip } }
       ],
       pageSize: 10
     });
@@ -1641,39 +1372,45 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
       //save modified ldap group mappings if any
       if(self.modifiesLdapGroupMappings().length>0){
         $.log("save modifiesLdapGroupMappings");
+        var message=$.i18n.prop('redback-runtime-ldap-group-mapping.updated');
+        var userMessages=$("#user-messages");
+        var ldapGroupMappings=[];
         $.each(self.modifiesLdapGroupMappings(),function(idx,item){
+
           if(!(item.automatic&item.roleNames().length<2)){
             $.log("update mapping for group:"+item.group());
-            var mainContent=$("#main-content");
-            var saveButton = mainContent.find("#redback-runtime-configuration-save" );
-            saveButton.button('loading');
-            clearUserMessages();
-            var userMessages=$("#user-messages");
-            userMessages.html(mediumSpinnerImg());
-            $.ajax("restServices/redbackServices/ldapGroupMappingService",
-                   {
-                     type: "POST",
-                     contentType: 'application/json',
-                     data:ko.toJSON(item),
-                     dataType: 'json',
-                     success: function(data) {
-                       var message=$.i18n.prop('redback-runtime-ldap-group-mapping.updated');
-                       displaySuccessMessage(message);
-                     },
-                     error: function(data) {
-                       var res = $.parseJSON(data.responseText);
-                       displayRestError(res);
-                     },
-                     complete:function(data){
-                       removeMediumSpinnerImg(userMessages);
-                       saveButton.button('reset');
-                       self.redbackRuntimeConfiguration().modified(false);
-                       self.redbackRuntimeConfiguration().ldapConfiguration().modified(false);
-                     }
-                   }
-            );
+            ldapGroupMappings.push(item);
           }
         });
+
+        if (ldapGroupMappings.length>0){
+
+          var mainContent=$("#main-content");
+          var saveButton = mainContent.find("#redback-runtime-configuration-save" );
+          saveButton.button('loading');
+          userMessages.html(mediumSpinnerImg());
+          $.ajax("restServices/redbackServices/ldapGroupMappingService",
+                 {
+                   type: "POST",
+                   contentType: 'application/json',
+                   data:ko.toJSON(new LdapGroupMappingUpdateRequest(ldapGroupMappings)),
+                   dataType: 'json',
+                   success: function(data) {
+                     displaySuccessMessage(message);
+                   },
+                   error: function(data) {
+                     var res = $.parseJSON(data.responseText);
+                     displayRestError(res);
+                   },
+                   complete:function(data){
+                     removeMediumSpinnerImg(userMessages);
+                     saveButton.button('reset');
+                     self.redbackRuntimeConfiguration().modified(false);
+                     self.redbackRuntimeConfiguration().ldapConfiguration().modified(false);
+                   }
+                 }
+          );
+        }
 
 
       } else {
@@ -1906,6 +1643,8 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
                     ||$.inArray("ldap",redbackRuntimeConfiguration.rbacManagerImpls())>=0;
             $.log("useLdap:"+useLdap);
             if(useLdap){
+              $.log("in get ldap groups");
+
               // load ldap roles
               $.ajax("restServices/redbackServices/ldapGroupMappingService/ldapGroups", {
                 type: "GET",
@@ -1939,6 +1678,7 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
                 }
               );
             } else {
+              $.log("before displayRuntimeConfigurationScreen");
               displayRuntimeConfigurationScreen(redbackRuntimeConfigurationViewModel,null,null);
             }
           }
@@ -1955,7 +1695,8 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     });
 
     redbackRuntimeConfigurationViewModel.allRoleNames=ko.observableArray(allRoleNames);
-    if (redbackRuntimeConfigurationViewModel.redbackRuntimeConfiguration().ldapConfiguration().useRoleNameAsGroup()) {
+
+    if (redbackRuntimeConfigurationViewModel.redbackRuntimeConfiguration().ldapConfiguration().useRoleNameAsGroup()&&groups) {
       // if using groups == roles add all as mapping except already mapped
       $.each(groups,function(idx,item){
         var exists=false;
@@ -1971,6 +1712,7 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
 
       });
     }
+
     redbackRuntimeConfigurationViewModel.redbackRuntimeConfiguration().ldapGroupMappings=ko.observableArray(groupMappings?groupMappings:[]);
     redbackRuntimeConfigurationViewModel.redbackRuntimeConfiguration().modified(false);
 
@@ -2007,6 +1749,10 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     this.update=true;
   }
 
+  LdapGroupMappingUpdateRequest=function(ldapGroupMappings){
+    this.ldapGroupMappings=ko.observableArray(ldapGroupMappings?ldapGroupMappings:[]);
+  }
+
   mapLdapGroupMappings=function(data,modifyLdapGroupMapping){
     if(data!=null){
       return $.map(data,function(item){
@@ -2041,28 +1787,6 @@ define("archiva.general-admin",["jquery","i18n","utils","jquery.tmpl","knockout"
     return new CacheConfiguration(data.timeToIdleSeconds,data.timeToLiveSeconds,data.maxElementsInMemory,data.maxElementsOnDisk);
   }
 
-  CookieInformation=function(path,domain,secure,timeout,rememberMeEnabled){
-    //private String path;
-    this.path=path;
-
-    //private String domain;
-    this.domain=domain;
-
-    //private String secure;
-    this.secure=secure;
-
-    //private String timeout;
-    this.timeout=timeout;
-
-    //private boolean rememberMeEnabled;
-    this.rememberMeEnabled=rememberMeEnabled;
-  }
-
-  mapCookieInformation=function(data){
-    if(!data){
-      return new CookieInformation();
-    }
-    return new CookieInformation(data.path,data.domain,data.secure,data.timeout,data.rememberMeEnabled);
-  }
+ 
 
 });

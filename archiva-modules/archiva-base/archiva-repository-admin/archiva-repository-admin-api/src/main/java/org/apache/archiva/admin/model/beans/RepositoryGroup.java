@@ -27,7 +27,7 @@ import java.util.List;
  * @author Olivier Lamy
  * @since 1.4-M1
  */
-@XmlRootElement( name = "repositoryGroup" )
+@XmlRootElement(name = "repositoryGroup")
 public class RepositoryGroup
     implements Serializable
 {
@@ -40,6 +40,16 @@ public class RepositoryGroup
      * repositories ids
      */
     private List<String> repositories;
+
+    /**
+     * The path of the merged index.
+     */
+    private String mergedIndexPath = "/.indexer";
+
+    /**
+     * The TTL (time to live) of the repo group's merged index.
+     */
+    private int mergedIndexTtl = 30;
 
     public RepositoryGroup()
     {
@@ -115,6 +125,39 @@ public class RepositoryGroup
     public void setRepositories( List<String> repositories )
     {
         this.repositories = repositories;
+    }
+
+    public String getMergedIndexPath()
+    {
+        return mergedIndexPath;
+    }
+
+    public void setMergedIndexPath( String mergedIndexPath )
+    {
+        this.mergedIndexPath = mergedIndexPath;
+    }
+
+    public int getMergedIndexTtl() {
+        return mergedIndexTtl;
+    }
+
+    /**
+     * Set the TTL of the repo group's merged index.
+     *
+     * @param mergedIndexTtl
+     */
+    public void setMergedIndexTtl(int mergedIndexTtl) {
+        this.mergedIndexTtl = mergedIndexTtl;
+    }
+
+    public RepositoryGroup mergedIndexPath( String mergedIndexPath ) {
+        this.mergedIndexPath = mergedIndexPath;
+        return this;
+    }
+
+    public RepositoryGroup mergedIndexTtl( int mergedIndexTtl ) {
+        this.mergedIndexTtl = mergedIndexTtl;
+        return this;
     }
 
     public boolean equals( Object other )

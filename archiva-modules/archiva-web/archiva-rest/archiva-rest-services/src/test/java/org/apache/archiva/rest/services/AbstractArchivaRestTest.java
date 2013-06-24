@@ -54,6 +54,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
+import org.apache.archiva.rest.api.services.PluginsService;
 
 /**
  * @author Olivier Lamy
@@ -165,6 +166,14 @@ public abstract class AbstractArchivaRestTest
     protected PingService getPingService()
     {
         return getService( PingService.class, null );
+    }
+    
+    protected PluginsService getPluginsService()
+    {
+        PluginsService service = getService( PluginsService.class, null );
+        WebClient.client( service ).accept( MediaType.TEXT_PLAIN );
+        WebClient.client( service ).type( MediaType.TEXT_PLAIN );
+        return service;
     }
 
     protected RemoteRepositoriesService getRemoteRepositoriesService()

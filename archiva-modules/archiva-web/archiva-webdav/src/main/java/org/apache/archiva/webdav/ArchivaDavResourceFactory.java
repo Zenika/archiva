@@ -73,6 +73,7 @@ import org.apache.archiva.xml.XMLException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -110,7 +111,7 @@ import java.util.Set;
 /**
  *
  */
-@Service( "davResourceFactory#archiva" )
+@Service("davResourceFactory#archiva")
 public class ArchivaDavResourceFactory
     implements DavResourceFactory, Auditable
 {
@@ -141,7 +142,7 @@ public class ArchivaDavResourceFactory
      *
      */
     @Inject
-    @Named( value = "repositoryProxyConnectors#default" )
+    @Named(value = "repositoryProxyConnectors#default")
     private RepositoryProxyConnectors connectors;
 
     /**
@@ -171,7 +172,7 @@ public class ArchivaDavResourceFactory
      *
      */
     @Inject
-    @Named( value = "httpAuthenticator#basic" )
+    @Named(value = "httpAuthenticator#basic")
     private HttpAuthenticator httpAuth;
 
     @Inject
@@ -207,7 +208,7 @@ public class ArchivaDavResourceFactory
      *
      */
     @Inject
-    @Named( value = "archivaTaskScheduler#repository" )
+    @Named(value = "archivaTaskScheduler#repository")
     private RepositoryArchivaTaskScheduler scheduler;
 
     private ApplicationContext applicationContext;
@@ -262,8 +263,8 @@ public class ArchivaDavResourceFactory
             // handle browse requests for virtual repos
             if ( RepositoryPathUtil.getLogicalResource( archivaLocator.getOrigResourcePath() ).endsWith( "/" ) )
             {
-                return getResource( request, repoGroupConfig.getRepositories(), archivaLocator,
-                                    archivaLocator.getRepositoryId() );
+                return getResourceFromGroup( request, repoGroupConfig.getRepositories(), archivaLocator,
+                                             repoGroupConfig );
             }
             else
             {
@@ -272,7 +273,7 @@ public class ArchivaDavResourceFactory
                 //  infrequent
                 List<String> repositories = new ArrayList<String>( repoGroupConfig.getRepositories() );
                 resource = processRepositoryGroup( request, archivaLocator, repositories, activePrincipal,
-                                                   resourcesInAbsolutePath, archivaLocator.getRepositoryId() );
+                                                   resourcesInAbsolutePath, repoGroupConfig );
             }
         }
         else
@@ -435,7 +436,7 @@ public class ArchivaDavResourceFactory
     private DavResource processRepositoryGroup( final DavServletRequest request,
                                                 ArchivaDavResourceLocator archivaLocator, List<String> repositories,
                                                 String activePrincipal, List<String> resourcesInAbsolutePath,
-                                                String repositoryGroupId )
+                                                RepositoryGroupConfiguration repoGroupConfig )
         throws DavException
     {
         DavResource resource = null;
@@ -445,12 +446,12 @@ public class ArchivaDavResourceFactory
 
         String rootPath = StringUtils.substringBeforeLast( pathInfo, "/" );
 
-        if ( StringUtils.endsWith( rootPath, "/.indexer" ) )
+        if ( StringUtils.endsWith( rootPath, repoGroupConfig.getMergedIndexPath() ) )
         {
             // we are in the case of index file request
             String requestedFileName = StringUtils.substringAfterLast( pathInfo, "/" );
             File temporaryIndexDirectory =
-                buildMergedIndexDirectory( repositories, activePrincipal, request, repositoryGroupId );
+                buildMergedIndexDirectory( repositories, activePrincipal, request, repoGroupConfig );
 
             File resourceFile = new File( temporaryIndexDirectory, requestedFileName );
             resource = new ArchivaDavResource( resourceFile.getAbsolutePath(), requestedFileName, null,
@@ -904,8 +905,9 @@ public class ArchivaDavResourceFactory
         }
     }
 
-    private DavResource getResource( DavServletRequest request, List<String> repositories,
-                                     ArchivaDavResourceLocator locator, String groupId )
+    private DavResource getResourceFromGroup( DavServletRequest request, List<String> repositories,
+                                              ArchivaDavResourceLocator locator,
+                                              RepositoryGroupConfiguration repositoryGroupConfiguration )
         throws DavException
     {
         List<File> mergedRepositoryContents = new ArrayList<File>();
@@ -925,18 +927,37 @@ public class ArchivaDavResourceFactory
 
         boolean allow = isAllowedToContinue( request, repositories, activePrincipal );
 
+        // remove last /
+        String pathInfo = StringUtils.removeEnd( request.getPathInfo(), "/" );
+
         if ( allow )
         {
 
-            // remove last /
-            String pathInfo = StringUtils.removeEnd( request.getPathInfo(), "/" );
-            if ( StringUtils.endsWith( pathInfo, "/.indexer" ) )
+            if ( StringUtils.endsWith( pathInfo, repositoryGroupConfiguration.getMergedIndexPath() ) )
             {
-                File mergedRepoDir = buildMergedIndexDirectory( repositories, activePrincipal, request, groupId );
+                File mergedRepoDir =
+                    buildMergedIndexDirectory( repositories, activePrincipal, request, repositoryGroupConfiguration );
                 mergedRepositoryContents.add( mergedRepoDir );
             }
             else
             {
+                if ( StringUtils.equalsIgnoreCase( pathInfo, "/" + repositoryGroupConfiguration.getId() ) )
+                {
+                    File tmpDirectory = new File( SystemUtils.getJavaIoTmpDir(),
+                                                  repositoryGroupConfiguration.getId() + "/"
+                                                      + repositoryGroupConfiguration.getMergedIndexPath() );
+                    if ( !tmpDirectory.exists() )
+                    {
+                        synchronized ( tmpDirectory.getAbsolutePath() )
+                        {
+                            if ( !tmpDirectory.exists() )
+                            {
+                                tmpDirectory.mkdirs();
+                            }
+                        }
+                    }
+                    mergedRepositoryContents.add( tmpDirectory.getParentFile() );
+                }
                 for ( String repository : repositories )
                 {
                     ManagedRepositoryContent managedRepository = null;
@@ -1160,7 +1181,8 @@ public class ArchivaDavResourceFactory
     }
 
     protected File buildMergedIndexDirectory( List<String> repositories, String activePrincipal,
-                                              DavServletRequest request, String groupId )
+                                              DavServletRequest request,
+                                              RepositoryGroupConfiguration repositoryGroupConfiguration )
         throws DavException
     {
 
@@ -1176,21 +1198,20 @@ public class ArchivaDavResourceFactory
                 temporaryGroupIndexMap = new HashMap<String, TemporaryGroupIndex>();
             }
 
-            TemporaryGroupIndex tmp = temporaryGroupIndexMap.get( groupId );
+            TemporaryGroupIndex tmp = temporaryGroupIndexMap.get( repositoryGroupConfiguration.getId() );
 
             if ( tmp != null && tmp.getDirectory() != null && tmp.getDirectory().exists() )
             {
-                if ( System.currentTimeMillis() - tmp.getCreationTime() > ( indexMerger.getGroupMergedIndexTtl() * 60
-                    * 1000 ) )
+                if ( System.currentTimeMillis() - tmp.getCreationTime() > ( repositoryGroupConfiguration.getMergedIndexTtl() * 60 * 1000 ) )
                 {
                     log.debug( MarkerFactory.getMarker( "group.merged.index" ),
-                               "tmp group index '{}' is too old so delete it", groupId );
+                               "tmp group index '{}' is too old so delete it", repositoryGroupConfiguration.getId() );
                     indexMerger.cleanTemporaryGroupIndex( tmp );
                 }
                 else
                 {
                     log.debug( MarkerFactory.getMarker( "group.merged.index" ),
-                               "merged index for group '{}' found in cache", groupId );
+                               "merged index for group '{}' found in cache", repositoryGroupConfiguration.getId() );
                     return tmp.getDirectory();
                 }
             }
@@ -1215,15 +1236,16 @@ public class ArchivaDavResourceFactory
                                e.getMessage() );
                 }
             }
-            log.info( "generate temporary merged index for repository group '{}' for repositories '{}'", groupId,
-                      authzRepos );
-            IndexingContext indexingContext =
-                indexMerger.buildMergedIndex( new IndexMergerRequest( authzRepos, true, groupId ) );
+            log.info( "generate temporary merged index for repository group '{}' for repositories '{}'",
+                      repositoryGroupConfiguration.getId(), authzRepos );
+            IndexingContext indexingContext = indexMerger.buildMergedIndex(
+                new IndexMergerRequest( authzRepos, true, repositoryGroupConfiguration.getId(),
+                                        repositoryGroupConfiguration.getMergedIndexPath(), repositoryGroupConfiguration.getMergedIndexTtl() ) );
             File mergedRepoDir = indexingContext.getIndexDirectoryFile();
-            TemporaryGroupIndex temporaryGroupIndex =
-                new TemporaryGroupIndex( mergedRepoDir, indexingContext.getId(), groupId ).setCreationTime(
-                    new Date().getTime() );
-            temporaryGroupIndexMap.put( groupId, temporaryGroupIndex );
+            TemporaryGroupIndex temporaryGroupIndex = new TemporaryGroupIndex( mergedRepoDir, indexingContext.getId(),
+                    repositoryGroupConfiguration.getId(),repositoryGroupConfiguration.getMergedIndexTtl() )
+                    .setCreationTime(new Date().getTime() );
+            temporaryGroupIndexMap.put( repositoryGroupConfiguration.getId(), temporaryGroupIndex );
             session.setAttribute( TemporaryGroupIndexSessionCleaner.TEMPORARY_INDEX_SESSION_KEY,
                                   temporaryGroupIndexMap );
             return mergedRepoDir;

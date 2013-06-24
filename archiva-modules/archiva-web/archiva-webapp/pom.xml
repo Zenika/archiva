@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva-web</artifactId>
-    <version>1.4-M4-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
   </parent>
   <artifactId>archiva-webapp</artifactId>
   <packaging>war</packaging>
@@ -79,8 +79,13 @@
     </dependency>
 
     <dependency>
-      <groupId>org.sonatype.sisu</groupId>
-      <artifactId>sisu-inject-plexus</artifactId>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.sisu</groupId>
+      <artifactId>org.eclipse.sisu.plexus</artifactId>
       <exclusions>
         <exclusion>
           <groupId>org.sonatype.sisu</groupId>
@@ -113,10 +118,17 @@
       <groupId>org.apache.archiva</groupId>
       <artifactId>metadata-repository-api</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.apache.archiva</groupId>
       <artifactId>metadata-store-jcr</artifactId>
     </dependency>
+    <!--
+    <dependency>
+      <groupId>org.apache.archiva</groupId>
+      <artifactId>metadata-store-cassandra</artifactId>
+    </dependency>
+    -->
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
@@ -706,17 +718,17 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j.adapters</groupId>
+      <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-1.2-api</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j.adapters</groupId>
+      <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j.adapters</groupId>
+      <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-jcl</artifactId>
       <scope>runtime</scope>
     </dependency>
@@ -856,6 +868,7 @@
           <artifactId>apache-rat-plugin</artifactId>
           <configuration>
             <excludes>
+              <exclude>nbactions.xml</exclude>  
               <exclude>src/main/webapp/css/*.css</exclude>
               <exclude>src/main/webapp/js/*.js</exclude>
               <exclude>src/site/resources/css/*.css</exclude>
@@ -1000,7 +1013,12 @@
             <archiva.devMode>${archiva.devMode}</archiva.devMode>
             <archiva.javascriptLog>${archiva.javascriptLog}</archiva.javascriptLog>
             <archiva.logMissingI18n>${archiva.logMissingI18n}</archiva.logMissingI18n>
-            <archiva.tmp.group.index.ttl>${archiva.groupIndexTtl}</archiva.tmp.group.index.ttl>
+            <!--
+            not needed as we use asyncLogger in configuration
+            <Log4jContextSelector>org.apache.logging.log4j.core.async.AsyncLoggerContextSelector</Log4jContextSelector>
+            -->
+            <cassandraHost>localhost</cassandraHost>
+            <cassandraPort>9160</cassandraPort>
           </systemProperties>
           <additionalClasspathDirs>
             <additionalClasspathDir>${basedir}/src/test/tomcat</additionalClasspathDir>

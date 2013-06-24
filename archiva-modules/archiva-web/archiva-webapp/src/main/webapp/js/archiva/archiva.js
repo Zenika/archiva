@@ -68,10 +68,10 @@ $.ajax({
               "bootstrap": "bootstrap.2.2.2",
               "jquery.validate": "jquery.validate-1.9.0",
               "jquery.json": "jquery.json-2.3.min",
-              "knockout": "knockout-2.2.0.debug",
+              "knockout": "knockout-2.2.1.debug",
               "knockout.simpleGrid": "knockout.simpleGrid",
               "knockout.select2": "knockout.select2",
-              "knockout.sortable": "knockout-sortable",
+              "knockout.sortable": "knockout-sortable.0.7.2",
               "jquery.iframe.transport": "jquery.iframe-transport-1.4",
               "jquery.fileupload": "jquery.fileupload-5.10.0",
               "jquery.fileupload.ip":"jquery.fileupload-ip-1.0.6",
@@ -82,28 +82,32 @@ $.ajax({
               "sammy": "sammy.0.7.4",
               "select2": "select2.min-3.2",
               "jqueryFileTree": "jqueryFileTree-1.0.1",
-              "d3": "d3.min",
+              "d3": "d3.min.3.1.5",
               "redback": "redback/redback",
               "redback.roles": "redback/roles",
               "redback.user": "redback/user",
               "redback.users": "redback/users",
               "redback.templates": "redback/redback-tmpl",
-              "archiva.general-admin":"archiva/general-admin",
+              "archiva.cookie-information":"archiva/cookie-information",
               "archiva.templates": "archiva/main-tmpl",
-              "archiva.repositories": "archiva/repositories",
-              "archiva.network-proxies": "archiva/network-proxies",
-              "archiva.proxy-connectors": "archiva/proxy-connectors",
-              "archiva.repository-groups": "archiva/repository-groups",
+             // "archiva.repositories": "archiva/repositories",
+             // "archiva.network-proxies": "archiva/network-proxies",
+             // "archiva.proxy-connectors": "archiva/proxy-connectors",
+             // "archiva.repository-groups": "archiva/repository-groups",
               "archiva.artifacts-management": "archiva/artifacts-management",
               "archiva.search": "archiva/search",
-              "archiva.proxy-connectors-rules": "archiva/proxy-connectors-rules",
+             // "archiva.proxy-connectors-rules": "archiva/proxy-connectors-rules",
               "archiva.docs": "archiva/docs",
               "archiva.main": "archiva/main",
               "archiva.cudf": "archiva/cudf"
           }
       });
-
-      requirejs(['jquery','jquery.tmpl','jquery.ui','i18n','sammy','startup','utils','domReady!','archiva.main','archiva.general-admin'], function () {
+      
+      
+ 
+  
+  
+      requirejs(['jquery','jquery.tmpl','jquery.ui','i18n','sammy','startup','utils','domReady!','archiva.main','archiva.cookie-information'], function () {
         loadi18n(function () {
           $.ajax({
             url: "restServices/archivaUiServices/runtimeInfoService/archivaRuntimeInfo/"+usedLang(),

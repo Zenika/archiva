@@ -26,12 +26,12 @@
   <parent>
     <groupId>org.apache.archiva</groupId>
     <artifactId>archiva-parent</artifactId>
-    <version>10-SNAPSHOT</version>
+    <version>11-SNAPSHOT</version>
     <relativePath />
   </parent>
 
   <artifactId>archiva</artifactId>
-  <version>1.4-M4-SNAPSHOT</version>
+  <version>1.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Archiva</name>
@@ -60,48 +60,48 @@
     <commons-io.version>2.4</commons-io.version>
     <commons-lang.version>2.6</commons-lang.version>
 
-    <maven3x.version>3.0.4</maven3x.version>
+    <maven3x.version>3.0.5</maven3x.version>
     <maven.version>2.0.8</maven.version>
     <aether.version>1.13.1</aether.version>
 
     <maven-model-converter.version>2.1</maven-model-converter.version>
     <maven.indexer.version>5.1.1</maven.indexer.version>
     <wagon.version>2.4</wagon.version>
-    <redback.version>2.1-SNAPSHOT</redback.version>
-    <redback.cache.version>2.1-SNAPSHOT</redback.cache.version>
+    <redback.version>2.1</redback.version>
+    <redback.cache.version>2.1</redback.cache.version>
     <redback.quartz.version>2.0</redback.quartz.version>
-    <redback.registry.version>2.1-SNAPSHOT</redback.registry.version>
+    <redback.registry.version>2.1</redback.registry.version>
     <redback.spring-utils.version>2.0</redback.spring-utils.version>
     <redback.taskqueue.version>2.0</redback.taskqueue.version>
-    <slf4j.version>1.7.2</slf4j.version>
-    <log4j.version>2.0-beta4</log4j.version>
+    <slf4j.version>1.7.5</slf4j.version>
+    <log4j.version>2.0-beta7</log4j.version>
 
-    <spring.version>3.2.2.RELEASE</spring.version>
+    <spring.version>3.2.3.RELEASE</spring.version>
 
     <javax.jcr.version>2.0</javax.jcr.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>
 
     <lucene.version>3.6.2</lucene.version>
-    <jackrabbit.version>2.6.0</jackrabbit.version>
+    <jackrabbit.version>2.6.2</jackrabbit.version>
 
-    <cxfVersion>2.6.6</cxfVersion>
-    <derbyVersion>10.9.1.0</derbyVersion>
-    <httpclient.version>4.2.3</httpclient.version>
-    <httpclient.core.version>4.2.3</httpclient.core.version>
+    <cxfVersion>2.6.8</cxfVersion>
+    <derbyVersion>10.10.1.1</derbyVersion>
+    <httpclient.version>4.2.5</httpclient.version>
+    <httpclient.core.version>4.2.4</httpclient.core.version>
     <javaxMailVersion>1.4</javaxMailVersion>
     <jettyVersion>8.1.9.v20130131</jettyVersion>
 
     <!-- restore when we will be able to use a derby in memory database -->
     <redbackTestJdbcUrl>jdbc:derby:memory:users-test;create=true</redbackTestJdbcUrl>
     <redbackTestJdbcDriver>org.apache.derby.jdbc.EmbeddedDriver</redbackTestJdbcDriver>
-    <sisu-inject-plexus.version>2.3.1</sisu-inject-plexus.version>
-    <sisu-guice.version>3.1.2</sisu-guice.version>
+    <sisu-inject-plexus.version>0.0.0.M2a</sisu-inject-plexus.version>
+    <sisu-guice.version>3.1.4</sisu-guice.version>
     <plexus-digest.version>1.1</plexus-digest.version>
     <plexus-expression-evaluator.version>2.0</plexus-expression-evaluator.version>
     <plexus-utils.version>3.0.8</plexus-utils.version>
     <asfTomcatMavenPluginVersion>2.1</asfTomcatMavenPluginVersion>
-    <tomcat7Version>7.0.39</tomcat7Version>
+    <tomcat7Version>7.0.40</tomcat7Version>
 
     <release.preparationGoals>clean install</release.preparationGoals>
   </properties>
@@ -207,6 +207,11 @@
       <dependency>
         <groupId>org.apache.archiva</groupId>
         <artifactId>metadata-store-file</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.archiva</groupId>
+        <artifactId>metadata-store-cassandra</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -464,7 +469,13 @@
       <dependency>
         <groupId>org.apache.archiva.redback.components</groupId>
         <artifactId>spring-jdo2</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.lmax</groupId>
+        <artifactId>disruptor</artifactId>
+        <version>3.0.1</version>
       </dependency>
 
       <!--
@@ -473,8 +484,8 @@
       -->
 
       <dependency>
-        <groupId>org.sonatype.sisu</groupId>
-        <artifactId>sisu-inject-plexus</artifactId>
+        <groupId>org.eclipse.sisu</groupId>
+        <artifactId>org.eclipse.sisu.plexus</artifactId>
         <version>${sisu-inject-plexus.version}</version>
       </dependency>
       <dependency>
@@ -502,6 +513,11 @@
       <dependency>
         <groupId>org.codehaus.jackson</groupId>
         <artifactId>jackson-core-asl</artifactId>
+        <version>${jacksonVersion}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.jackson</groupId>
+        <artifactId>jackson-mapper-asl</artifactId>
         <version>${jacksonVersion}</version>
       </dependency>
       <dependency>
@@ -537,7 +553,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>13.0</version>
+        <version>14.0.1</version>
       </dependency>
       <dependency>
         <groupId>stax</groupId>
@@ -819,7 +835,7 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-repository-metadata</artifactId>
-        <version>${maven.version}</version>
+        <version>${maven3x.version}</version>
       </dependency>
       <dependency>
         <groupId>org.codehaus.plexus</groupId>
@@ -1133,6 +1149,11 @@
         <version>1.1</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.geronimo.specs</groupId>
+        <artifactId>geronimo-jpa_2.0_spec</artifactId>
+        <version>1.1</version>
+      </dependency>
+      <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>servlet-api</artifactId>
         <version>2.5</version>
@@ -1195,25 +1216,25 @@
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <version>${log4j.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j.adapters</groupId>
         <artifactId>log4j-slf4j-impl</artifactId>
         <version>${log4j.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.logging.log4j.adapters</groupId>
+        <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-jcl</artifactId>
         <version>${log4j.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.logging.log4j.adapters</groupId>
+        <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-1.2-api</artifactId>
+        <version>${log4j.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-to-slf4j</artifactId>
         <version>${log4j.version}</version>
         <scope>runtime</scope>
       </dependency>
@@ -1433,7 +1454,7 @@
       <dependency>
         <groupId>net.sf.ehcache</groupId>
         <artifactId>ehcache-core</artifactId>
-        <version>2.6.5</version>
+        <version>2.6.6</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -1543,11 +1564,13 @@
 
                     <exclude>commons-logging:commons-logging-api</exclude>
                     <exclude>log4j:log4j</exclude>
+
+                    <exclude>org.sonatype.sisu:sisu-guava</exclude>
+
                     <!--
                     <exclude>org.slf4j:jcl-over-slf4j</exclude>
                     <exclude>org.slf4j:slf4j-log4j12</exclude>
                     -->
-                    <!-- TODO org.sonatype.sisu:sisu-guava -->
 
                   </excludes>
                 </bannedDependencies>
@@ -1723,27 +1746,14 @@
             <dependency>
               <groupId>org.apache.archiva.redback.components.modello</groupId>
               <artifactId>modello-plugin-redback-registry</artifactId>
-              <version>1.0-SNAPSHOT</version>
+              <version>1.0</version>
             </dependency>
           </dependencies>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.cargo</groupId>
-          <artifactId>cargo-maven2-plugin</artifactId>
-          <version>1.1.4</version>
-        </plugin>
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
-          <version>1.6</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.5.1</version>
-          <configuration>
-            <useJvmChmod>true</useJvmChmod>
-          </configuration>
+          <version>1.7</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1803,6 +1813,7 @@
               <exclude>.repository/**</exclude>
               <exclude>*.patch</exclude>
               <exclude>**/target/**</exclude>
+              <exclude>.java-version</exclude>
             </excludes>
           </configuration>
         </plugin>
@@ -1877,6 +1888,17 @@
       <id>apache.snapshots</id>
       <name>Apache Snapshots</name>
       <url>https://repository.apache.org/content/groups/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>mojo.snapshots</id>
+      <name>Codehaus Mojo Snapshots</name>
+      <url>https://nexus.codehaus.org/content/repositories/snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
