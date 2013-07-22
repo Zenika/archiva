@@ -94,6 +94,60 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
     $( '#extract-CUDF' ).remove();
   }
 
+  CUDFExtract = function ( cudfJob, extractFiles ) {
+    var self = this;
+    this.cudfJob = cudfJob;
+    this.extractFiles = extractFiles;
+  }
+
+  CUDFExtractsViewModel = function () {
+    var self = this;
+    this.cudfExtracts = [];
+
+    downloadCudf = function (jobId, file) {
+      var url = "restServices/archivaServices/cudfService/jobs/" + jobId + "/extracts/files/" + file;
+      $( "<form id='extract-CUDF' style='display: none;' action=" + url + " method='GET' accept='application/octet-stream'>"
+             + "<input type='submit'>" + "</form>" ).appendTo( 'body' );
+      $( '#extract-CUDF' ).submit();
+      $( '#extract-CUDF' ).remove();
+    }
+
+    downloadCudfAsPdf = function (jobId, file) {
+      file = file.substring(0, file.length - 4);
+      file += 'pdf';
+      var url = "restServices/archivaServices/cudfService/jobs/" + jobId + "/extracts/files/" + file;
+      $( "<form id='extract-CUDF' style='display: none;' action=" + url + " method='GET' accept='application/octet-stream'>"
+             + "<input type='submit'>" + "</form>" ).appendTo( 'body' );
+      $( '#extract-CUDF' ).submit();
+      $( '#extract-CUDF' ).remove();
+    }
+  }
+
+  displayCUDFExtracts = function () {
+    screenChange();
+    var mainContent = $( "#main-content" );
+    mainContent.html( mediumSpinnerImg() );
+
+    var self = this;
+    this.cudfExtractsViewModel = new CUDFExtractsViewModel();
+
+    loadCUDFJobs( function ( data ) {
+      var cudfJobs = mapCUDFJobs( data );
+      for (var i = 0; i < cudfJobs.length; i++) {
+        var cudfExtract = new CUDFExtract(cudfJobs[i]);
+        loadCUDFExtracts(cudfExtract, function (data) {
+          cudfExtract.extractFiles = data;
+          self.cudfExtractsViewModel.cudfExtracts.push(cudfExtract);
+          mainContent.html( $( "#cudf-universe-main").tmpl() );
+          ko.applyBindings(self.cudfExtractsViewModel, mainContent.find( "#cudf-extracts-view").get(0) );
+        }, function () {
+          var res = $.parseJSON( data.responseText );
+          displayRestError( res );
+        });
+      }
+    });
+  }
+
   CUDFJob = function ( id, location, cronExpression, allRepositories, repositoryGroup, debug ) {
     var self = this;
     this.id = ko.observable( id );
@@ -369,5 +423,14 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
       success:successCallBackFn,
       error:errorCallBackFn
     } )
+  }
+
+  loadCUDFExtracts = function ( cudfExtract, successCallBackFn1, errorCallBackFn ) {
+    $.ajax( "restServices/archivaServices/cudfService/jobs/files/" + cudfExtract.cudfJob.id(), {
+      type:"GET",
+      dataType:"json",
+      success:successCallBackFn1,
+      error:errorCallBackFn
+    });
   }
 })

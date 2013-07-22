@@ -17,18 +17,48 @@
   ~ under the License.
 -->
 
-<script id="cudf_universe_tmpl" type="text/html">
-    <div id="cudf-universe-action" class="well">
-        <p>${$.i18n.prop('cudf.message.universe-extraction')}</p>
-        <a href="#" onclick="showCUDFUniverseExtract()" class="btn" id="show-cudf-universe-button">
-            ${$.i18n.prop('cudf.show-text')}
-        </a>
-        <a href="#" onclick="getCUDFUniverseExtract()" class='btn' id="get-cudf-universe-extract">
-            ${$.i18n.prop('cudf.extract-text')}
-        </a>
-        <div id="get-cudf-universe-spinner-div"></div>
+<script id="cudf-universe-main" type="text/html">
+  <div class="header">
+    <h2>${$.i18n.prop('cudf.extract.page.header')}</h2>
+  </div>
+  <div id="cudf-extracts-view">
+    <div id="cudf-extracts-div" data-bind="template: {name: 'cudf-extracts-tmpl'}">
     </div>
-    <pre class="prettyprint hide" id="show-cudf-universe-content"></pre>
+  </div>
+</script>
+
+<script id="cudf-extracts-tmpl" type="text/html">
+  <ul>
+    {{each(i, cudfExtract) cudfExtracts }}
+      <li>Job: ${ cudfExtract.cudfJob.id() }</li>
+      <ul>
+      {{each(i, file) cudfExtract.extractFiles }}
+        <li>
+          <a href="#" data-bind="click: function(){downloadCudf(cudfExtract.cudfJob.id(), file)}">${ file }</a>
+          <a href="#" data-bind="click: function(){downloadCudfAsPdf(cudfExtract.cudfJob.id(), file)}"> (pdf)</a>
+        </li>
+      {{/each}}
+      </ul>
+    {{/each}}
+  </ul>
+  <!--<thead>-->
+  <!--<tr>-->
+    <!--{{each(i, columnDefinition) columns}}-->
+    <!--<th>${ columnDefinition.headerText }</th>-->
+    <!--{{/each}}-->
+  <!--</tr>-->
+  <!--</thead>-->
+  <!--<tbody>-->
+  <!--{{each(i, cudfJob) itemsOnCurrentPage()}}-->
+  <!--<tr>-->
+    <!--{{each(i, columnDefinition) columns}}-->
+    <!--{{var val = (typeof columnDefinition.rowText == 'function' ? columnDefinition.rowText(cudfJob) : cudfJob[columnDefinition.rowText])}}-->
+    <!--<td>-->
+      <!--${val}-->
+    <!--</td>-->
+    <!--{{/each}}-->
+  <!--{{/each}}-->
+  <!--</tbody>-->
 </script>
 
 <script id="cudfJobsMain" type="text/html">

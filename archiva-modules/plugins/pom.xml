@@ -39,7 +39,7 @@
     <module>stage-repository-merge</module>
     <module>generic-metadata-support</module>
     <module>metadata-store-jcr</module>
-    <module>metadata-store-cassandra</module>
+    <!--<module>metadata-store-cassandra</module>-->
     <module>cudf</module>
   </modules>
 </project>

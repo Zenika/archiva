@@ -36,6 +36,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -160,5 +162,19 @@ public interface CUDFService
     @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION )
     @Consumes( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
     void deleteCUDFJob( @PathParam( "id" ) String id )
+        throws ArchivaRestServiceException;
+
+    @Path( "jobs/files/{id}" )
+    @GET
+    @RedbackAuthorization( permissions = ArchivaRoleConstants.OPERATION_MANAGE_CONFIGURATION)
+    @Produces( { MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML } )
+    List<String> getCudfFiles( @PathParam( "id" ) String jobId )
+        throws ArchivaRestServiceException;
+
+    @Path( "jobs/{id}/extracts/files/{fileName}" )
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @RedbackAuthorization( noPermission = true, noRestriction = true)
+    Response getCudfFile( @PathParam( "id" ) String jobId, @PathParam( "fileName" ) String fileName)
         throws ArchivaRestServiceException;
 }

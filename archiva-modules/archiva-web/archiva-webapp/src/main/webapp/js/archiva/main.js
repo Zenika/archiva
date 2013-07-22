@@ -223,7 +223,7 @@ function(jquery,ui,sammy,tmpl,i18n,jqueryCookie,bootstrap,archivaSearch,jqueryVa
       ]);
       this.cudfMenuItems = ko.observableArray([
           {  text : $.i18n.prop('cudf.title') , id: null },
-          {  text : $.i18n.prop('menu.cudf.universe.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFUniverse()}},
+          {  text : $.i18n.prop('menu.cudf.universe.text') , id: "menu-cudf-extract-universe" , href: "#extractUniverse" , func: function(){displayCUDFExtracts()}},
           {  text : $.i18n.prop('menu.cudf.job.text') , id: "menu-cudf-jobs" , href: "#cudfJobs" , redback: "{permissions: ['archiva-manage-configuration']}" , func: function(){displayCUDFJobs()}}
       ]);
       this.administrationMenuItems = ko.observableArray([

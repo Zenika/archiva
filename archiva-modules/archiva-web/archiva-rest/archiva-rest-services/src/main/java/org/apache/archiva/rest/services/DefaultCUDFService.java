@@ -25,6 +25,8 @@ import org.apache.archiva.admin.model.group.RepositoryGroupAdmin;
 import org.apache.archiva.cudf.admin.api.CUDFJobsAdmin;
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.cudf.extractor.CUDFEngine;
+import org.apache.archiva.cudf.extractor.CUDFFiles;
+import org.apache.archiva.cudf.extractor.CUDFPdfGenerator;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
@@ -33,12 +35,14 @@ import org.apache.archiva.scheduler.ArchivaTaskScheduler;
 import org.apache.archiva.scheduler.cudf.ArchivaCUDFTaskExecutor;
 import org.apache.archiva.scheduler.cudf.CUDFTask;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
@@ -74,6 +78,12 @@ public class DefaultCUDFService
 
     @Inject
     private RepositoryGroupAdmin repositoryGroupAdmin;
+
+    @Inject
+    private CUDFFiles cudfFiles;
+
+    @Inject
+    private CUDFPdfGenerator cudfPdfGenerator;
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
                              HttpServletResponse servletResponse )
@@ -354,6 +364,34 @@ public class DefaultCUDFService
         catch ( RepositoryAdminException e )
         {
             throw new ArchivaRestServiceException( e.getMessage(), e );
+        }
+    }
+
+    @Override
+    public List<String> getCudfFiles( String jobId )
+        throws ArchivaRestServiceException
+    {
+
+        return cudfFiles.getCudfFiles( jobId );
+    }
+
+    @Override
+    public Response getCudfFile( String jobId, String fileName )
+        throws ArchivaRestServiceException
+    {
+        if ( FilenameUtils.isExtension( fileName, "cudf" )) {
+            File file = cudfFiles.getCudfFile( jobId, fileName );
+            return Response.ok( file, "application/cudf" )
+                .header( "content-disposition", "attachment; filename = " + file.getName() )
+                .build();
+        } else if (FilenameUtils.isExtension( fileName, "pdf" )) {
+            File cudf = cudfFiles.getCudfFile( jobId, FilenameUtils.getBaseName( fileName ) + ".cudf" );
+            File pdf = cudfPdfGenerator.generateCUDFPdf( cudf );
+            return Response.ok( pdf, "application/pdf" )
+                .header( "content-disposition", "attachment; filename = " + pdf.getName() )
+                .build();
+        } else {
+            return Response.noContent().build();
         }
     }
 
