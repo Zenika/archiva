@@ -35,7 +35,8 @@
       {{each(i, file) cudfExtract.extractFiles }}
         <li>
           <a href="#" data-bind="click: function(){downloadCudf(cudfExtract.cudfJob.id(), file)}">${ file }</a>
-          <a href="#" data-bind="click: function(){downloadCudfAsPdf(cudfExtract.cudfJob.id(), file)}"> (pdf)</a>
+          <span> (<a href="#" data-bind="click: function(){downloadCudfAsPdf(cudfExtract.cudfJob.id(), file)}">pdf</a>) </span>
+          <span> (<a href="#" data-bind="click: function(){downloadReport(cudfExtract.cudfJob.id(), file)}">report</a>)</span>
         </li>
       {{/each}}
       </ul>

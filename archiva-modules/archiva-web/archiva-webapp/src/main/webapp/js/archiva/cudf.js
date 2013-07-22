@@ -121,6 +121,15 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
       $( '#extract-CUDF' ).submit();
       $( '#extract-CUDF' ).remove();
     }
+
+    downloadReport = function (jobId, file) {
+      file += '.rep';
+      var url = "restServices/archivaServices/cudfService/jobs/" + jobId + "/extracts/files/" + file;
+      $( "<form id='extract-CUDF' style='display: none;' action=" + url + " method='GET' accept='application/octet-stream'>"
+             + "<input type='submit'>" + "</form>" ).appendTo( 'body' );
+      $( '#extract-CUDF' ).submit();
+      $( '#extract-CUDF' ).remove();
+    }
   }
 
   displayCUDFExtracts = function () {

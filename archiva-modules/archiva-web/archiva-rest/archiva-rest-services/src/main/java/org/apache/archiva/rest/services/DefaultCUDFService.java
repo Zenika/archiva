@@ -27,6 +27,7 @@ import org.apache.archiva.cudf.admin.bean.CUDFJob;
 import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.cudf.extractor.CUDFFiles;
 import org.apache.archiva.cudf.extractor.CUDFPdfGenerator;
+import org.apache.archiva.cudf.report.CUDFReportGenerator;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
@@ -51,6 +52,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -84,6 +86,9 @@ public class DefaultCUDFService
 
     @Inject
     private CUDFPdfGenerator cudfPdfGenerator;
+
+    @Inject
+    private CUDFReportGenerator cudfReportGenerator;
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
                              HttpServletResponse servletResponse )
@@ -391,10 +396,18 @@ public class DefaultCUDFService
             return Response.ok( pdf, "application/pdf" )
                 .header( "content-disposition", "attachment; filename = " + pdf.getName() )
                 .build();
+        } else if (FilenameUtils.isExtension( fileName, "rep" )) {
+            File cudf = cudfFiles.getCudfFile( jobId, FilenameUtils.getBaseName( fileName ) );
+            File report = cudfReportGenerator.generateReport( cudf );
+                return Response.ok( report, "application/rep" )
+                    .header( "content-disposition", "attachment; filename = " + report.getName() )
+                    .build();
         } else {
             return Response.noContent().build();
         }
     }
+
+
 
     @Override
     protected String getSelectedRepoExceptionMessage()
