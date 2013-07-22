@@ -537,6 +537,9 @@
     <a data-toggle="tab" id="artifact-details-metadatas-content-a" data-target="#artifact-details-metadatas-content"
        href="#artifact-details-metadatas-content">${$.i18n.prop('artifact.detail.tab.header.metadatas')}</a>
   </li>
+  <li>
+    <a data-toggle="tab" href="#artifact-details-cudf">${$.i18n.prop('cudf.title')}</a>
+  </li>
 </ul>
 <div class="tab-content">
 {{if projectVersionMetadata}}
@@ -779,6 +782,20 @@
     <a href="#" class="btn btn-primary"
        data-bind="click: addProperty">${$.i18n.prop('browse.artifact.metadatas.add')}</a>
     {{/if}}
+  </div>
+
+  <div class="tab-pane" id="artifact-details-cudf">
+    <p>${$.i18n.prop('cudf.message.artifact.extract-cudf')}</p><br/>
+    <pre class="prettyprint hide" id="show-cudf-content"></pre>
+    <div id="get-cudf-spinner-div"></div>
+    <div id="cudf-action">
+      <button data-bind="click: function(){showCUDFExtract(groupId, artifactId, version)}" class="btn" id="show-cudf-button">
+        ${$.i18n.prop('cudf.show-text')}
+      </button>
+      <button class='btn' data-bind='click: function(){getCUDFExtract(groupId,artifactId,version)}'>
+        ${$.i18n.prop('cudf.extract-text')}
+      </button>
+    </div>
   </div>
 
 </div>
