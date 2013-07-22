@@ -150,6 +150,12 @@
                 </div>
             </div>
             <div class="control-group">
+              <label class="control-label" for="retentionCount">${$.i18n.prop('cudf.job.form.retentionCount')}</label>
+              <div class="controls">
+                <input id="retentionCount" type="text" name="retentionCount" data-bind="value: cudfJob.retentionCount"/>
+              </div>
+            </div>
+            <div class="control-group">
                 <label class="control-label" for="debug">${$.i18n.prop('cudf.job.form.debug')}</label>
                 <div class="controls">
                     <input id="debug" type="checkbox" name="debug" data-bind="checked: cudfJob.debug"/>

@@ -1821,6 +1821,12 @@
           <version>1.4.0+</version>
           <type>boolean</type>
         </field>
+        <field>
+          <name>retentionCount</name>
+          <description>Number of universe to keep</description>
+          <version>1.4.0+</version>
+          <type>int</type>
+        </field>
       </fields>
     </class>
 

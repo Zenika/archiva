@@ -210,6 +210,7 @@ public class CUDFArchivaTaskScheduler
                 configuration.getConfiguration().getGroupToRepositoryMap().get( repositoryGroupId );
             cudfTask.setRepositoriesId( repositories );
         }
+        cudfTask.setRetentionCount( cudfJobConfiguration.getRetentionCount() );
         JobDataMap dataMap = new JobDataMap();
         dataMap.put( TASK_QUEUE, taskQueue );
         dataMap.put( CUDF_TASK, cudfTask );

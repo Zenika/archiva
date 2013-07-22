@@ -40,6 +40,8 @@ public class CUDFJob
 
     private String repositoryGroup;
 
+    private int retentionCount;
+
     private boolean debug;
 
     public CUDFJob()
@@ -47,7 +49,7 @@ public class CUDFJob
     }
 
     public CUDFJob( String id, String location, String cronExpression, boolean allRepositories, String repositoryGroup,
-                    boolean debug )
+                    boolean debug, int retentionCount )
     {
         this.id = id;
         this.location = location;
@@ -55,6 +57,7 @@ public class CUDFJob
         this.allRepositories = allRepositories;
         this.repositoryGroup = repositoryGroup;
         this.debug = debug;
+        this.retentionCount = retentionCount;
     }
 
     public String getId()
@@ -117,18 +120,27 @@ public class CUDFJob
         this.debug = debug;
     }
 
+    public int getRetentionCount()
+    {
+        return retentionCount;
+    }
+
+    public void setRetentionCount( int retentionCount )
+    {
+        this.retentionCount = retentionCount;
+    }
+
     @Override
     public String toString()
     {
-        final StringBuilder sb = new StringBuilder();
-        sb.append( "CUDFJob" );
-        sb.append( "{id='" ).append( id ).append( '\'' );
-        sb.append( ", location='" ).append( location ).append( '\'' );
-        sb.append( ", cronExpression='" ).append( cronExpression ).append( '\'' );
-        sb.append( ", allRepositories=" ).append( allRepositories );
-        sb.append( ", repositoryGroup='" ).append( repositoryGroup ).append( '\'' );
-        sb.append( ", debug='" ).append( debug ).append( '\'' );
-        sb.append( '}' );
-        return sb.toString();
+        return "CUDFJob{" +
+            "id='" + id + '\'' +
+            ", location='" + location + '\'' +
+            ", cronExpression='" + cronExpression + '\'' +
+            ", allRepositories=" + allRepositories +
+            ", repositoryGroup='" + repositoryGroup + '\'' +
+            ", retentionCount=" + retentionCount +
+            ", debug=" + debug +
+            '}';
     }
 }

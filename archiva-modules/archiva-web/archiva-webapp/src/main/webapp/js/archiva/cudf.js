@@ -148,7 +148,7 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
     });
   }
 
-  CUDFJob = function ( id, location, cronExpression, allRepositories, repositoryGroup, debug ) {
+  CUDFJob = function ( id, location, cronExpression, allRepositories, repositoryGroup, debug, retentionCount ) {
     var self = this;
     this.id = ko.observable( id );
     this.location = ko.observable( location );
@@ -156,6 +156,7 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
     this.allRepositories = ko.observable( allRepositories );
     this.repositoryGroup = ko.observable( repositoryGroup );
     this.debug = ko.observable( debug );
+    this.retentionCount = ko.observable( retentionCount );
   }
 
   CUDFJobViewModel = function ( cudfJob, cudfJobsViewModel, update ) {
@@ -341,7 +342,7 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
 
   mapCUDFJob = function ( data ) {
     return data == null ? null : new CUDFJob( data.id, data.location, data.cronExpression, data.allRepositories,
-                                              data.repositoryGroup === null ? "" : data.repositoryGroup, data.debug );
+                                              data.repositoryGroup === null ? "" : data.repositoryGroup, data.debug, data.retentionCount );
   }
 
   mapAvailableRepositoryGroups = function ( data ) {

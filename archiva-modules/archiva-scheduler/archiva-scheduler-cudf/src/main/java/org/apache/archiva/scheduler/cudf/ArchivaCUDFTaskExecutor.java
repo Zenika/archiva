@@ -26,6 +26,10 @@ import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.redback.components.taskqueue.Task;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutor;
+import org.apache.commons.collections.comparators.ReverseComparator;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.comparator.NameFileComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -37,7 +41,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -100,6 +107,9 @@ public class ArchivaCUDFTaskExecutor
                                             new FileWriter( new File( cudfTask.getResourceDestination(), fileName ) ),
                                             debugWriter );
 
+            deleteOldFile( cudfTask.getResourceDestination(), cudfTask.getRetentionCount(), "cudf" );
+            deleteOldFile( cudfTask.getResourceDestination(), cudfTask.getRetentionCount(), "pdf" );
+
             log.info( "Finished CUDF Task. Saved in " + cudfTask.getResourceDestination().getAbsolutePath() +
                           File.separator + fileName );
         }
@@ -112,6 +122,18 @@ public class ArchivaCUDFTaskExecutor
         {
             log.error( e.getMessage(), e );
             throw new TaskExecutionException( e.getMessage(), e );
+        }
+    }
+
+    private void deleteOldFile( File resourceDestination, int retentionCount, String extension )
+    {
+        List<File> cudfFiles = new ArrayList<File>( FileUtils.listFiles( resourceDestination, new String[]{ extension }, false ));
+        if (cudfFiles.size() > retentionCount )
+        {
+            Collections.sort( cudfFiles , new ReverseComparator( new NameFileComparator() ));
+            for (int i = retentionCount; i < cudfFiles.size(); i++) {
+                FileUtils.deleteQuietly( cudfFiles.get( i ) );
+            }
         }
     }
 

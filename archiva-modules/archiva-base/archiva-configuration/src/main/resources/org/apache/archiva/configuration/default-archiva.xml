@@ -150,6 +150,7 @@
         <cronExpression>0 0\,30 * * * ?</cronExpression>
         <allRepositories>true</allRepositories>
         <repositoryGroup></repositoryGroup>
+        <retentionCount>10</retentionCount>
       </cudfJob>
     </cudfJobs>
   </cudf>

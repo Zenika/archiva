@@ -40,6 +40,8 @@ public class CUDFTask
 
     private File resourceDestination;
 
+    private int retentionCount;
+
     private boolean debug;
 
     public CUDFTask()
@@ -100,6 +102,16 @@ public class CUDFTask
     public void setDebug( boolean debug )
     {
         this.debug = debug;
+    }
+
+    public int getRetentionCount()
+    {
+        return retentionCount;
+    }
+
+    public void setRetentionCount( int retentionCount )
+    {
+        this.retentionCount = retentionCount;
     }
 
     @Override

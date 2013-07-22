@@ -271,6 +271,7 @@ public class DefaultCUDFService
         cudfTask.setId( cudfJob.getId() );
         cudfTask.setResourceDestination( new File( cudfJob.getLocation() ) );
         cudfTask.setDebug( cudfJob.isDebug() );
+        cudfTask.setRetentionCount( cudfJob.getRetentionCount() );
         if ( cudfJob.isAllRepositories() )
         {
             cudfTask.setAllRepositories( true );
