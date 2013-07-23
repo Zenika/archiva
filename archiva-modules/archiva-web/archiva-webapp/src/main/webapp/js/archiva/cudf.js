@@ -28,6 +28,14 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
     removeSmallSpinnerImg( "#artifact-details-cudf #get-cudf-spinner-div" );
   }
 
+  getCUDFExtractPdf = function ( groupId, artifactId, version ) {
+    $( "#artifact-details-cudf #get-cudf-spinner-div" ).html( smallSpinnerImg() );
+    $( "<form action='restServices/archivaServices/cudfService/cone/pdf/" + groupId + "/" + artifactId + "/" + version
+           + "' method='GET' accept='application/pdf'>" + "<input type='text' name='repositoryId' value='"
+           + getSelectedBrowsingRepository() + "'/>" + "</form>" ).submit();
+    removeSmallSpinnerImg( "#artifact-details-cudf #get-cudf-spinner-div" );
+  }
+
   showCUDFExtract = function ( groupId, artifactId, version ) {
     $( "#artifact-details-cudf #get-cudf-spinner-div" ).html( smallSpinnerImg() );
     var metadataUrl = "restServices/archivaServices/cudfService/cone/";
@@ -49,7 +57,7 @@ function ( jquery, i18n, jqueryTmpl, ko, koSimpleGrid ) {
         $( "#show-cudf-button" ).addClass( "disabled" );
       },
       error:function ( data ) {
-        displayErrorMessage( $.i18n.prop( 'cudf.extract.error-message' ) );
+        displayErrorMessage( $.i18n.prop( 'cudf.extract.error-message' )  );
         removeSmallSpinnerImg( "#artifact-details-cudf #get-cudf-spinner-div" );
       }
     } );

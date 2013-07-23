@@ -22,6 +22,7 @@ package org.apache.archiva.cudf.extractor;
 import com.zenika.cudf.model.CUDFDescriptor;
 import com.zenika.cudf.parser.DefaultSerializer;
 import com.zenika.cudf.parser.ParsingException;
+import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.metadata.repository.RepositorySessionFactory;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +48,7 @@ public class DefaultCUDFEngine
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                  List<String> repositories, Writer writer )
-        throws IOException
+        throws IOException, MetadataResolutionException
     {
         new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositoryId,
                                                            repositories, repositorySessionFactory );
@@ -55,7 +56,7 @@ public class DefaultCUDFEngine
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type,
                                  List<String> repositories, Writer writer )
-        throws IOException
+        throws IOException, MetadataResolutionException
     {
         new CUDFExtractor( writer, null ).computeCUDFCone( groupId, artifactId, version, type, repositories,
                                                            repositorySessionFactory );

@@ -20,11 +20,13 @@ package org.apache.archiva.rest.services.interceptors;
 
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.services.ArchivaRestError;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.io.IOException;
 
 /**
  * @author Olivier Lamy
@@ -37,8 +39,17 @@ public class ArchivaRestServiceExceptionMapper
 {
     public Response toResponse( ArchivaRestServiceException e )
     {
-        ArchivaRestError restError = new ArchivaRestError( e );
-        Response.ResponseBuilder responseBuilder = Response.status( e.getHttpErrorCode() ).entity( restError );
-        return responseBuilder.build();
+        try
+        {
+            ArchivaRestError restError = new ArchivaRestError( e );
+            ObjectMapper mapper = new ObjectMapper(  );
+            String errorString = mapper.writeValueAsString( restError );
+            Response.ResponseBuilder responseBuilder = Response.status( e.getHttpErrorCode() ).entity( errorString );
+            return responseBuilder.build();
+        }
+        catch ( IOException e1 )
+        {
+            throw new RuntimeException( "Unable to map exception", e1 );
+        }
     }
 }

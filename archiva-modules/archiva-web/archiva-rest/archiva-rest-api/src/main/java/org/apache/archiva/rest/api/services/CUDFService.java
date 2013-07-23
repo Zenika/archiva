@@ -20,6 +20,7 @@ package org.apache.archiva.rest.api.services;
  */
 
 import org.apache.archiva.cudf.admin.bean.CUDFJob;
+import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.redback.authorization.RedbackAuthorization;
 import org.apache.archiva.security.common.ArchivaRoleConstants;
 
@@ -37,6 +38,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -63,7 +65,7 @@ public interface CUDFService
     void getConeCUDF( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
                       @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
                       @QueryParam( "repositoryId" ) String repositoryId, @Context HttpServletResponse servletResponse )
-        throws ArchivaRestServiceException;
+        throws ArchivaRestServiceException, MetadataResolutionException;
 
     /**
      * Gets the cone extract for the artifact in file.
@@ -82,7 +84,16 @@ public interface CUDFService
     Response getConeCUDFFile( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
                               @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
                               @QueryParam( "repositoryId" ) String repositoryId, @QueryParam( "keep" ) boolean keep )
-        throws ArchivaRestServiceException;
+        throws ArchivaRestServiceException, MetadataResolutionException;
+
+    @Path( "cone/pdf/{groupId}/{artifactId}/{version}" )
+    @GET
+    @RedbackAuthorization( noRestriction = true, noPermission = true)
+    @Produces( "application/pdf")
+    Response getConeCUDFPdf( @PathParam( "groupId" ) String groupId, @PathParam( "artifactId" ) String artifactId,
+                             @PathParam( "version" ) String version, @QueryParam( "type" ) String type,
+                             @QueryParam( "repositoryId" ) String repositoryId, @QueryParam( "keep" ) boolean keep)
+        throws IOException, ArchivaRestServiceException;
 
     /**
      * Gets the entire repository into cudf output.

@@ -118,7 +118,10 @@
               org.quartz*;version="[2,3)",
               org.springframework*;version="[3,4)",
               org.slf4j;resolution:=optional,
-              org.apache.archiva.cudf.extractor
+              org.apache.archiva.cudf.extractor,
+              org.apache.commons.collections.comparators,
+              org.apache.commons.io,
+              org.apache.commons.io.comparator
             </Import-Package>
           </instructions>
         </configuration>

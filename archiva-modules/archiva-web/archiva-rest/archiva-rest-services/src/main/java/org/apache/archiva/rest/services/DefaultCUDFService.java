@@ -20,6 +20,7 @@ package org.apache.archiva.rest.services;
  */
 
 import org.apache.archiva.admin.model.RepositoryAdminException;
+import org.apache.archiva.admin.model.beans.ManagedRepository;
 import org.apache.archiva.admin.model.beans.RepositoryGroup;
 import org.apache.archiva.admin.model.group.RepositoryGroupAdmin;
 import org.apache.archiva.cudf.admin.api.CUDFJobsAdmin;
@@ -28,6 +29,7 @@ import org.apache.archiva.cudf.extractor.CUDFEngine;
 import org.apache.archiva.cudf.extractor.CUDFFiles;
 import org.apache.archiva.cudf.extractor.CUDFPdfGenerator;
 import org.apache.archiva.cudf.report.CUDFReportGenerator;
+import org.apache.archiva.metadata.repository.MetadataResolutionException;
 import org.apache.archiva.redback.components.taskqueue.TaskQueueException;
 import org.apache.archiva.redback.components.taskqueue.execution.TaskExecutionException;
 import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
@@ -35,6 +37,7 @@ import org.apache.archiva.rest.api.services.CUDFService;
 import org.apache.archiva.scheduler.ArchivaTaskScheduler;
 import org.apache.archiva.scheduler.cudf.ArchivaCUDFTaskExecutor;
 import org.apache.archiva.scheduler.cudf.CUDFTask;
+import org.apache.archiva.security.ArchivaSecurityException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,16 +46,17 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author Adrien Lecharpentier <adrien.lecharpentier@zenika.com>
@@ -92,7 +96,7 @@ public class DefaultCUDFService
 
     public void getConeCUDF( String groupId, String artifactId, String version, String type, String repositoryId,
                              HttpServletResponse servletResponse )
-        throws ArchivaRestServiceException
+        throws ArchivaRestServiceException, MetadataResolutionException
     {
 
         Writer output = null;
@@ -123,7 +127,7 @@ public class DefaultCUDFService
 
     public Response getConeCUDFFile( String groupId, String artifactId, String version, String type,
                                      String repositoryId, boolean keep )
-        throws ArchivaRestServiceException
+        throws ArchivaRestServiceException, MetadataResolutionException
     {
         try
         {
@@ -163,18 +167,95 @@ public class DefaultCUDFService
         }
     }
 
+    @Override
+    public Response getConeCUDFPdf( String groupId, String artifactId, String version, String type, String repositoryId,
+                                    boolean keep )
+        throws IOException, ArchivaRestServiceException
+    {
+        StringWriter writer = new StringWriter(  );
+        computeCUDFCone( groupId, artifactId, version, type, repositoryId, writer );
+        String fileName = "extractCUDF_" + groupId + "-" + artifactId + "-" + version;
+        File output = File.createTempFile( fileName, ".pdf" );
+        if ( !keep )
+        {
+            output.deleteOnExit();
+        }
+        cudfPdfGenerator.generateCUDFPdf( new StringReader( writer.toString() ), output );
+        return Response.ok( output, "application/pdf" ).header( "Content-Disposition",
+                                                                                 "attachment; filename=" + fileName
+                                                                                     + ".pdf" ).build();
+    }
+
     private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                   Writer writer )
-        throws IOException
+        throws IOException, ArchivaRestServiceException
     {
-        if ( repositoryId == null || repositoryId.isEmpty() )
+        try
         {
-            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, getObservableRepos(), writer );
+            if ( repositoryId == null || repositoryId.isEmpty() )
+            {
+                if ( version.contains( "SNAPSHOT" ) )
+                {
+                    cudfEngine.computeCUDFCone( groupId, artifactId, version, type, getSnapshotRepository(), writer );
+                }
+                else
+                {
+                    cudfEngine.computeCUDFCone( groupId, artifactId, version, type, getReleaseRepository(), writer );
+                }
+            }
+            else
+            {
+                cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, getObservableRepos(),
+                                            writer );
+            }
         }
-        else
+        catch ( MetadataResolutionException e )
         {
-            cudfEngine.computeCUDFCone( groupId, artifactId, version, type, repositoryId, getObservableRepos(),
-                                        writer );
+            throw new ArchivaRestServiceException( "Invalid Metadata, check the artifact metadata", e );
+        }
+    }
+
+    private List<String> getSnapshotRepository()
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            List<ManagedRepository> managedRepositories = userRepositories.getAccessibleRepositories( getPrincipal() );
+            List<String> repositoryIds = new ArrayList<String>();
+            for ( ManagedRepository managedRepository : managedRepositories )
+            {
+                if ( managedRepository.isSnapshots() )
+                {
+                    repositoryIds.add( managedRepository.getId() );
+                }
+            }
+            return repositoryIds;
+        }
+        catch ( ArchivaSecurityException e )
+        {
+            throw new ArchivaRestServiceException( "Security exception", e );
+        }
+    }
+
+    private List<String> getReleaseRepository()
+        throws ArchivaRestServiceException
+    {
+        try
+        {
+            List<ManagedRepository> managedRepositories = userRepositories.getAccessibleRepositories( getPrincipal() );
+            List<String> repositoryIds = new ArrayList<String>();
+            for ( ManagedRepository managedRepository : managedRepositories )
+            {
+                if ( managedRepository.isReleases() )
+                {
+                    repositoryIds.add( managedRepository.getId() );
+                }
+            }
+            return repositoryIds;
+        }
+        catch ( ArchivaSecurityException e )
+        {
+            throw new ArchivaRestServiceException( "Security exception", e );
         }
     }
 
@@ -385,29 +466,31 @@ public class DefaultCUDFService
     public Response getCudfFile( String jobId, String fileName )
         throws ArchivaRestServiceException
     {
-        if ( FilenameUtils.isExtension( fileName, "cudf" )) {
+        if ( FilenameUtils.isExtension( fileName, "cudf" ) )
+        {
             File file = cudfFiles.getCudfFile( jobId, fileName );
-            return Response.ok( file, "application/cudf" )
-                .header( "content-disposition", "attachment; filename = " + file.getName() )
-                .build();
-        } else if (FilenameUtils.isExtension( fileName, "pdf" )) {
+            return Response.ok( file, "application/cudf" ).header( "content-disposition",
+                                                                   "attachment; filename = " + file.getName() ).build();
+        }
+        else if ( FilenameUtils.isExtension( fileName, "pdf" ) )
+        {
             File cudf = cudfFiles.getCudfFile( jobId, FilenameUtils.getBaseName( fileName ) + ".cudf" );
             File pdf = cudfPdfGenerator.generateCUDFPdf( cudf );
-            return Response.ok( pdf, "application/pdf" )
-                .header( "content-disposition", "attachment; filename = " + pdf.getName() )
-                .build();
-        } else if (FilenameUtils.isExtension( fileName, "rep" )) {
+            return Response.ok( pdf, "application/pdf" ).header( "content-disposition",
+                                                                 "attachment; filename = " + pdf.getName() ).build();
+        }
+        else if ( FilenameUtils.isExtension( fileName, "rep" ) )
+        {
             File cudf = cudfFiles.getCudfFile( jobId, FilenameUtils.getBaseName( fileName ) );
             File report = cudfReportGenerator.generateReport( cudf );
-                return Response.ok( report, "application/rep" )
-                    .header( "content-disposition", "attachment; filename = " + report.getName() )
-                    .build();
-        } else {
+            return Response.ok( report, "application/rep" ).header( "content-disposition", "attachment; filename = "
+                + report.getName() ).build();
+        }
+        else
+        {
             return Response.noContent().build();
         }
     }
-
-
 
     @Override
     protected String getSelectedRepoExceptionMessage()
@@ -416,23 +499,23 @@ public class DefaultCUDFService
     }
 
     private List<String> getSelectedRepos( String repositoryId )
-            throws ArchivaRestServiceException
+        throws ArchivaRestServiceException
     {
 
         List<String> selectedRepos = getObservableRepos();
 
-        if ( CollectionUtils.isEmpty(selectedRepos) )
+        if ( CollectionUtils.isEmpty( selectedRepos ) )
         {
             return Collections.emptyList();
         }
 
-        if ( StringUtils.isNotEmpty(repositoryId) )
+        if ( StringUtils.isNotEmpty( repositoryId ) )
         {
             // check user has karma on the repository
             if ( !selectedRepos.contains( repositoryId ) )
             {
                 throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
-                        Response.Status.FORBIDDEN.getStatusCode(), null );
+                                                       Response.Status.FORBIDDEN.getStatusCode(), null );
             }
             selectedRepos = Collections.singletonList( repositoryId );
         }

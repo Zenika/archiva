@@ -19,6 +19,8 @@ package org.apache.archiva.cudf.extractor;
  * under the License.
  */
 
+import org.apache.archiva.metadata.repository.MetadataResolutionException;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
@@ -32,11 +34,11 @@ public interface CUDFEngine
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                  List<String> repositories, Writer output )
-        throws IOException;
+        throws IOException, MetadataResolutionException;
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type,
                                  List<String> repositories, Writer output )
-        throws IOException;
+        throws IOException, MetadataResolutionException;
 
     public void computeCUDFUniverse( List<String> repositoryId, Writer writer, Writer debugWriter )
         throws IOException;

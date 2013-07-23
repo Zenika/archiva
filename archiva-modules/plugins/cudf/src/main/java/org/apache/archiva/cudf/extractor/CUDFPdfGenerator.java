@@ -24,6 +24,7 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.zenika.cudf.parser.DefaultDeserializer;
 import com.zenika.cudf.parser.FileDeserializer;
 import com.zenika.cudf.parser.PDFSerializer;
 import com.zenika.cudf.parser.ParsingException;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Scanner;
@@ -59,6 +61,20 @@ public class CUDFPdfGenerator
                 pdfSerializer.serialize( deserializer.deserialize() );
                 return cudfPdf;
             }
+        }
+        catch ( ParsingException e )
+        {
+            throw new RuntimeException( "Unable to create pdf", e );
+        }
+    }
+
+    public File generateCUDFPdf(Reader reader, File outputFile) {
+        try
+        {
+            PDFSerializer pdfSerializer = new PDFSerializer( outputFile );
+            DefaultDeserializer deserializer = new DefaultDeserializer( reader );
+            pdfSerializer.serialize( deserializer.deserialize() );
+            return outputFile;
         }
         catch ( ParsingException e )
         {

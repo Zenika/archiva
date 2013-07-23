@@ -102,16 +102,17 @@ public class CUDFExtractor
                 if ( repositorySession != null )
                 {
                     repositorySession.close();
+
                 }
+                this.writer.flush();
+                this.writer.close();
             }
         }
-        this.writer.flush();
-        this.writer.close();
     }
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type,
                                  List<String> repositories, RepositorySessionFactory repositorySessionFactory )
-        throws IOException
+        throws IOException, MetadataResolutionException
     {
         this.repositories = repositories;
         this.writer.append( getCUDFPreambule() );
@@ -124,7 +125,7 @@ public class CUDFExtractor
 
     public void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                  List<String> repositories, RepositorySessionFactory repositorySessionFactory )
-        throws IOException
+        throws IOException, MetadataResolutionException
     {
         this.repositories = repositories;
         this.writer.append( getCUDFPreambule() );
@@ -134,7 +135,7 @@ public class CUDFExtractor
 
     private void computeCUDFCone( String groupId, String artifactId, String version, String type, String repositoryId,
                                   RepositorySessionFactory repositorySessionFactory )
-        throws IOException
+        throws IOException, MetadataResolutionException
     {
         RepositorySession repositorySession = null;
         try
@@ -148,7 +149,7 @@ public class CUDFExtractor
         }
         catch ( MetadataResolutionException e )
         {
-            throw new RuntimeException( "Unable to extract CUDF Cone", e );
+            throw new MetadataResolutionException( "Unable to extract CUDF Cone", e );
         }
         finally
         {
@@ -162,7 +163,7 @@ public class CUDFExtractor
 
     private void resolveNamespaces( RepositorySession session, MetadataResolver metadataResolver, String repositoryId,
                                     String namespace )
-        throws MetadataResolutionException
+        throws MetadataResolutionException, IOException
     {
         Collection<String> namespaces = metadataResolver.resolveNamespaces( session, repositoryId, namespace );
         if ( namespaces.size() == 0 )
@@ -180,7 +181,7 @@ public class CUDFExtractor
 
     private void resolveProjects( RepositorySession session, MetadataResolver metadataResolver, String repositoryId,
                                   String namespace )
-        throws MetadataResolutionException
+        throws MetadataResolutionException, IOException
     {
         Collection<String> projects = metadataResolver.resolveProjects( session, repositoryId, namespace );
         if ( projects.size() != 0 )
@@ -194,61 +195,46 @@ public class CUDFExtractor
 
     private void resolveProjectVersions( RepositorySession session, MetadataResolver metadataResolver,
                                          String repositoryId, String namespace, String project )
+        throws IOException, MetadataResolutionException
     {
-        try
+        List<String> projectVersions = new LinkedList<String>(
+            metadataResolver.resolveProjectVersions( session, repositoryId, namespace, project ) );
+        Collections.sort( projectVersions, VersionComparator.getInstance() );
+        if ( projectVersions.size() != 0 )
         {
-            List<String> projectVersions = new LinkedList<String>(
-                metadataResolver.resolveProjectVersions( session, repositoryId, namespace, project ) );
-            Collections.sort( projectVersions, VersionComparator.getInstance() );
-            if ( projectVersions.size() != 0 )
+            for ( int i = 0; i < projectVersions.size(); i++ )
             {
-                for ( int i = 0; i < projectVersions.size(); i++ )
-                {
-                    resolveProjectVersionMetadata( session, metadataResolver, repositoryId, namespace, project,
-                                                   projectVersions.get( i ), i + 1 );
-                }
+                resolveProjectVersionMetadata( session, metadataResolver, repositoryId, namespace, project,
+                                               projectVersions.get( i ), i + 1 );
             }
-        }
-        catch ( MetadataResolutionException e )
-        {
-            log.warn( "Metadata Resolution Error", e );
         }
     }
 
     private void resolveProjectVersionMetadata( RepositorySession session, MetadataResolver metadataResolver,
                                                 String repositoryId, String namespace, String project,
                                                 String projectVersion, int version )
-        throws MetadataResolutionException
+        throws MetadataResolutionException, IOException
     {
         ProjectVersionMetadata projectVersionMetadata =
             metadataResolver.resolveProjectVersion( session, repositoryId, namespace, project, projectVersion );
         if ( projectVersionMetadata != null )
         {
-            try
+            String projectOneLine = outputArtifactInCUDFInline( extractOrganisation( projectVersionMetadata ),
+                                                                extractName( projectVersionMetadata ) );
+            writer.append( "package: " ).append( projectOneLine ).append( '\n' );
+            writer.append( "number: " ).append( projectVersionMetadata.getVersion() ).append( '\n' );
+            writer.append( "version: " ).append( Integer.toString( version ) ).append( '\n' );
+            writer.append( "type: " ).append( extractPackaging( projectVersionMetadata ) ).append( '\n' );
+            if ( hasDependencies( projectVersionMetadata ) )
             {
-                String projectOneLine = outputArtifactInCUDFInline( extractOrganisation( projectVersionMetadata ),
-                                                                    extractName( projectVersionMetadata ) );
-                writer.append( "package: " ).append( projectOneLine ).append( '\n' );
-                writer.append( "number: " ).append( projectVersionMetadata.getVersion() ).append( '\n' );
-                writer.append( "version: " ).append( Integer.toString( version ) ).append( '\n' );
-                writer.append( "type: " ).append( extractPackaging( projectVersionMetadata ) ).append( '\n' );
-                if ( hasDependencies( projectVersionMetadata ) )
-                {
-                    writer.append( "depends: " ).append(
-                        extractDependencies( session, projectVersionMetadata.getDependencies(),
-                                             metadataResolver ) ).append( '\n' );
-                }
-                writer.append( '\n' );
-                writer.flush();
+                writer.append( "depends: " ).append(
+                    extractDependencies( session, projectVersionMetadata.getDependencies(), metadataResolver ) ).append(
+                    '\n' );
             }
-            catch ( IllegalArgumentException e )
-            {
-                log.warn( "No correct information about " + namespace + "#" + project + "#" + version );
-            }
-            catch ( IOException e )
-            {
-                throw new RuntimeException( "Unable to write CUDF", e );
-            }
+            writer.append( '\n' );
+            writer.flush();
+        } else {
+            throw new MetadataResolutionException( "Invalid Metadata, check the artifact metadata" );
         }
     }
 
@@ -363,13 +349,14 @@ public class CUDFExtractor
      * @param organisation (groupId)
      * @param name         (artifactId)
      * @return organisation%3aname => org.apache.archiva%3aarchiva with %+hexadecimal code of every forbidden characters
-     * @throws IllegalArgumentException if the organisation or the name is null
+     * @throws MetadataResolutionException if the organisation or the name is null
      */
     private String outputArtifactInCUDFInline( String organisation, String name )
+        throws MetadataResolutionException
     {
         if ( organisation == null || name == null )
         {
-            throw new IllegalArgumentException();
+            throw new MetadataResolutionException("Invalid Metadata, check the artifact metadata");
         }
         String packageLine = new StringBuilder( 20 ).append( organisation ).append( ':' ).append( name ).toString();
         return encodingString( packageLine );

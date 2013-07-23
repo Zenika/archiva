@@ -795,6 +795,9 @@
       <button class='btn' data-bind='click: function(){getCUDFExtract(groupId,artifactId,version)}'>
         ${$.i18n.prop('cudf.extract-text')}
       </button>
+      <button data-bind="click: function(){getCUDFExtractPdf(groupId,artifactId,version)}" class="btn">
+        ${$.i18n.prop('cudf.extract-pdf-text')}
+      </button>
     </div>
   </div>
 
