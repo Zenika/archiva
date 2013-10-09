@@ -19,15 +19,12 @@ package org.apache.archiva.cudf.report;
  * under the License.
  */
 
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 /**
  * @author Antoine Rouaze <antoine.rouaze@zenika.com>

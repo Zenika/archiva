@@ -19,28 +19,15 @@ package org.apache.archiva.cudf.extractor;
  * under the License.
  */
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.pdf.PdfWriter;
 import com.zenika.cudf.parser.DefaultDeserializer;
 import com.zenika.cudf.parser.FileDeserializer;
 import com.zenika.cudf.parser.PDFSerializer;
 import com.zenika.cudf.parser.ParsingException;
-import com.zenika.cudf.parser.model.CUDFParsedDescriptor;
-import com.zenika.cudf.parser.model.ParsedPreamble;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Scanner;
 
 /**
  * @author Antoine Rouaze <antoine.rouaze@zenika.com>
