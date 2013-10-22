@@ -36,30 +36,11 @@
         <li>
           <a href="#" data-bind="click: function(){downloadCudf(cudfExtract.cudfJob.id(), file)}">${ file }</a>
           <span> (<a href="#" data-bind="click: function(){downloadCudfAsPdf(cudfExtract.cudfJob.id(), file)}">pdf</a>) </span>
-          <span> (<a href="#" data-bind="click: function(){downloadReport(cudfExtract.cudfJob.id(), file)}">report</a>)</span>
         </li>
       {{/each}}
       </ul>
     {{/each}}
   </ul>
-  <!--<thead>-->
-  <!--<tr>-->
-    <!--{{each(i, columnDefinition) columns}}-->
-    <!--<th>${ columnDefinition.headerText }</th>-->
-    <!--{{/each}}-->
-  <!--</tr>-->
-  <!--</thead>-->
-  <!--<tbody>-->
-  <!--{{each(i, cudfJob) itemsOnCurrentPage()}}-->
-  <!--<tr>-->
-    <!--{{each(i, columnDefinition) columns}}-->
-    <!--{{var val = (typeof columnDefinition.rowText == 'function' ? columnDefinition.rowText(cudfJob) : cudfJob[columnDefinition.rowText])}}-->
-    <!--<td>-->
-      <!--${val}-->
-    <!--</td>-->
-    <!--{{/each}}-->
-  <!--{{/each}}-->
-  <!--</tbody>-->
 </script>
 
 <script id="cudfJobsMain" type="text/html">
